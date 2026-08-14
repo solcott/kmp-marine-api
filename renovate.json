@@ -1,0 +1,22 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "packageRules": [
+    {
+      "description": "Group Kotlin-related updates together",
+      "groupName": "Kotlin",
+      "matchPackageNames": [
+        "/^org.jetbrains.kotlin/"
+      ]
+    },
+    {
+      "description": "Ignore Android Gradle Plugin marker lookups as they are handled by the library entry",
+      "matchPackageNames": [
+        "com.android.kotlin.multiplatform.library:com.android.kotlin.multiplatform.library.gradle.plugin"
+      ],
+      "enabled": false
+    }
+  ]
+}
