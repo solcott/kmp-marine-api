@@ -6,7 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Fork of ktuukkan/marine-api ("Java Marine API") — a parser library for NMEA 0183, AIS, u-blox and SeaTalk marine data. LGPL v3.
 
-Gradle Kotlin Multiplatform build, published as `io.github.solcott:kmp-marine-api`. **The Kotlin port has not started** — all real code is still Java in `marine-api/src/jvmMain/java` under the `net.sf.marineapi` package. Write Java there; ask before adding Kotlin outside the placeholder described below.
+Gradle Kotlin Multiplatform build, published as `io.github.solcott:kmp-marine-api`.
+
+**The Kotlin port is in progress.** Two trees coexist:
+
+- `marine-api/src/commonMain/kotlin` under `io.github.solcott.marineapi` — the new multiplatform API. New work goes here.
+- `marine-api/src/jvmMain/java` under `net.sf.marineapi` — the original Java library, still the complete implementation. It is deleted at the end of the port; don't extend it.
+
+The port is a redesign, not a transliteration: values are immutable, optional NMEA fields are nullable instead of throwing, and line-level failures are returned as `ParseResult` rather than thrown. No reflection — it does not work on Native or JS. See `.claude/plans/` for the phase plan.
 
 Two modules:
 
@@ -45,7 +52,8 @@ These are non-obvious and easy to break:
 - **Do not call `withJava()` on the `jvm` target.** Since Kotlin 2.1.20 `src/jvmMain/java` and `src/jvmTest/java` compile automatically.
 - **Test resources are loaded from the classpath**, e.g. `getClass().getResourceAsStream("/data/sample1.txt")`. Do not reintroduce filesystem-relative paths — Gradle splits classes from processed resources, so there is no directory containing both.
 - `jvmTest` runs with `maxParallelForks = 1`: `SentenceReaderTest.testSetDatagramSocket` binds a fixed UDP port 3810 that `UDPServerMock` also uses, and several tests assert on `Thread.sleep` timing.
-- `marine-api/src/commonMain/kotlin/.../MarineApi.kt` is a **placeholder**. Without at least one common Kotlin source the Kotlin/Native compilations are `NO-SOURCE`, produce no `.klib`, and the three Apple publications fail. Delete it once real common code exists. `:examples` needs no such placeholder — it has zero Kotlin sources anywhere, and `compileJvmMainJava` still runs with `compileKotlinJvm` at `NO-SOURCE`.
+- **`commonMain` must never go back to being empty.** With no common Kotlin source the Kotlin/Native compilations are `NO-SOURCE`, produce no `.klib`, and the three Apple publications fail. The `MarineApi.kt` placeholder that used to guarantee this was deleted once the port began. `:examples` needs no such placeholder — it has zero Kotlin sources anywhere, and `compileJvmMainJava` still runs with `compileKotlinJvm` at `NO-SOURCE`.
+- `explicitApi()` is on for `:marine-api`: every public declaration needs an explicit visibility and return type.
 
 ## Code style
 

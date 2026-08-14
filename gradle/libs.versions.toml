@@ -18,6 +18,7 @@ publish = "0.37.0"
 [libraries]
 android-gradle-plugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 ktfmt-gradle-plugin = { module = "com.ncorti.ktfmt.gradle:com.ncorti.ktfmt.gradle.gradle.plugin", version.ref = "ktfmt" }
 nrjavaserial = { module = "com.neuronrobotics:nrjavaserial", version.ref = "nrjavaserial" }

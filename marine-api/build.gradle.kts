@@ -15,6 +15,11 @@ plugins {
 val jvmCompat = libs.versions.jvm.compat.get()
 
 kotlin {
+  // Every public declaration needs an explicit visibility and return type. This is a
+  // published library and the Kotlin API is new, so the discipline costs nothing now and
+  // prevents accidental API surface later.
+  explicitApi()
+
   android { namespace = "io.github.solcott.marineapi" }
 
   jvm {
@@ -29,8 +34,10 @@ kotlin {
   }
 
   sourceSets {
-    // NOTHING goes in commonMain: the Kotlin port has not started. Every non-JVM source
-    // set is intentionally empty.
+    // commonTest uses kotlin.test. On the jvm target that resolves to kotlin-test-junit
+    // because jvmTest is configured with useJUnit(), so the common tests and the legacy
+    // Java JUnit 4 suite run in the same task.
+    commonTest.dependencies { implementation(libs.kotlin.test) }
     jvmTest.dependencies { implementation(libs.junit) }
   }
 }
