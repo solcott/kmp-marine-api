@@ -134,7 +134,7 @@ Recommended Android Proguard settings when `minifyEnabled` is set `true`:
 ```
 
 See also:
-- [Examples](marine-api/src/jvmMain/java/net/sf/marineapi/example)
+- [Examples](examples/src/jvmMain/java/net/sf/marineapi/example)
 - [Javadocs](http://www.javadoc.io/doc/net.sf.marineapi/marineapi)
 - [Graphical User Interface](https://github.com/aitov/gps-info) using marine-api by @aitov
 

@@ -44,7 +44,7 @@ jobs:
         run: ./gradlew checkSortDependencies
 
       - name: Build JVM target
-        run: ./gradlew :marine-api:jvmJar :marine-api:jvmTest :marine-api:javadocJvm
+        run: ./gradlew :marine-api:jvmJar :marine-api:jvmTest :marine-api:javadocJvm :examples:jvmJar
 
       - name: Upload test report
         if: failure()

@@ -31,11 +31,6 @@ kotlin {
   sourceSets {
     // NOTHING goes in commonMain: the Kotlin port has not started. Every non-JVM source
     // set is intentionally empty.
-    jvmMain.dependencies {
-      // Was Maven <scope>provided</scope>. Used by exactly one class,
-      // net.sf.marineapi.example.SerialPortExample (gnu.io.*).
-      compileOnly(libs.nrjavaserial)
-    }
     jvmTest.dependencies { implementation(libs.junit) }
   }
 }
@@ -81,12 +76,9 @@ val javadocJvm =
     description = "Generates Javadoc for the jvm target's Java sources."
 
     source(fileTree("src/jvmMain/java") { include("**/*.java") })
-    // was <excludePackageNames>net.sf.marineapi.example</excludePackageNames>; Gradle
-    // filters by source-file pattern rather than package name.
-    exclude("net/sf/marineapi/example/**")
+    // The old <excludePackageNames>net.sf.marineapi.example</excludePackageNames> is gone:
+    // the examples live in the :examples module now, so there is nothing to filter out.
 
-    // The jvm main compilation's compile classpath, which includes compileOnly -- this is
-    // what puts nrjavaserial on the path so SerialPortExample's gnu.io imports resolve.
     classpath = files(configurations.named("jvmCompileClasspath"))
     destinationDir = layout.buildDirectory.dir("docs/javadoc").get().asFile
 
@@ -126,7 +118,8 @@ tasks.named<Jar>("jvmJar") {
   val bundleVersion = project.version.toString()
 
   // Felix expanded <Export-Package>net.sf.marineapi.*</Export-Package> to every package
-  // holding a class, INCLUDING net.sf.marineapi.example. Derived from the source tree
+  // holding a class, which under Maven included net.sf.marineapi.example; that package now
+  // lives in the :examples module and is no longer exported. Derived from the source tree
   // rather than hardcoded so it cannot rot, and evaluated lazily so the jar task's own
   // up-to-date checks drive re-evaluation.
   val exportedPackages = provider {
