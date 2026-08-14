@@ -2,7 +2,12 @@
 .classpath
 .settings
 .idea
-target/
 *.iml
-.gradle
 .vscode/
+.claude/settings.local.json
+
+# Gradle
+.gradle
+build/
+.kotlin/
+local.properties

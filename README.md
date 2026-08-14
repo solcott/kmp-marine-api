@@ -1,7 +1,7 @@
 # Java Marine API
 [![License](https://img.shields.io/badge/License-LGPL%20v3-brightgreen.svg)](./LICENSE)
-[![Build & Test](https://github.com/ktuukkan/marine-api/actions/workflows/build.yml/badge.svg)](https://github.com/ktuukkan/marine-api/actions/workflows/build.yml)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.sf.marineapi/marineapi/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.sf.marineapi/marineapi)
+[![Build & Test](https://github.com/solcott/kmp-marine-api/actions/workflows/build.yml/badge.svg)](https://github.com/solcott/kmp-marine-api/actions/workflows/build.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.solcott/kmp-marine-api)](https://central.sonatype.com/artifact/io.github.solcott/kmp-marine-api)
 [![Download Java Marine API](https://img.shields.io/sourceforge/dm/marineapi.svg)](https://sourceforge.net/projects/marineapi/files/Releases/)
 [![Javadocs](http://www.javadoc.io/badge/net.sf.marineapi/marineapi.svg)](http://www.javadoc.io/doc/net.sf.marineapi/marineapi)
 
@@ -19,8 +19,9 @@
     - [u-blox](#u-blox)
   - [Distribution](#distribution)
     - [Pre-built JARs](#pre-built-jars)
+    - [Gradle](#gradle)
     - [Maven](#maven)
-      - [Snapshots](#snapshots)
+    - [Building from source](#building-from-source)
   - [Contributing](#contributing)
   - [References](#references)
     - [National Marine Electronics Association](#national-marine-electronics-association)
@@ -46,7 +47,7 @@ devices such as GPS, echo sounder and weather instruments.
 - Additional parsers may be added by extending the provided base classes
     - This can be done at runtime and does not require compiling the library
 - Sentence encoding with common validation and unified formatting
-- Several sentences can be aggregated to single event by using [providers](./src/main/java/net/sf/marineapi/provider)
+- Several sentences can be aggregated to single event by using [providers](marine-api/src/jvmMain/java/net/sf/marineapi/provider)
     - For example, to record current position and depth of water
 - Decoding of selected [AIS messages](#ais)
 - The NMEA 0183 layer of [Raymarine SeaTalk<sup>1</sup>](http://www.raymarine.com/view/?id=5535)
@@ -84,7 +85,7 @@ should never be your only reference.
 
 ### Requirements
 
-* Java 2 SE JRE/JDK 11 or newer
+* Java SE JRE/JDK 17 or newer
 * For serial port communication (choose one):
   * [Neuron Robotics Java Serial Library](https://github.com/NeuronRobotics/nrjavaserial)
   * [PureJavaComm](http://www.sparetimelabs.com/purejavacomm)
@@ -133,7 +134,7 @@ Recommended Android Proguard settings when `minifyEnabled` is set `true`:
 ```
 
 See also:
-- [Examples](src/main/java/net/sf/marineapi/example)
+- [Examples](examples/src/jvmMain/java/net/sf/marineapi/example)
 - [Javadocs](http://www.javadoc.io/doc/net.sf.marineapi/marineapi)
 - [Graphical User Interface](https://github.com/aitov/gps-info) using marine-api by @aitov
 
@@ -226,7 +227,7 @@ messages are decoded.
 *Not to be confused with SeaTalk<sup>ng</sup> derived from NMEA 2000.*
 
 Only the NMEA layer is currently supported, see
-[STALKSentence](src/main/java/net/sf/marineapi/nmea/sentence/STALKSentence.java)
+[STALKSentence](marine-api/src/jvmMain/java/net/sf/marineapi/nmea/sentence/STALKSentence.java)
 and [Issue #67](https://github.com/ktuukkan/marine-api/issues/67).
 
 ### u-blox
@@ -255,40 +256,38 @@ The project was first published in Sourceforge, hence the `net.sf.marineapi`
 package naming.
 
 
+### Gradle
+
+Releases are published to Maven Central as `io.github.solcott:kmp-marine-api`.
+
+```kotlin
+dependencies {
+    implementation("io.github.solcott:kmp-marine-api:0.12.0")
+}
+```
+
 ### Maven
 
-Both releases and snapshots are deployed to [Maven Central Repository](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22net.sf.marineapi%22)
-and may be imported by adding the following dependency in your `pom.xml`.
+This is a Kotlin Multiplatform library, so the root module carries only Gradle module
+metadata. Maven consumers must depend on the JVM artifact directly:
 
 ```xml
 <dependency>
-  <groupId>net.sf.marineapi</groupId>
-  <artifactId>marineapi</artifactId>
-  <version>0.10.0</version>
-  <type>bundle</type>
+  <groupId>io.github.solcott</groupId>
+  <artifactId>kmp-marine-api-jvm</artifactId>
+  <version>0.12.0</version>
 </dependency>
 ```
 
-#### Snapshots
+### Building from source
 
-The snapshots should be mostly stable, but they are still *Work In Progress* and
-should be considered as a preview of the next release.
-
-See [changelog.txt](changelog.txt) for the current `SNAPSHOT` version. Notice that
-you may need to tweak your [Maven settings](https://gist.github.com/ktuukkan/8cf2de1e915185118c60)
-to enable snapshot dependencies.
-
-```xml
-<dependency>
-  <groupId>net.sf.marineapi</groupId>
-  <artifactId>marineapi</artifactId>
-  <version>0.11.0-SNAPSHOT</version>
-  <type>bundle</type>
-</dependency>
+```
+./gradlew build                 # all targets (requires macOS for the Apple targets)
+./gradlew :marine-api:jvmTest   # JVM tests only
 ```
 
-Snapshots may also be downloaded manually from the
-[repository](https://oss.sonatype.org/content/repositories/snapshots/net/sf/marineapi/marineapi/).
+Requires JDK 17+ and an Android SDK (`ANDROID_HOME`) — the Android Gradle plugin is needed
+at configuration time even for JVM-only tasks.
 
 
 ## Contributing
