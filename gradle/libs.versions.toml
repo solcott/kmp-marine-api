@@ -1,0 +1,30 @@
+[versions]
+agp = "9.3.1"
+kotlin = "2.4.10"
+junit = "4.13.2"
+nrjavaserial = "5.2.1"
+#noinspection UnusedVersionCatalogEntry
+androidCompileSdk = "37"
+#noinspection UnusedVersionCatalogEntry
+androidMinSdk = "24"
+#noinspection UnusedVersionCatalogEntry
+jvm-toolchain = "25" # After updating run ./gradlew updateDaemonJvm
+#noinspection UnusedVersionCatalogEntry
+jvm-compat = "17"
+ktfmt = "0.27.0"
+sort-dependencies = "0.21.0"
+publish = "0.37.0"
+
+[libraries]
+android-gradle-plugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+ktfmt-gradle-plugin = { module = "com.ncorti.ktfmt.gradle:com.ncorti.ktfmt.gradle.gradle.plugin", version.ref = "ktfmt" }
+nrjavaserial = { module = "com.neuronrobotics:nrjavaserial", version.ref = "nrjavaserial" }
+
+[plugins]
+android-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
+publish = { id = "com.vanniktech.maven.publish", version.ref = "publish" }
+sort-dependencies = { id = "com.squareup.sort-dependencies", version.ref = "sort-dependencies" }
