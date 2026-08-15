@@ -117,6 +117,8 @@ class GpsdCorpusTest {
   fun theCorpusCoversTheseSentenceTypes() {
     // Which ported types this corpus actually exercises. ZDA, HDT, XDR and ROT are the four it
     // added: before it arrived they were registered with no real device data behind them at all.
+    // VDM and VDO joined them once AIS was ported -- the corpus carries several AIS captures, and
+    // they had been counted as unrecognised until there was something to recognise them.
     assertEquals(
       setOf(
         "BOD",
@@ -139,6 +141,8 @@ class GpsdCorpusTest {
         "ROT",
         "RTE",
         "TXT",
+        "VDM",
+        "VDO",
         "VTG",
         "XDR",
         "XTE",

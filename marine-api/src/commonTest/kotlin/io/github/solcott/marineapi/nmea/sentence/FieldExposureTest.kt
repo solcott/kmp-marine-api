@@ -140,6 +140,13 @@ class FieldExposureTest {
       // channel, concentration, confidence, distance, light level, timestamp, serial, status
       "\$GFDTA,1,1.5,99,600,11067,2002/03/01 00:30:28,HF-1xxx,1",
       "\$GFDTB,2,1.5,99,600,11067,2002/03/01 00:30:28,HF-1xxx,1",
+      // fragment count, fragment number, message id, radio channel, payload, fill bits
+      "!AIVDM,2,1,3,B,55?MbV02;H;s<HtKR20EHE:0@T4@Dn2222222216L961O5Gf0NSQEp6ClRp8,0",
+      "!AIVDO,2,2,3,A,88888888880,2",
+      // SeaTalk command and its datagram bytes
+      "\$STALK,52,A1,00,00",
+      // u-blox message id, then whatever that message id defines
+      "\$PUBX,00,125926.00,4717.11337,N,00833.91163,E,111.5,GLL,20,15,0.007,0.0,1.0,2.0,3.0,3.0",
     )
 
   @Test
@@ -178,7 +185,14 @@ class FieldExposureTest {
   @Test
   fun theExamplesCoverEveryRegisteredType() {
     // A type added to the registry without an example here would go unaudited.
-    val covered = fullyPopulated.map { it.substring(3, 6) }.toSet()
+    //
+    // The id comes from the parsed sentence rather than from a fixed slice of the tag: a
+    // proprietary sentence is `$P` plus a manufacturer mnemonic of no fixed length, so slicing
+    // characters 3 to 6 of `$PUBX,...` yields "BX," rather than a sentence type.
+    val covered =
+      fullyPopulated
+        .map { SentenceRegistry.Default.parse(Checksum.append(it)).sentenceOrNull()!!.id }
+        .toSet()
     assertEquals(SentenceRegistry.Default.types, covered)
   }
 

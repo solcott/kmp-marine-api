@@ -416,10 +416,14 @@ class SentenceRoundTripTest {
   }
 
   @Test
-  fun unportedTypesStillParseAsUnknown() {
-    assertIs<UnknownSentence>(
-      SentenceRegistry.Default.parse("!AIVDM,1,1,,A,13aEOK?P00PD2wVMdLDRhgvL289?,0*26")
-        .sentenceOrNull()
-    )
+  fun unregisteredTypesStillParseAsUnknown() {
+    // Every sentence type the Java implementation had is now ported, so this can no longer point
+    // at one of them. It points instead at a type neither implementation ever had: an unknown
+    // sentence keeps its fields and re-encodes intact rather than being dropped, which is what
+    // makes a proprietary or newer sentence usable without writing a parser for it.
+    val line = Checksum.append("\$GPZZZ,1,2,three")
+    val unknown = assertIs<UnknownSentence>(SentenceRegistry.Default.parse(line).sentenceOrNull())
+    assertEquals("ZZZ", unknown.id)
+    assertEquals(line, unknown.toNmeaString())
   }
 }
