@@ -71,6 +71,20 @@ class FieldExposureTest {
       // status, XTE, steer to, origin, destination, lat, N/S, lon, E/W, range, bearing,
       // velocity, arrival status, FAA mode
       "\$GPRMB,A,0.66,L,003,004,4917.24,N,12309.57,W,001.3,052.5,000.5,V,A",
+      // heading true, T, heading magnetic, M, knots, N, km/h, K
+      "\$IIVHW,240.5,T,234.7,M,4.9,N,9.1,K",
+      // total water, N, trip water, N, total ground, N, trip ground, N
+      "\$IIVLW,1958.64,N,365.2,N,2011.3,N,401.7,N",
+      // long water, transverse water, status, long ground, transverse ground, status,
+      // stern water, status, stern ground, status
+      "\$IIVBW,11.0,02.0,A,10.0,03.0,A,05.3,A,01.0,A",
+      // direction true, T, direction magnetic, M, speed, N
+      "\$IIVDR,10.0,T,12.0,M,1.5,N",
+      // speed knots, N, speed m/s, M
+      "\$IIVPW,4.5,N,2.3,M",
+      // wind angle, side, knots, N, m/s, M, km/h, K
+      "\$IIVWR,088,L,24.5,N,12.6,M,45.4,K",
+      "\$IIVWT,088,L,24.7,N,12.6,M,45.7,K",
     )
 
   @Test

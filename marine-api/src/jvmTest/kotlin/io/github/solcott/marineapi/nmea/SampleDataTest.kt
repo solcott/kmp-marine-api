@@ -142,7 +142,7 @@ class SampleDataTest {
     // APB and HDG are instrument sentences no GPS emits, HDT likewise, and none of these receivers
     // sends ZDA.
     val withoutCorpusData = SentenceRegistry.Default.types - expectedCoverage.keys
-    assertEquals(setOf("APB", "HDG", "HDT", "ZDA"), withoutCorpusData)
+    assertEquals(setOf("APB", "HDG", "HDT", "VBW", "VDR", "ZDA"), withoutCorpusData)
   }
 
   @Test
