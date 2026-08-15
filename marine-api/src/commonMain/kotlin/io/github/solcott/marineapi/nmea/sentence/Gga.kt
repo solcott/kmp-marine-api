@@ -99,7 +99,7 @@ public data class Gga(
         time = fields.timeAt(TIME),
         position =
           fields.positionAt(LATITUDE, LATITUDE_HEMISPHERE, LONGITUDE, LONGITUDE_HEMISPHERE),
-        fixQuality = fields.intCodedAt(FIX_QUALITY, GpsFixQuality.entries),
+        fixQuality = fields.advisoryIntCodedAt(FIX_QUALITY, GpsFixQuality.entries),
         satelliteCount = fields.intAt(SATELLITE_COUNT),
         horizontalDilution = fields.doubleAt(HORIZONTAL_DILUTION),
         altitude = fields.doubleAt(ALTITUDE),

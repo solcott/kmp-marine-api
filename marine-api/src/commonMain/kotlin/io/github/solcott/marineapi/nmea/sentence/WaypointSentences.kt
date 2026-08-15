@@ -201,7 +201,7 @@ public data class Rte(
         talker = fields.talker,
         sentenceCount = fields.intAt(SENTENCE_COUNT),
         sentenceIndex = fields.intAt(SENTENCE_INDEX),
-        routeType = fields.codedAt(ROUTE_TYPE, RouteType.entries),
+        routeType = fields.advisoryCodedAt(ROUTE_TYPE, RouteType.entries),
         routeId = fields.stringAt(ROUTE_ID),
         waypointIds = fields.stringsFrom(FIRST_WAYPOINT),
       )

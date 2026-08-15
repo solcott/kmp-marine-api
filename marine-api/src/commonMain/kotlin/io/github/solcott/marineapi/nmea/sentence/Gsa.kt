@@ -94,14 +94,14 @@ public data class Gsa(
     public fun from(fields: SentenceFields): Gsa =
       Gsa(
         talker = fields.talker,
-        selection = fields.codedAt(SELECTION, FixSelection.entries),
-        fixStatus = fields.intCodedAt(FIX_STATUS, GpsFixStatus.entries),
+        selection = fields.advisoryCodedAt(SELECTION, FixSelection.entries),
+        fixStatus = fields.advisoryIntCodedAt(FIX_STATUS, GpsFixStatus.entries),
         satelliteIds =
           (FIRST_SATELLITE until FIRST_SATELLITE + SATELLITE_SLOTS).map(fields::stringAt),
         positionDop = fields.doubleAt(POSITION_DOP),
         horizontalDop = fields.doubleAt(HORIZONTAL_DOP),
         verticalDop = fields.doubleAt(VERTICAL_DOP),
-        systemId = fields.intAt(SYSTEM_ID),
+        systemId = fields.advisoryIntAt(SYSTEM_ID),
       )
   }
 }

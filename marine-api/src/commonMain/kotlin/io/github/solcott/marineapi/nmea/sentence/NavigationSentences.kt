@@ -70,12 +70,12 @@ public data class Xte(
     public fun from(fields: SentenceFields): Xte =
       Xte(
         talker = fields.talker,
-        status = fields.codedAt(STATUS, DataStatus.entries),
-        cycleLockStatus = fields.codedAt(CYCLE_LOCK_STATUS, DataStatus.entries),
+        status = fields.advisoryCodedAt(STATUS, DataStatus.entries),
+        cycleLockStatus = fields.advisoryCodedAt(CYCLE_LOCK_STATUS, DataStatus.entries),
         magnitude = fields.doubleAt(MAGNITUDE),
         steerTo = fields.codedAt(STEER_TO, Direction.entries),
         units = fields.codedAt(UNITS, Units.entries),
-        faaMode = fields.codedAt(FAA_MODE, FaaMode.entries),
+        faaMode = fields.advisoryCodedAt(FAA_MODE, FaaMode.entries),
       )
   }
 }
@@ -183,13 +183,13 @@ public data class Apb(
     public fun from(fields: SentenceFields): Apb =
       Apb(
         talker = fields.talker,
-        status = fields.codedAt(STATUS, DataStatus.entries),
-        cycleLockStatus = fields.codedAt(CYCLE_LOCK_STATUS, DataStatus.entries),
+        status = fields.advisoryCodedAt(STATUS, DataStatus.entries),
+        cycleLockStatus = fields.advisoryCodedAt(CYCLE_LOCK_STATUS, DataStatus.entries),
         crossTrackError = fields.doubleAt(CROSS_TRACK_ERROR),
         steerTo = fields.codedAt(STEER_TO, Direction.entries),
         crossTrackUnits = fields.codedAt(CROSS_TRACK_UNITS, CROSS_TRACK_UNIT_CODES),
-        arrivalCircleEntered = fields.codedAt(ARRIVAL_CIRCLE, DataStatus.entries),
-        perpendicularPassed = fields.codedAt(PERPENDICULAR, DataStatus.entries),
+        arrivalCircleEntered = fields.advisoryCodedAt(ARRIVAL_CIRCLE, DataStatus.entries),
+        perpendicularPassed = fields.advisoryCodedAt(PERPENDICULAR, DataStatus.entries),
         bearingOriginToDestination = fields.doubleAt(BEARING_ORIGIN_TO_DESTINATION),
         bearingOriginToDestinationReference =
           fields.codedAt(BEARING_ORIGIN_REFERENCE, BearingReference.entries),
@@ -304,7 +304,7 @@ public data class Rmb(
     public fun from(fields: SentenceFields): Rmb =
       Rmb(
         talker = fields.talker,
-        status = fields.codedAt(STATUS, DataStatus.entries),
+        status = fields.advisoryCodedAt(STATUS, DataStatus.entries),
         crossTrackError = fields.doubleAt(CROSS_TRACK_ERROR),
         steerTo = fields.codedAt(STEER_TO, Direction.entries),
         originWaypointId = fields.stringAt(ORIGIN_WAYPOINT_ID),
@@ -319,8 +319,8 @@ public data class Rmb(
         range = fields.doubleAt(RANGE),
         bearing = fields.doubleAt(BEARING),
         velocity = fields.doubleAt(VELOCITY),
-        arrivalStatus = fields.codedAt(ARRIVAL_STATUS, DataStatus.entries),
-        faaMode = fields.codedAt(FAA_MODE, FaaMode.entries),
+        arrivalStatus = fields.advisoryCodedAt(ARRIVAL_STATUS, DataStatus.entries),
+        faaMode = fields.advisoryCodedAt(FAA_MODE, FaaMode.entries),
       )
   }
 }

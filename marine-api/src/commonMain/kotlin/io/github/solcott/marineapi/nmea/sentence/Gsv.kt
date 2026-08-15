@@ -109,7 +109,7 @@ public data class Gsv(
         sentenceIndex = fields.intAt(SENTENCE_INDEX),
         satellitesInView = fields.intAt(SATELLITES_IN_VIEW),
         satellites = satellites,
-        signalId = fields.intAt(signalIdIndex),
+        signalId = fields.advisoryIntAt(signalIdIndex),
       )
     }
   }

@@ -67,7 +67,7 @@ public data class Mwv(
         reference = fields.codedAt(REFERENCE, AngleReference.entries),
         windSpeed = fields.doubleAt(WIND_SPEED),
         speedUnits = fields.codedAt(SPEED_UNITS, WIND_SPEED_UNITS),
-        status = fields.codedAt(STATUS, DataStatus.entries),
+        status = fields.advisoryCodedAt(STATUS, DataStatus.entries),
       )
   }
 }

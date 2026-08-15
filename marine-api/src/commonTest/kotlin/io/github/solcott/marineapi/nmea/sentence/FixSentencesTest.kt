@@ -17,6 +17,7 @@ import io.github.solcott.marineapi.nmea.sentenceOrNull
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.datetime.LocalDate
@@ -191,14 +192,36 @@ class RmcTest {
   }
 
   @Test
-  fun variationWithoutADirectionIsMalformed() {
-    // Signing it either way would turn a malformed sentence into a plausible heading error.
-    val result =
-      SentenceRegistry.Default.parse(
-        Checksum.append("\$GPRMC,225446,A,4916.45,N,12311.12,W,000.5,054.7,191194,020.3,")
-      )
-    val malformed = assertIs<ParseResult.Malformed>(result)
-    assertTrue("no E/W direction" in malformed.reason, malformed.reason)
+  fun variationWithoutADirectionIsDroppedRatherThanSigned() {
+    // An earlier revision failed the sentence here. It now drops the unusable pair and keeps the
+    // fix, which is what a Saab R4 and a Motorola T805 in the sample logs need -- both put their
+    // FAA mode in the direction field. Signing it by guessing would report a variation the device
+    // never sent, so the pair goes rather than the sentence.
+    val rmc =
+      parse<Rmc>(Checksum.append("\$GPRMC,225446,A,4916.45,N,12311.12,W,000.5,054.7,191194,020.3,"))
+    assertNull(rmc.magneticVariation, "020.3 with no E/W cannot be signed")
+    assertNull(rmc.variationDirection)
+    assertEquals(0.5, rmc.speedKnots, "everything else in the sentence survives")
+    assertEquals(54.7, rmc.courseTrue)
+    assertNotNull(rmc.position)
+  }
+
+  @Test
+  fun readsTheSaabAndMotorolaVariationQuirk() {
+    // Real lines from the gpsd corpus. Both receivers put an FAA mode where the variation
+    // direction belongs; the Motorola also sends a variation magnitude of 0 alongside it.
+    val saab = parse<Rmc>("\$GPRMC,130711.00,A,5012.790800,N,00806.879600,W,0.5,3.0,010611,,A*6A")
+    assertNull(saab.magneticVariation)
+    assertNull(saab.variationDirection)
+    assertNotNull(saab.position)
+
+    val motorola =
+      parse<Rmc>("\$GPRMC,212614.879,A,4839.9488,N,00214.8863,E,0.56,344.41,181207,0,A*77")
+    assertNull(
+      motorola.magneticVariation,
+      "a 0 magnitude with no usable direction is still unusable",
+    )
+    assertEquals(0.56, motorola.speedKnots)
   }
 
   @Test

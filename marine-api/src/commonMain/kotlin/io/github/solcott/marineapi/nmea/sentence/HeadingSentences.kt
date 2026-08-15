@@ -1,7 +1,6 @@
 package io.github.solcott.marineapi.nmea.sentence
 
 import io.github.solcott.marineapi.nmea.CompassPoint
-import io.github.solcott.marineapi.nmea.NmeaFieldException
 import io.github.solcott.marineapi.nmea.Sentence
 import io.github.solcott.marineapi.nmea.SentenceFields
 import io.github.solcott.marineapi.nmea.TalkerId
@@ -78,38 +77,16 @@ public data class Hdg(
 
     /** Reads an HDG sentence from its fields. */
     public fun from(fields: SentenceFields): Hdg {
-      val deviation = fields.doubleAt(DEVIATION)
-      val deviationDirection = fields.eastWestAt(DEVIATION_DIRECTION)
-      val variation = fields.doubleAt(VARIATION)
-      val variationDirection = fields.eastWestAt(VARIATION_DIRECTION)
-
-      // As in RMC: a magnitude with no direction cannot be signed, and guessing would turn a
-      // malformed sentence into a plausible compass error.
-      requireDirection(fields, deviation, deviationDirection, DEVIATION_DIRECTION, "deviation")
-      requireDirection(fields, variation, variationDirection, VARIATION_DIRECTION, "variation")
-
+      val deviation = fields.magneticAngleAt(DEVIATION, DEVIATION_DIRECTION)
+      val variation = fields.magneticAngleAt(VARIATION, VARIATION_DIRECTION)
       return Hdg(
         talker = fields.talker,
         heading = fields.doubleAt(HEADING),
-        deviation = deviation?.let { abs(it) },
-        deviationDirection = deviationDirection.takeIf { deviation != null },
-        variation = variation?.let { abs(it) },
-        variationDirection = variationDirection.takeIf { variation != null },
+        deviation = deviation.magnitude,
+        deviationDirection = deviation.direction,
+        variation = variation.magnitude,
+        variationDirection = variation.direction,
       )
-    }
-
-    private fun requireDirection(
-      fields: SentenceFields,
-      magnitude: Double?,
-      direction: CompassPoint?,
-      index: Int,
-      name: String,
-    ) {
-      if (magnitude != null && direction == null) {
-        throw NmeaFieldException(
-          "${fields.talker}$ID field $index: magnetic $name $magnitude has no E/W direction"
-        )
-      }
     }
   }
 }
@@ -174,9 +151,38 @@ public data class Hdt(override val talker: TalkerId, val heading: Double? = null
   }
 }
 
-/** Reads an `E`/`W` indicator field. */
-internal fun SentenceFields.eastWestAt(index: Int): CompassPoint? =
-  codedAt(index, listOf(CompassPoint.EAST, CompassPoint.WEST))
+/** A magnetic magnitude together with the direction that gives it a sign. */
+internal class MagneticAngle(val magnitude: Double?, val direction: CompassPoint?)
+
+/**
+ * Reads a magnetic magnitude and its `E`/`W` direction as one value, or nothing.
+ *
+ * The two fields only mean something together: a magnitude with no direction cannot be signed, and
+ * a direction with no magnitude says nothing. So either both are read or neither is, and a
+ * direction field holding something other than `E` or `W` discards the pair rather than the whole
+ * sentence.
+ *
+ * That last part is the tolerant half of the rule [SentenceFields.advisoryCodedAt] describes,
+ * applied to a pair instead of a field. The direction is load-bearing *for the magnitude* -- it is
+ * the sign, so misreading it inverts a compass correction -- but the pair as a whole is auxiliary
+ * to a sentence whose job is to report position, time, speed and course. Two receivers in this
+ * project's sample logs, a Saab R4 and a Motorola T805, put their FAA mode in this field; failing
+ * those lines would throw away a valid fix over a correction the device never sent.
+ */
+internal fun SentenceFields.magneticAngleAt(
+  magnitudeIndex: Int,
+  directionIndex: Int,
+): MagneticAngle {
+  val magnitude = doubleAt(magnitudeIndex)
+  val direction = advisoryCodedAt(directionIndex, EAST_WEST)
+  return if (magnitude == null || direction == null) {
+    MagneticAngle(null, null)
+  } else {
+    MagneticAngle(abs(magnitude), direction)
+  }
+}
+
+private val EAST_WEST = listOf(CompassPoint.EAST, CompassPoint.WEST)
 
 /** Rejects a magnitude that is negative, unpaired, or paired with a north/south indicator. */
 internal fun requireEastWest(magnitude: Double?, direction: CompassPoint?, name: String) {

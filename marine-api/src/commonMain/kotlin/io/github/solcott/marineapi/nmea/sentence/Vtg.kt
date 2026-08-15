@@ -82,7 +82,7 @@ public data class Vtg(
         courseMagnetic = fields.doubleAt(if (legacy) LEGACY_COURSE_MAGNETIC else COURSE_MAGNETIC),
         speedKnots = fields.doubleAt(if (legacy) LEGACY_SPEED_KNOTS else SPEED_KNOTS),
         speedKmh = fields.doubleAt(if (legacy) LEGACY_SPEED_KMH else SPEED_KMH),
-        faaMode = if (legacy) null else fields.codedAt(FAA_MODE, FaaMode.entries),
+        faaMode = if (legacy) null else fields.advisoryCodedAt(FAA_MODE, FaaMode.entries),
         isLegacyFormat = legacy,
       )
     }

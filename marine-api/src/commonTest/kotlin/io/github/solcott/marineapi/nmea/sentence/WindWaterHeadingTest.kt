@@ -143,10 +143,26 @@ class HdgTest {
   }
 
   @Test
-  fun magnitudeWithoutDirectionIsMalformed() {
-    val result = SentenceRegistry.Default.parse(Checksum.append("\$HCHDG,123.4,1.2,,4.8,W"))
-    val malformed = assertIs<ParseResult.Malformed>(result)
-    assertTrue("no E/W direction" in malformed.reason, malformed.reason)
+  fun aMagnitudeWithNoDirectionIsDroppedRatherThanSigned() {
+    // An earlier revision failed the sentence here. It now drops the unusable pair and keeps the
+    // heading, matching RMC: the correction is auxiliary to a sentence whose job is the heading,
+    // and two receivers in the sample logs put other values in this field entirely. What it must
+    // never do is guess a direction, which would report a compass correction the device did not
+    // send.
+    val hdg = parse<Hdg>(Checksum.append("\$HCHDG,123.4,1.2,,4.8,W"))
+    assertEquals(123.4, hdg.heading)
+    assertNull(hdg.deviation, "1.2 with no E/W cannot be signed, so there is no deviation")
+    assertNull(hdg.deviationDirection)
+    assertEquals(4.8, hdg.variation, "the variation pair is complete and survives")
+    assertEquals(CompassPoint.WEST, hdg.variationDirection)
+  }
+
+  @Test
+  fun aDirectionThatIsNotEastOrWestDropsThePairToo() {
+    val hdg = parse<Hdg>(Checksum.append("\$HCHDG,123.4,1.2,A,4.8,W"))
+    assertNull(hdg.deviation)
+    assertNull(hdg.deviationDirection)
+    assertEquals(4.8, hdg.variation)
   }
 
   @Test

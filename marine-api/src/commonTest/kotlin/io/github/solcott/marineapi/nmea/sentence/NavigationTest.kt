@@ -143,10 +143,14 @@ class RteTest {
   }
 
   @Test
-  fun rejectsAnUnknownRouteType() {
-    val result = SentenceRegistry.Default.parse(Checksum.append("\$GPRTE,1,1,x,0,MELIN"))
-    val malformed = assertIs<ParseResult.Malformed>(result)
-    assertTrue("one of [c, w]" in malformed.reason, malformed.reason)
+  fun readsARouteWhoseTypeCodeIsUnrecognised() {
+    // The route type says whether the list is the whole route or the remaining legs. It qualifies
+    // nothing else in the sentence, so an unrecognised code leaves it unknown rather than
+    // discarding a route that is otherwise perfectly readable.
+    val odd = parse<Rte>(Checksum.append("\$GPRTE,1,1,x,0,MELIN"))
+    assertNull(odd.routeType)
+    assertEquals(listOf("MELIN"), odd.waypoints)
+    assertEquals("0", odd.routeId)
   }
 }
 

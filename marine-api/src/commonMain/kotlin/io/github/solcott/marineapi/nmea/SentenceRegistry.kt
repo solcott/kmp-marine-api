@@ -140,7 +140,13 @@ private constructor(private val factories: Map<String, SentenceFactory>) {
 
     return try {
       ParseResult.Ok(line, factory.create(fields))
-    } catch (e: NmeaFieldException) {
+    } catch (e: IllegalArgumentException) {
+      // Not just NmeaFieldException, which is one subclass of this. The value types reject
+      // impossible values in their own `init` blocks -- a latitude past 90 degrees, a GSV with
+      // more satellites than the format allows -- with a plain `require`, and a receiver with no
+      // fix really does emit such values: one in the sample logs reports 36000.0000 as a latitude
+      // while flagging the fix void. Letting that escape would make a malformed line crash the
+      // caller, when the whole point of returning ParseResult is that it should not.
       ParseResult.Malformed(line, e.message ?: "Invalid field")
     }
   }

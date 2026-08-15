@@ -61,8 +61,8 @@ public data class Gll(
         position =
           fields.positionAt(LATITUDE, LATITUDE_HEMISPHERE, LONGITUDE, LONGITUDE_HEMISPHERE),
         time = fields.timeAt(TIME),
-        status = fields.codedAt(STATUS, DataStatus.entries),
-        faaMode = fields.codedAt(FAA_MODE, FaaMode.entries),
+        status = fields.advisoryCodedAt(STATUS, DataStatus.entries),
+        faaMode = fields.advisoryCodedAt(FAA_MODE, FaaMode.entries),
       )
   }
 }

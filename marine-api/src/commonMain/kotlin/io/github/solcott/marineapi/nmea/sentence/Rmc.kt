@@ -6,7 +6,6 @@ import io.github.solcott.marineapi.nmea.Degrees
 import io.github.solcott.marineapi.nmea.FaaMode
 import io.github.solcott.marineapi.nmea.NavStatus
 import io.github.solcott.marineapi.nmea.NmeaDateTime
-import io.github.solcott.marineapi.nmea.NmeaFieldException
 import io.github.solcott.marineapi.nmea.Position
 import io.github.solcott.marineapi.nmea.Sentence
 import io.github.solcott.marineapi.nmea.SentenceFields
@@ -14,7 +13,6 @@ import io.github.solcott.marineapi.nmea.TalkerId
 import io.github.solcott.marineapi.nmea.buildNmea
 import io.github.solcott.marineapi.nmea.field
 import io.github.solcott.marineapi.nmea.positionAt
-import kotlin.math.abs
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 
@@ -115,30 +113,20 @@ public data class Rmc(
 
     /** Reads an RMC sentence from its fields. */
     public fun from(fields: SentenceFields): Rmc {
-      val variation = fields.doubleAt(MAGNETIC_VARIATION)
-      val direction = fields.eastWestAt(VARIATION_HEMISPHERE)
-      // A magnitude with no E/W field cannot be signed. Guessing a direction would turn a
-      // malformed sentence into a plausible-looking heading error, so report it instead.
-      if (variation != null && direction == null) {
-        throw NmeaFieldException(
-          "${fields.talker}$ID field $VARIATION_HEMISPHERE: magnetic variation " +
-            "$variation has no E/W direction"
-        )
-      }
+      val variation = fields.magneticAngleAt(MAGNETIC_VARIATION, VARIATION_HEMISPHERE)
       return Rmc(
         talker = fields.talker,
         time = fields.timeAt(TIME),
-        status = fields.codedAt(STATUS, DataStatus.entries),
+        status = fields.advisoryCodedAt(STATUS, DataStatus.entries),
         position =
           fields.positionAt(LATITUDE, LATITUDE_HEMISPHERE, LONGITUDE, LONGITUDE_HEMISPHERE),
         speedKnots = fields.doubleAt(SPEED),
         courseTrue = fields.doubleAt(COURSE),
         date = fields.dateAt(DATE),
-        magneticVariation = variation?.let { abs(it) },
-        // A direction with no magnitude says nothing, so it is dropped rather than kept.
-        variationDirection = direction.takeIf { variation != null },
-        faaMode = fields.codedAt(FAA_MODE, FaaMode.entries),
-        navStatus = fields.codedAt(NAV_STATUS, NavStatus.entries),
+        magneticVariation = variation.magnitude,
+        variationDirection = variation.direction,
+        faaMode = fields.advisoryCodedAt(FAA_MODE, FaaMode.entries),
+        navStatus = fields.advisoryCodedAt(NAV_STATUS, NavStatus.entries),
       )
     }
   }

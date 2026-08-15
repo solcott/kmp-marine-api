@@ -257,14 +257,14 @@ public data class Vbw(
         talker = fields.talker,
         longitudinalWaterSpeed = fields.doubleAt(LONGITUDINAL_WATER),
         transverseWaterSpeed = fields.doubleAt(TRANSVERSE_WATER),
-        waterSpeedStatus = fields.codedAt(WATER_STATUS, DataStatus.entries),
+        waterSpeedStatus = fields.advisoryCodedAt(WATER_STATUS, DataStatus.entries),
         longitudinalGroundSpeed = fields.doubleAt(LONGITUDINAL_GROUND),
         transverseGroundSpeed = fields.doubleAt(TRANSVERSE_GROUND),
-        groundSpeedStatus = fields.codedAt(GROUND_STATUS, DataStatus.entries),
+        groundSpeedStatus = fields.advisoryCodedAt(GROUND_STATUS, DataStatus.entries),
         sternTransverseWaterSpeed = fields.doubleAt(STERN_WATER),
-        sternWaterSpeedStatus = fields.codedAt(STERN_WATER_STATUS, DataStatus.entries),
+        sternWaterSpeedStatus = fields.advisoryCodedAt(STERN_WATER_STATUS, DataStatus.entries),
         sternTransverseGroundSpeed = fields.doubleAt(STERN_GROUND),
-        sternGroundSpeedStatus = fields.codedAt(STERN_GROUND_STATUS, DataStatus.entries),
+        sternGroundSpeedStatus = fields.advisoryCodedAt(STERN_GROUND_STATUS, DataStatus.entries),
       )
   }
 }

@@ -53,7 +53,7 @@ public data class Rot(
       Rot(
         talker = fields.talker,
         rateOfTurn = fields.doubleAt(RATE_OF_TURN),
-        status = fields.codedAt(STATUS, DataStatus.entries),
+        status = fields.advisoryCodedAt(STATUS, DataStatus.entries),
       )
   }
 }
@@ -122,9 +122,9 @@ public data class Rsa(
       Rsa(
         talker = fields.talker,
         starboardAngle = fields.doubleAt(STARBOARD_ANGLE),
-        starboardStatus = fields.codedAt(STARBOARD_STATUS, DataStatus.entries),
+        starboardStatus = fields.advisoryCodedAt(STARBOARD_STATUS, DataStatus.entries),
         portAngle = fields.doubleAt(PORT_ANGLE),
-        portStatus = fields.codedAt(PORT_STATUS, DataStatus.entries),
+        portStatus = fields.advisoryCodedAt(PORT_STATUS, DataStatus.entries),
       )
   }
 }
@@ -201,11 +201,11 @@ public data class Osd(
       Osd(
         talker = fields.talker,
         heading = fields.doubleAt(HEADING),
-        headingStatus = fields.codedAt(HEADING_STATUS, DataStatus.entries),
+        headingStatus = fields.advisoryCodedAt(HEADING_STATUS, DataStatus.entries),
         course = fields.doubleAt(COURSE),
-        courseReference = fields.codedAt(COURSE_REFERENCE, ReferenceSystem.entries),
+        courseReference = fields.advisoryCodedAt(COURSE_REFERENCE, ReferenceSystem.entries),
         speed = fields.doubleAt(SPEED),
-        speedReference = fields.codedAt(SPEED_REFERENCE, ReferenceSystem.entries),
+        speedReference = fields.advisoryCodedAt(SPEED_REFERENCE, ReferenceSystem.entries),
         vesselSet = fields.doubleAt(VESSEL_SET),
         vesselDrift = fields.doubleAt(VESSEL_DRIFT),
         speedUnits = fields.codedAt(SPEED_UNITS, RADAR_DISTANCE_UNITS),
@@ -313,7 +313,7 @@ public data class Rsd(
         cursorBearing = fields.doubleAt(CURSOR_BEARING),
         rangeScale = fields.doubleAt(RANGE_SCALE),
         rangeUnits = fields.codedAt(RANGE_UNITS, RADAR_DISTANCE_UNITS),
-        displayRotation = fields.codedAt(DISPLAY_ROTATION, DisplayRotation.entries),
+        displayRotation = fields.advisoryCodedAt(DISPLAY_ROTATION, DisplayRotation.entries),
       )
   }
 }
@@ -424,10 +424,10 @@ public data class Ttm(
         timeToClosestPointOfApproach = fields.doubleAt(CPA_TIME),
         units = fields.codedAt(UNITS, RADAR_DISTANCE_UNITS),
         name = fields.stringAt(NAME),
-        status = fields.codedAt(STATUS, TargetStatus.entries),
+        status = fields.advisoryCodedAt(STATUS, TargetStatus.entries),
         isReferenceTarget = fields.readReferenceTarget(REFERENCE_TARGET),
         time = fields.timeAt(TIME),
-        acquisitionType = fields.codedAt(ACQUISITION_TYPE, AcquisitionType.entries),
+        acquisitionType = fields.advisoryCodedAt(ACQUISITION_TYPE, AcquisitionType.entries),
       )
   }
 }
@@ -497,7 +497,7 @@ public data class Tll(
           fields.positionAt(LATITUDE, LATITUDE_HEMISPHERE, LONGITUDE, LONGITUDE_HEMISPHERE),
         name = fields.stringAt(NAME),
         time = fields.timeAt(TIME),
-        status = fields.codedAt(STATUS, TargetStatus.entries),
+        status = fields.advisoryCodedAt(STATUS, TargetStatus.entries),
         isReferenceTarget = fields.readReferenceTarget(REFERENCE_TARGET),
       )
   }
