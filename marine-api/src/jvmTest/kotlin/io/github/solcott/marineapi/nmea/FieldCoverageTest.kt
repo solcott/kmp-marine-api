@@ -19,6 +19,10 @@ class FieldCoverageTest {
     listOf(
       "/data/sample1.txt",
       "/data/Garmin-GPS76.txt",
+      "/data/Garmin-GPS15.txt",
+      "/data/Garmin-GPS76_diff.txt",
+      "/data/Garmin-GPS76_goto.txt",
+      "/data/Garmin-GPS76_route.txt",
       "/data/Garmin-GPS15H.txt",
       "/data/Navibe-GM720.txt",
       "/data/AISsample.txt",

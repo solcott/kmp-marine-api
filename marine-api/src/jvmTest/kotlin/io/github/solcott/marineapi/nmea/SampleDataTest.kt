@@ -1,6 +1,7 @@
 package io.github.solcott.marineapi.nmea
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
@@ -20,6 +21,10 @@ class SampleDataTest {
     listOf(
       "/data/sample1.txt",
       "/data/Garmin-GPS76.txt",
+      "/data/Garmin-GPS15.txt",
+      "/data/Garmin-GPS76_diff.txt",
+      "/data/Garmin-GPS76_goto.txt",
+      "/data/Garmin-GPS76_route.txt",
       "/data/Garmin-GPS15H.txt",
       "/data/Navibe-GM720.txt",
       "/data/AISsample.txt",
@@ -70,6 +75,74 @@ class SampleDataTest {
         "${failures.size} of $total lines failed to parse:\n" + failures.take(20).joinToString("\n")
       )
     }
+  }
+
+  /**
+   * Sentence types the corpus actually contains, and how many of each.
+   *
+   * Which types have real device data behind them and which rest only on the reference examples is
+   * not something to re-derive by hand each time a batch lands -- getting it wrong overstates how
+   * well a type has been tested. Recording it here means a corpus file dropped from [samples], or a
+   * newly ported type that turns out to have real data waiting for it, both show up as a diff.
+   *
+   * `GRME`, `GRMM`, `GRMV`, `GRMZ` and `GRMT` are Garmin's proprietary sentences, parsed as
+   * [UnknownSentence] but counted the same way.
+   */
+  private val expectedCoverage =
+    mapOf(
+      "GSA" to 1182,
+      "GGA" to 1179,
+      "GRME" to 1143,
+      "GRMM" to 1142,
+      "GSV" to 924,
+      "RMC" to 798,
+      "GRMV" to 381,
+      "VDM" to 36,
+      "GLL" to 35,
+      "BOD" to 32,
+      "GRMZ" to 32,
+      "GRMT" to 31,
+      "RMB" to 29,
+      "RTE" to 26,
+      "WPL" to 5,
+      "MWV" to 4,
+      "VDO" to 4,
+      "VHW" to 3,
+      "VLW" to 3,
+      "VPW" to 3,
+      "VTG" to 3,
+      "VWR" to 3,
+      "VWT" to 3,
+      "XTE" to 3,
+      "DBT" to 3,
+      "HDM" to 3,
+      "MTA" to 3,
+      "MTW" to 3,
+      "MWD" to 3,
+      "DPT" to 1,
+    )
+
+  @Test
+  fun theCorpusCoversTheseSentenceTypes() {
+    val counts = mutableMapOf<String, Int>()
+    for (resource in samples) {
+      for (line in linesOf(resource)) {
+        if (line.isBlank() || !Nmea.isBeginChar(line[0])) continue
+        val id = SentenceRegistry.Default.parse(line).sentenceOrNull()?.id ?: continue
+        counts[id] = (counts[id] ?: 0) + 1
+      }
+    }
+    assertEquals(expectedCoverage, counts.toMap())
+  }
+
+  @Test
+  fun everyPortedTypeWithCorpusDataIsExercised() {
+    // A registered type the corpus can validate should be validated. These four appear in no
+    // capture, so they rest on the reference examples and the fixtures of the suite this replaces:
+    // APB and HDG are instrument sentences no GPS emits, HDT likewise, and none of these receivers
+    // sends ZDA.
+    val withoutCorpusData = SentenceRegistry.Default.types - expectedCoverage.keys
+    assertEquals(setOf("APB", "HDG", "HDT", "ZDA"), withoutCorpusData)
   }
 
   @Test
