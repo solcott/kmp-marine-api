@@ -1,5 +1,7 @@
 package io.github.solcott.marineapi.nmea.sentence
 
+import io.github.solcott.marineapi.nmea.FaaMode
+import io.github.solcott.marineapi.nmea.NmeaDateTime
 import io.github.solcott.marineapi.nmea.Position
 import io.github.solcott.marineapi.nmea.RouteType
 import io.github.solcott.marineapi.nmea.Sentence
@@ -10,6 +12,7 @@ import io.github.solcott.marineapi.nmea.buildNmea
 import io.github.solcott.marineapi.nmea.field
 import io.github.solcott.marineapi.nmea.positionAt
 import io.github.solcott.marineapi.nmea.positionFields
+import kotlinx.datetime.LocalTime
 
 /**
  * Bearing from one waypoint to another.
@@ -204,6 +207,104 @@ public data class Rte(
         routeType = fields.advisoryCodedAt(ROUTE_TYPE, RouteType.entries),
         routeId = fields.stringAt(ROUTE_ID),
         waypointIds = fields.stringsFrom(FIRST_WAYPOINT),
+      )
+  }
+}
+
+/**
+ * Bearing and great-circle distance to a waypoint, with the waypoint's position and the time.
+ *
+ * Example: `$GPBWC,220516,5130.02,N,00046.34,W,213.8,T,218.0,M,0004.6,N,EGLM*11`
+ *
+ * The sentence [Bod] was replaced by in NMEA 4.00, and it says considerably more: where the
+ * waypoint is, how far off it is, and when that was true. Unlike BOD's leg bearing, this is
+ * measured from where the vessel is now, so it changes as the vessel moves.
+ *
+ * A receiver with no active waypoint still emits it, empty apart from the markers, as in
+ * `$GPBWC,125106,,,,,,T,,M,,N,,S`.
+ *
+ * The `T`, `M` and `N` fields are fixed markers and are written back as constants.
+ *
+ * @property time UTC of the observation
+ * @property waypointPosition where the waypoint is
+ * @property bearingTrue bearing to the waypoint in degrees true
+ * @property bearingMagnetic bearing to the waypoint in degrees magnetic
+ * @property distanceNauticalMiles great-circle distance to the waypoint
+ * @property waypointId the waypoint's name
+ * @property faaMode FAA mode indicator, added in NMEA 2.3
+ */
+public data class Bwc(
+  override val talker: TalkerId,
+  val time: LocalTime? = null,
+  val waypointPosition: Position? = null,
+  val bearingTrue: Double? = null,
+  val bearingMagnetic: Double? = null,
+  val distanceNauticalMiles: Double? = null,
+  val waypointId: String? = null,
+  val faaMode: FaaMode? = null,
+) : Sentence {
+
+  override val id: String
+    get() = ID
+
+  /** [waypointPosition] and [waypointId] together, or `null` when either is missing. */
+  public val waypoint: Waypoint?
+    get() =
+      if (waypointPosition != null && waypointId != null) {
+        Waypoint(waypointId, waypointPosition)
+      } else {
+        null
+      }
+
+  override fun toNmeaString(): String =
+    buildNmea(
+      talker,
+      ID,
+      listOf(time?.let { NmeaDateTime.formatTime(it) }) +
+        positionFields(waypointPosition) +
+        listOf(
+          bearingTrue.field(),
+          TRUE_MARKER.toString(),
+          bearingMagnetic.field(),
+          MAGNETIC_MARKER.toString(),
+          distanceNauticalMiles.field(),
+          NAUTICAL_MILES_MARKER.toString(),
+          waypointId,
+          faaMode.field(),
+        ),
+    )
+
+  public companion object {
+    /** Sentence type code. */
+    public const val ID: String = "BWC"
+
+    private const val TRUE_MARKER = 'T'
+    private const val MAGNETIC_MARKER = 'M'
+    private const val NAUTICAL_MILES_MARKER = 'N'
+
+    private const val TIME = 0
+    private const val LATITUDE = 1
+    private const val LATITUDE_HEMISPHERE = 2
+    private const val LONGITUDE = 3
+    private const val LONGITUDE_HEMISPHERE = 4
+    private const val BEARING_TRUE = 5
+    private const val BEARING_MAGNETIC = 7
+    private const val DISTANCE = 9
+    private const val WAYPOINT_ID = 11
+    private const val FAA_MODE = 12
+
+    /** Reads a BWC sentence from its fields. */
+    public fun from(fields: SentenceFields): Bwc =
+      Bwc(
+        talker = fields.talker,
+        time = fields.timeAt(TIME),
+        waypointPosition =
+          fields.positionAt(LATITUDE, LATITUDE_HEMISPHERE, LONGITUDE, LONGITUDE_HEMISPHERE),
+        bearingTrue = fields.doubleAt(BEARING_TRUE),
+        bearingMagnetic = fields.doubleAt(BEARING_MAGNETIC),
+        distanceNauticalMiles = fields.doubleAt(DISTANCE),
+        waypointId = fields.stringAt(WAYPOINT_ID),
+        faaMode = fields.advisoryCodedAt(FAA_MODE, FaaMode.entries),
       )
   }
 }

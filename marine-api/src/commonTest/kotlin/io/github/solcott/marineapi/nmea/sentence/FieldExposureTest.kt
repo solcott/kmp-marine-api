@@ -112,6 +112,21 @@ class FieldExposureTest {
       "\$IIMDA,29.9,I,1.01,B,3.2,C,4.1,C,66.0,5.0,3.0,C,295.19,T,301.2,M,5.70,N,2.93,M",
       // two transducer quadruples: type, value, unit, name
       "\$IIXDR,P,1.02481,B,Barometer,C,21.5,C,AirTemp",
+      // time, lat, N/S, lon, E/W, mode indicator, satellites, HDOP, altitude, geoid separation,
+      // dgps age, dgps station, nav status
+      "\$GNGNS,043539.00,4333.190206,N,00127.618380,E,AAAAN,14,1.3,250.8,50.0,1.5,0123,V",
+      // time, RMS residual, semi-major, semi-minor, orientation, lat error, lon error, alt error
+      "\$GPGST,182141.000,15.5,15.3,7.2,21.8,0.9,0.5,0.8",
+      // time, lat error, lon error, alt error, satellite, probability, bias, deviation,
+      // system id, signal id
+      "\$GPGBS,125027.00,23.43,13.91,34.01,12,0.5,1.2,0.3,1,1",
+      // datum code, subcode, lat offset, N/S, lon offset, E/W, altitude offset, datum name
+      "\$GPDTM,W84,C,0.5,N,0.6,E,1.2,W84",
+      // message count, index, identifier, message
+      "\$GPTXT,01,01,TARG1,Message",
+      // time, lat, N/S, lon, E/W, bearing true, T, bearing magnetic, M, distance, N,
+      // waypoint id, FAA mode
+      "\$GPBWC,220516,5130.02,N,00046.34,W,213.8,T,218.0,M,0004.6,N,EGLM,A",
     )
 
   @Test
