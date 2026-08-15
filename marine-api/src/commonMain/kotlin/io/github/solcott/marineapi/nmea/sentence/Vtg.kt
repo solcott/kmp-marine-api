@@ -73,9 +73,23 @@ public data class Vtg(
     private const val LEGACY_SPEED_KNOTS = 2
     private const val LEGACY_SPEED_KMH = 3
 
+    /**
+     * Fewest fields the modern form has: through the `K` marker, before the NMEA 2.3 FAA mode.
+     *
+     * The pre-3.01 form is four bare numbers, so anything this long is the modern one whatever its
+     * marker fields say.
+     */
+    private const val MODERN_MINIMUM_FIELDS = 8
+
     /** Reads a VTG sentence from its fields, in either the modern or the pre-3.01 form. */
     public fun from(fields: SentenceFields): Vtg {
-      val legacy = fields.stringAt(TRUE_INDICATOR) != TRUE_MARKER.toString()
+      // The `T` marker alone is not enough to tell the forms apart. A Bluetooth receiver in the
+      // sample logs sends `$GPVTG,,,,,,,,,N` -- the modern nine-field form with every value empty,
+      // markers included -- and reading that as the legacy form dropped its FAA mode and made the
+      // sentence re-encode into the other format. Length settles it when the marker is absent.
+      val legacy =
+        fields.stringAt(TRUE_INDICATOR) != TRUE_MARKER.toString() &&
+          fields.size < MODERN_MINIMUM_FIELDS
       return Vtg(
         talker = fields.talker,
         courseTrue = fields.doubleAt(COURSE_TRUE),

@@ -35,8 +35,16 @@ public object Degrees {
   /** Fewest minute decimals written, matching what most receivers emit. */
   public const val MIN_MINUTE_DECIMALS: Int = 3
 
-  /** Most minute decimals written; beyond this the digits are below any receiver's resolution. */
-  public const val MAX_MINUTE_DECIMALS: Int = 7
+  /**
+   * Most minute decimals written.
+   *
+   * Eight, because that is what survey-grade receivers send: 704 coordinate fields in the gpsd
+   * corpus carry eight, from RTK hardware like the u-blox ZED-F9P. This was seven until that corpus
+   * arrived, which silently rounded those fields and stopped them re-encoding to themselves. The
+   * eighth decimal of a minute is about 19 micrometres, well past what any receiver resolves, but
+   * the device sent it and dropping it is not this library's call.
+   */
+  public const val MAX_MINUTE_DECIMALS: Int = 8
 
   /**
    * Formats decimal [degrees] as `ddmm.mmm`, with [degreeDigits] digits of degrees.

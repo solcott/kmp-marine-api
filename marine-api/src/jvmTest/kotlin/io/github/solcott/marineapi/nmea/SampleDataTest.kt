@@ -137,21 +137,21 @@ class SampleDataTest {
 
   @Test
   fun everyPortedTypeWithCorpusDataIsExercised() {
-    // A registered type the corpus can validate should be validated. These are the ones it
-    // cannot: instrument and radar sentences no GPS receiver emits, plus ZDA, which none of
-    // these receivers sends. They rest on the reference tables and the fixtures of the suite
-    // this replaces, which is weaker evidence -- worth knowing rather than assuming.
-    val withoutCorpusData = SentenceRegistry.Default.types - expectedCoverage.keys
+    // A registered type that either corpus can validate should be validated. What is left is the
+    // set resting only on reference tables and the fixtures of the suite this replaces -- weaker
+    // evidence, worth naming rather than assuming. It is now the radar and autopilot group, the
+    // meteorological composite and its single-value siblings, plus HDG, VBW and VDR: instrument
+    // sentences that no GPS receiver emits and so appear in no capture anyone has published.
+    val withRealData = expectedCoverage.keys + GpsdCorpusTest.typeCoverage().keys
+    val withoutCorpusData = SentenceRegistry.Default.types - withRealData
     assertEquals(
       setOf(
         "APB",
         "HDG",
-        "HDT",
         "MDA",
         "MHU",
         "MMB",
         "OSD",
-        "ROT",
         "RSA",
         "RSD",
         "TLB",
@@ -159,8 +159,6 @@ class SampleDataTest {
         "TTM",
         "VBW",
         "VDR",
-        "XDR",
-        "ZDA",
       ),
       withoutCorpusData,
     )
