@@ -64,6 +64,11 @@ public enum class Side(override val code: Char) : CharCoded {
  *
  * The codes are case-sensitive: `F` is fathoms while `f` is feet, a distinction the format relies
  * on in depth sentences.
+ *
+ * A code means different things in different sentences -- `B` is bars in a pressure field, and `P`
+ * is pascals in one but percent of full range in another -- so a sentence reads the subset its own
+ * field allows rather than the whole set. XDR, where the same letter is genuinely ambiguous within
+ * one sentence, keeps its units as raw text instead.
  */
 public enum class Units(override val code: Char) : CharCoded {
   BARS('B'),
@@ -74,5 +79,6 @@ public enum class Units(override val code: Char) : CharCoded {
   KILOMETERS('K'),
   METER('M'),
   NAUTICAL_MILES('N'),
+  PASCAL('P'),
   STATUTE_MILES('S'),
 }

@@ -394,6 +394,9 @@ class SentenceRoundTripTest {
 
   @Test
   fun unportedTypesStillParseAsUnknown() {
-    assertIs<UnknownSentence>(SentenceRegistry.Default.parse("\$IIMTA,17.9,C").sentenceOrNull())
+    assertIs<UnknownSentence>(
+      SentenceRegistry.Default.parse("\$GPGST,024603.00,3.2,6.6,4.2,205.5,3.3,2.8,2.9")
+        .sentenceOrNull()
+    )
   }
 }

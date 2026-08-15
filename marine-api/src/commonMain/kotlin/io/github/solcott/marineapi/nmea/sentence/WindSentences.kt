@@ -56,6 +56,9 @@ public data class Mwv(
     private const val SPEED_UNITS = 3
     private const val STATUS = 4
 
+    // The field is documented as K, M or N; it is not a free choice among every unit code.
+    private val WIND_SPEED_UNITS = listOf(Units.KILOMETERS, Units.METER, Units.NAUTICAL_MILES)
+
     /** Reads an MWV sentence from its fields. */
     public fun from(fields: SentenceFields): Mwv =
       Mwv(
@@ -63,7 +66,7 @@ public data class Mwv(
         windAngle = fields.doubleAt(WIND_ANGLE),
         reference = fields.codedAt(REFERENCE, AngleReference.entries),
         windSpeed = fields.doubleAt(WIND_SPEED),
-        speedUnits = fields.codedAt(SPEED_UNITS, Units.entries),
+        speedUnits = fields.codedAt(SPEED_UNITS, WIND_SPEED_UNITS),
         status = fields.codedAt(STATUS, DataStatus.entries),
       )
   }

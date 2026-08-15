@@ -137,16 +137,19 @@ class SampleDataTest {
 
   @Test
   fun everyPortedTypeWithCorpusDataIsExercised() {
-    // A registered type the corpus can validate should be validated. These four appear in no
-    // capture, so they rest on the reference examples and the fixtures of the suite this replaces:
-    // APB and HDG are instrument sentences no GPS emits, HDT likewise, and none of these receivers
-    // sends ZDA.
+    // A registered type the corpus can validate should be validated. These are the ones it
+    // cannot: instrument and radar sentences no GPS receiver emits, plus ZDA, which none of
+    // these receivers sends. They rest on the reference tables and the fixtures of the suite
+    // this replaces, which is weaker evidence -- worth knowing rather than assuming.
     val withoutCorpusData = SentenceRegistry.Default.types - expectedCoverage.keys
     assertEquals(
       setOf(
         "APB",
         "HDG",
         "HDT",
+        "MDA",
+        "MHU",
+        "MMB",
         "OSD",
         "ROT",
         "RSA",
@@ -156,6 +159,7 @@ class SampleDataTest {
         "TTM",
         "VBW",
         "VDR",
+        "XDR",
         "ZDA",
       ),
       withoutCorpusData,

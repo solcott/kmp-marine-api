@@ -101,6 +101,17 @@ class FieldExposureTest {
       "\$RATLL,01,3731.512,N,02436.000,E,ANDROS,163700.86,T,R",
       // three target number and label pairs
       "\$RATLB,1,SHIPONE,2,SHIPTWO,3,SHIPTHREE",
+      // air temperature, C
+      "\$IIMTA,21.5,C",
+      // inches of mercury, I, bars, B
+      "\$IIMMB,29.9870,I,1.0154,B",
+      // relative humidity, absolute humidity, dew point, C
+      "\$IIMHU,66.0,5.0,3.0,C",
+      // pressure, I/P, pressure bars, B, air temp, C, water temp, C, relative humidity,
+      // absolute humidity, dew point, C, wind true, T, wind magnetic, M, knots, N, m/s, M
+      "\$IIMDA,29.9,I,1.01,B,3.2,C,4.1,C,66.0,5.0,3.0,C,295.19,T,301.2,M,5.70,N,2.93,M",
+      // two transducer quadruples: type, value, unit, name
+      "\$IIXDR,P,1.02481,B,Barometer,C,21.5,C,AirTemp",
     )
 
   @Test
