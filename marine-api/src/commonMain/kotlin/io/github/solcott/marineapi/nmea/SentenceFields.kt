@@ -1,5 +1,8 @@
 package io.github.solcott.marineapi.nmea
 
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+
 /**
  * Thrown when a field holds a value that cannot be read as the requested type.
  *
@@ -73,6 +76,52 @@ internal constructor(
     return raw[0]
   }
 
+  /**
+   * Field at [index] as an `hhmmss[.sss]` time of day, or `null` if empty.
+   *
+   * @throws NmeaFieldException if the field is present but not a time.
+   */
+  public fun timeAt(index: Int): LocalTime? {
+    val raw = stringAt(index) ?: return null
+    return runCatching { NmeaDateTime.parseTime(raw) }
+      .getOrElse { throw NmeaFieldException(fieldError(index, raw, "a time")) }
+  }
+
+  /**
+   * Field at [index] as a `ddmmyy` date, or `null` if empty.
+   *
+   * @throws NmeaFieldException if the field is present but not a date.
+   */
+  public fun dateAt(index: Int): LocalDate? {
+    val raw = stringAt(index) ?: return null
+    return runCatching { NmeaDateTime.parseDate(raw) }
+      .getOrElse { throw NmeaFieldException(fieldError(index, raw, "a date")) }
+  }
+
+  /**
+   * Field at [index] as one of [entries], matched on [CharCoded.code], or `null` if empty.
+   *
+   * ```
+   * val status = fields.codedAt(1, DataStatus.entries)
+   * ```
+   *
+   * @throws NmeaFieldException if the field holds a code none of [entries] declares. An
+   *   unrecognised code is corruption or an unsupported dialect, not absence, so it is reported
+   *   rather than folded into `null`.
+   */
+  public fun <T : CharCoded> codedAt(index: Int, entries: Iterable<T>): T? {
+    val char = charAt(index) ?: return null
+    return entries.fromCode(char)
+      ?: throw NmeaFieldException(fieldError(index, char.toString(), expectedOneOf(entries)))
+  }
+
+  /** Field at [index] as one of [entries], matched on [IntCoded.code], or `null` if empty. */
+  public fun <T : IntCoded> intCodedAt(index: Int, entries: Iterable<T>): T? {
+    val value = intAt(index) ?: return null
+    return entries.fromCode(value)
+      ?: throw NmeaFieldException(fieldError(index, value.toString(), expectedOneOf(entries)))
+  }
+
   /** Every field from [first] onwards, for the sentences that carry variable-length lists. */
   public fun stringsFrom(first: Int): List<String?> =
     if (first >= fields.size) emptyList()
@@ -80,6 +129,15 @@ internal constructor(
 
   private fun fieldError(index: Int, raw: String, expected: String): String =
     "$talker$id field $index is not $expected: \"$raw\""
+
+  private fun expectedOneOf(entries: Iterable<*>): String =
+    entries.joinToString(prefix = "one of [", postfix = "]") {
+      when (it) {
+        is CharCoded -> it.code.toString()
+        is IntCoded -> it.code.toString()
+        else -> it.toString()
+      }
+    }
 
   override fun toString(): String = "$beginChar$talker$id,${fields.joinToString(",")}"
 }

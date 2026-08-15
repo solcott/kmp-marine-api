@@ -37,6 +37,7 @@ kotlin {
     // commonTest uses kotlin.test. On the jvm target that resolves to kotlin-test-junit
     // because jvmTest is configured with useJUnit(), so the common tests and the legacy
     // Java JUnit 4 suite run in the same task.
+    commonMain.dependencies { api(libs.kotlinx.datetime) }
     commonTest.dependencies { implementation(libs.kotlin.test) }
     jvmTest.dependencies { implementation(libs.junit) }
   }

@@ -2,6 +2,7 @@
 agp = "9.3.1"
 kotlin = "2.4.10"
 junit = "4.13.2"
+kotlinx-datetime = "0.7.0"
 nrjavaserial = "5.2.1"
 #noinspection UnusedVersionCatalogEntry
 androidCompileSdk = "37"
@@ -19,6 +20,7 @@ publish = "0.37.0"
 android-gradle-plugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 ktfmt-gradle-plugin = { module = "com.ncorti.ktfmt.gradle:com.ncorti.ktfmt.gradle.gradle.plugin", version.ref = "ktfmt" }
 nrjavaserial = { module = "com.neuronrobotics:nrjavaserial", version.ref = "nrjavaserial" }
