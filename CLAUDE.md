@@ -55,6 +55,8 @@ These are non-obvious and easy to break:
 - `jvmTest` runs with `maxParallelForks = 1`: `SentenceReaderTest.testSetDatagramSocket` binds a fixed UDP port 3810 that `UDPServerMock` also uses, and several tests assert on `Thread.sleep` timing.
 - **`commonMain` must never go back to being empty.** With no common Kotlin source the Kotlin/Native compilations are `NO-SOURCE`, produce no `.klib`, and the three Apple publications fail. The `MarineApi.kt` placeholder that used to guarantee this was deleted once the port began. `:examples` needs no such placeholder — it has zero Kotlin sources anywhere, and `compileJvmMainJava` still runs with `compileKotlinJvm` at `NO-SOURCE`.
 - `explicitApi()` is on for `:marine-api`: every public declaration needs an explicit visibility and return type.
+- **The IO layer must not choose a dispatcher.** `Source.nmeaResults()`/`nmeaSentences()` read blocking sources on the collecting coroutine. `Dispatchers.IO` exists on JVM and Native but not JS or Wasm, so callers add `.flowOn(...)` themselves. Do not import it into `commonMain`.
+- **Do not replace `NmeaLineReader` with `kotlinx.io.readLine`.** That splits on `LF` alone; NMEA uses `CRLF`, and captures in the corpus use a lone `CR` throughout or mix both in one file. An `LF`-only split turns a `CR`-terminated feed into one unbounded line.
 
 ## Code style
 
