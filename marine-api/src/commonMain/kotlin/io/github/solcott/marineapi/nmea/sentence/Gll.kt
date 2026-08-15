@@ -1,7 +1,6 @@
 package io.github.solcott.marineapi.nmea.sentence
 
 import io.github.solcott.marineapi.nmea.DataStatus
-import io.github.solcott.marineapi.nmea.Degrees
 import io.github.solcott.marineapi.nmea.FaaMode
 import io.github.solcott.marineapi.nmea.NmeaDateTime
 import io.github.solcott.marineapi.nmea.Position
@@ -11,6 +10,7 @@ import io.github.solcott.marineapi.nmea.TalkerId
 import io.github.solcott.marineapi.nmea.buildNmea
 import io.github.solcott.marineapi.nmea.field
 import io.github.solcott.marineapi.nmea.positionAt
+import io.github.solcott.marineapi.nmea.positionFields
 import kotlinx.datetime.LocalTime
 
 /**
@@ -38,15 +38,8 @@ public data class Gll(
     buildNmea(
       talker,
       ID,
-      listOf(
-        position?.let { Degrees.format(it.latitude, degreeDigits = 2) },
-        position?.latitudeHemisphere.field(),
-        position?.let { Degrees.format(it.longitude, degreeDigits = 3) },
-        position?.longitudeHemisphere.field(),
-        time?.let { NmeaDateTime.formatTime(it) },
-        status.field(),
-        faaMode.field(),
-      ),
+      positionFields(position) +
+        listOf(time?.let { NmeaDateTime.formatTime(it) }, status.field(), faaMode.field()),
     )
 
   public companion object {

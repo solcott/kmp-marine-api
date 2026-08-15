@@ -52,8 +52,13 @@ public enum class TurnMode(override val code: Char) : CharCoded {
  * Unusually for NMEA, these codes are lower case.
  */
 public enum class RouteType(override val code: Char) : CharCoded {
-  /** Complete route, all waypoints. */
-  ACTIVE('c'),
-  /** Working route, the remaining waypoints. */
+  /**
+   * Complete route: every waypoint in it.
+   *
+   * The Java implementation called this `ACTIVE`, which reads as the opposite of what `c` means --
+   * a complete route is the whole list, not the leg being sailed.
+   */
+  COMPLETE('c'),
+  /** Working route: the waypoint just left, the one being steered to, then the rest. */
   WORKING('w'),
 }

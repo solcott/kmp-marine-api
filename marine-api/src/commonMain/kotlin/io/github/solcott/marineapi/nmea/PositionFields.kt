@@ -117,5 +117,21 @@ public fun SentenceFields.positionAt(
   )
 }
 
+/**
+ * Renders a position as the four fields that carry it, or four empty ones when there is no
+ * position.
+ *
+ * Latitude takes two degree digits and longitude three; getting that backwards produces a sentence
+ * that still parses but puts the vessel somewhere else entirely, so the rule lives here rather than
+ * being repeated at every sentence that writes a position.
+ */
+internal fun positionFields(position: Position?): List<String?> =
+  listOf(
+    position?.let { Degrees.format(it.latitude, degreeDigits = 2) },
+    position?.latitudeHemisphere.field(),
+    position?.let { Degrees.format(it.longitude, degreeDigits = 3) },
+    position?.longitudeHemisphere.field(),
+  )
+
 private val LATITUDE_HEMISPHERES = listOf(CompassPoint.NORTH, CompassPoint.SOUTH)
 private val LONGITUDE_HEMISPHERES = listOf(CompassPoint.EAST, CompassPoint.WEST)

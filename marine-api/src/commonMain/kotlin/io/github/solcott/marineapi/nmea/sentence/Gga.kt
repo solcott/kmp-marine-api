@@ -1,6 +1,5 @@
 package io.github.solcott.marineapi.nmea.sentence
 
-import io.github.solcott.marineapi.nmea.Degrees
 import io.github.solcott.marineapi.nmea.GpsFixQuality
 import io.github.solcott.marineapi.nmea.NmeaDateTime
 import io.github.solcott.marineapi.nmea.NmeaFormat
@@ -12,6 +11,7 @@ import io.github.solcott.marineapi.nmea.Units
 import io.github.solcott.marineapi.nmea.buildNmea
 import io.github.solcott.marineapi.nmea.field
 import io.github.solcott.marineapi.nmea.positionAt
+import io.github.solcott.marineapi.nmea.positionFields
 import kotlinx.datetime.LocalTime
 
 /**
@@ -58,22 +58,19 @@ public data class Gga(
     buildNmea(
       talker,
       ID,
-      listOf(
-        time?.let { NmeaDateTime.formatTime(it) },
-        position?.let { Degrees.format(it.latitude, degreeDigits = 2) },
-        position?.latitudeHemisphere.field(),
-        position?.let { Degrees.format(it.longitude, degreeDigits = 3) },
-        position?.longitudeHemisphere.field(),
-        fixQuality.field(),
-        satelliteCount?.let { NmeaFormat.integer(it, 2) },
-        horizontalDilution.field(),
-        altitude.field(),
-        altitudeUnits.field(),
-        geoidalHeight.field(),
-        geoidalHeightUnits.field(),
-        dgpsAge.field(),
-        dgpsStationId,
-      ),
+      listOf(time?.let { NmeaDateTime.formatTime(it) }) +
+        positionFields(position) +
+        listOf(
+          fixQuality.field(),
+          satelliteCount?.let { NmeaFormat.integer(it, 2) },
+          horizontalDilution.field(),
+          altitude.field(),
+          altitudeUnits.field(),
+          geoidalHeight.field(),
+          geoidalHeightUnits.field(),
+          dgpsAge.field(),
+          dgpsStationId,
+        ),
     )
 
   public companion object {

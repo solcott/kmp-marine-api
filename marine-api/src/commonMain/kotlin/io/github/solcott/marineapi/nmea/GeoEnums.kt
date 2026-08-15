@@ -24,6 +24,20 @@ public enum class Direction(override val code: Char) : CharCoded {
   RIGHT('R'),
 }
 
+/**
+ * Which north a bearing or heading is measured from.
+ *
+ * Sentences that report a bearing follow it with a `T`/`M` field saying which. Unlike the fixed
+ * markers in BOD or HDT, this one genuinely varies from field to field within a single sentence --
+ * APB carries three of them -- so it is read rather than assumed.
+ */
+public enum class BearingReference(override val code: Char) : CharCoded {
+  /** Referenced to true north. */
+  TRUE('T'),
+  /** Referenced to magnetic north. */
+  MAGNETIC('M'),
+}
+
 /** Side of a vessel. */
 public enum class Side(override val code: Char) : CharCoded {
   PORT('P'),

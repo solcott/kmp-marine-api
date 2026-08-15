@@ -57,6 +57,20 @@ class FieldExposureTest {
       "\$WIMWD,302.4,T,289.6,M,10.5,N,5.4,M",
       // wind angle, reference, speed, units, status
       "\$IIMWV,125.1,T,5.5,M,A",
+      // bearing true, T, bearing magnetic, M, destination, origin
+      "\$GPBOD,234.9,T,228.8,M,POINTB,POINTA",
+      // lat, N/S, lon, E/W, waypoint name
+      "\$GPWPL,5536.200,N,01436.500,E,RUSKI",
+      // count, index, route type, route id, three waypoints
+      "\$GPRTE,1,1,c,0,MELIN,RUSKI,KNUDAN",
+      // status, cycle lock, magnitude, steer to, units, FAA mode
+      "\$IIXTE,A,A,5.36,R,N,A",
+      // status, cycle lock, XTE, steer to, units, arrival circle, perpendicular, bearing
+      // origin->dest, M/T, destination, bearing pos->dest, M/T, heading to steer, M/T
+      "\$GPAPB,A,A,0.10,R,N,V,V,011,M,DEST,011,M,011,M",
+      // status, XTE, steer to, origin, destination, lat, N/S, lon, E/W, range, bearing,
+      // velocity, arrival status, FAA mode
+      "\$GPRMB,A,0.66,L,003,004,4917.24,N,12309.57,W,001.3,052.5,000.5,V,A",
     )
 
   @Test
