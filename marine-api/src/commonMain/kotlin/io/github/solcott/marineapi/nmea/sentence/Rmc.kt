@@ -32,12 +32,13 @@ import kotlinx.datetime.LocalTime
  * @property position latitude and longitude; `null` when the receiver has no fix
  * @property speedKnots speed over ground, knots
  * @property courseTrue track made good, degrees true
- * @property magneticVariation degrees, **positive east**. NMEA carries a magnitude and a separate
- *   `E`/`W` field rather than a signed number, so the sign is this library's choice. East-positive
- *   is the usual convention for magnetic declination, and it is the one that makes the relation
- *   `magnetic = true - variation` hold -- which is what [the reference](https://aprs.gids.nl/nmea/)
- *   means by "easterly variation subtracts from true course". The Java implementation used the
- *   opposite sign, negating easterly variation, so a caller moving across will see values flip.
+ * @property magneticVariation degrees, as an unsigned magnitude, paired with [variationDirection].
+ *   The sentence carries these as two fields and so does this type. Folding the direction into the
+ *   sign would lose it at zero: `-0.0 >= 0.0` is true in IEEE arithmetic, so a westerly variation
+ *   of `000.0` would read back, and re-encode, as easterly. Use [variationEastPositive] to compute
+ *   with.
+ * @property variationDirection which way [magneticVariation] points, [CompassPoint.EAST] or
+ *   [CompassPoint.WEST]
  * @property faaMode FAA mode indicator, added in NMEA 2.3
  * @property navStatus navigational status, added in NMEA 4.1
  */
@@ -50,16 +51,41 @@ public data class Rmc(
   val courseTrue: Double? = null,
   val date: LocalDate? = null,
   val magneticVariation: Double? = null,
+  val variationDirection: CompassPoint? = null,
   val faaMode: FaaMode? = null,
   val navStatus: NavStatus? = null,
 ) : Sentence {
 
+  init {
+    require(magneticVariation == null || magneticVariation >= 0.0) {
+      "Magnetic variation is an unsigned magnitude; the direction goes in variationDirection: " +
+        "$magneticVariation"
+    }
+    require(
+      variationDirection == null ||
+        variationDirection == CompassPoint.EAST ||
+        variationDirection == CompassPoint.WEST
+    ) {
+      "Variation direction must be EAST or WEST: $variationDirection"
+    }
+    require(magneticVariation == null || variationDirection != null) {
+      "A magnetic variation of $magneticVariation needs a direction to mean anything"
+    }
+  }
+
   override val id: String
     get() = ID
 
-  /** Which way [magneticVariation] points, or `null` when the sentence reports none. */
-  public val variationDirection: CompassPoint?
-    get() = magneticVariation?.let { if (it >= 0.0) CompassPoint.EAST else CompassPoint.WEST }
+  /**
+   * [magneticVariation] signed east-positive, or `null` when the sentence reports none.
+   *
+   * This is the form to compute with: `magnetic = true - variationEastPositive`, which is what
+   * [the reference](https://aprs.gids.nl/nmea/) means by "easterly variation subtracts from true
+   * course". East-positive is also the usual convention for magnetic declination. The Java
+   * implementation returned the opposite sign, so a caller moving across will see values flip.
+   */
+  public val variationEastPositive: Double?
+    get() = magneticVariation?.let { if (variationDirection == CompassPoint.WEST) -it else it }
 
   override fun toNmeaString(): String =
     buildNmea(
@@ -75,7 +101,7 @@ public data class Rmc(
         speedKnots.field(),
         courseTrue.field(),
         date?.let { NmeaDateTime.formatDate(it) },
-        magneticVariation?.let { abs(it).field() },
+        magneticVariation.field(),
         variationDirection.field(),
         faaMode.field(),
         navStatus.field(),
@@ -122,8 +148,9 @@ public data class Rmc(
         speedKnots = fields.doubleAt(SPEED),
         courseTrue = fields.doubleAt(COURSE),
         date = fields.dateAt(DATE),
-        magneticVariation =
-          variation?.let { if (direction == CompassPoint.WEST) -abs(it) else abs(it) },
+        magneticVariation = variation?.let { abs(it) },
+        // A direction with no magnitude says nothing, so it is dropped rather than kept.
+        variationDirection = direction.takeIf { variation != null },
         faaMode = fields.codedAt(FAA_MODE, FaaMode.entries),
         navStatus = fields.codedAt(NAV_STATUS, NavStatus.entries),
       )

@@ -115,18 +115,28 @@ class RmcTest {
   }
 
   @Test
-  fun easterlyVariationIsPositive() {
-    // NMEA carries magnitude plus an E/W field; this library signs it east-positive, where the
-    // Java implementation signed it the other way.
+  fun variationKeepsItsMagnitudeAndDirectionApart() {
+    // The sentence carries two fields and so does the type; the signed form is derived.
     assertEquals(6.1, rmc.magneticVariation)
     assertEquals(CompassPoint.EAST, rmc.variationDirection)
+    assertEquals(6.1, rmc.variationEastPositive)
+
+    val west = parse<Rmc>(Checksum.append(Examples.RMC.replace(",006.1,E,", ",006.1,W,")))
+    assertEquals(6.1, west.magneticVariation)
+    assertEquals(CompassPoint.WEST, west.variationDirection)
+    assertEquals(-6.1, west.variationEastPositive)
   }
 
   @Test
-  fun westerlyVariationIsNegative() {
-    val west = parse<Rmc>(Checksum.append(Examples.RMC.replace(",006.1,E,", ",006.1,W,")))
-    assertEquals(-6.1, west.magneticVariation)
-    assertEquals(CompassPoint.WEST, west.variationDirection)
+  fun aWesterlyZeroVariationStaysWesterly() {
+    // Encoding the direction in the sign lost this case: -0.0 >= 0.0 is true in IEEE arithmetic,
+    // so a westerly zero read back as easterly and re-encoded as "0.0,E".
+    val line = "\$GPRMC,225446,A,4916.45,N,12311.12,W,000.5,054.7,191194,000.0,W*7B"
+    val zeroWest = parse<Rmc>(line)
+    assertEquals(0.0, zeroWest.magneticVariation)
+    assertEquals(CompassPoint.WEST, zeroWest.variationDirection)
+    assertTrue(zeroWest.toNmeaString().contains(",0.0,W,"), zeroWest.toNmeaString())
+    assertEquals(zeroWest, SentenceRegistry.Default.parse(zeroWest.toNmeaString()).sentenceOrNull())
   }
 
   @Test
@@ -164,7 +174,8 @@ class RmcTest {
     assertEquals(20.3, documented.magneticVariation)
 
     val westerly = parse<Rmc>("\$GPRMC,220516,A,5133.82,N,00042.24,W,173.8,231.8,130694,004.2,W*70")
-    assertEquals(-4.2, westerly.magneticVariation)
+    assertEquals(4.2, westerly.magneticVariation)
+    assertEquals(CompassPoint.WEST, westerly.variationDirection)
     assertEquals(173.8, westerly.speedKnots)
     assertEquals(231.8, westerly.courseTrue)
   }
@@ -175,13 +186,13 @@ class RmcTest {
     // variation must be positive for that subtraction to be the right one. This pins the meaning,
     // which a sign check alone would not.
     val easterly = parse<Rmc>("\$GPRMC,225446,A,4916.45,N,12311.12,W,000.5,054.7,191194,020.3,E*68")
-    val magnetic = easterly.courseTrue!! - easterly.magneticVariation!!
+    val magnetic = easterly.courseTrue!! - easterly.variationEastPositive!!
     assertEquals(54.7 - 20.3, magnetic, 1e-9)
     assertTrue(magnetic < easterly.courseTrue!!, "easterly variation must subtract")
 
     val westerly = parse<Rmc>("\$GPRMC,220516,A,5133.82,N,00042.24,W,173.8,231.8,130694,004.2,W*70")
     assertTrue(
-      westerly.courseTrue!! - westerly.magneticVariation!! > westerly.courseTrue!!,
+      westerly.courseTrue!! - westerly.variationEastPositive!! > westerly.courseTrue!!,
       "westerly variation must add",
     )
   }
