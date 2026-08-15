@@ -70,23 +70,14 @@ public data class Position(
   override fun toString(): String {
     val latitudeText = NmeaFormat.decimal(kotlin.math.abs(latitude), 2, 7)
     val longitudeText = NmeaFormat.decimal(kotlin.math.abs(longitude), 3, 7)
-    val altitudeText = altitude?.let { ", ${it.render()} m" } ?: ""
+    // formatTrimmed rather than interpolating: Kotlin/JS prints 5.0 as "5", which would make this
+    // class's toString platform-dependent.
+    val altitudeText = altitude?.let { ", ${formatTrimmed(it)} m" } ?: ""
     return "[$latitudeText ${latitudeHemisphere.code}, " +
       "$longitudeText ${longitudeHemisphere.code}$altitudeText]"
   }
 
   private fun Double.toRadians(): Double = this * PI / 180.0
-
-  /**
-   * Renders a double the same way on every target.
-   *
-   * `Double.toString` would not: Kotlin/JS prints 5.0 as `5`, so interpolating directly here made
-   * this class's `toString` platform-dependent.
-   */
-  private fun Double.render(): String {
-    val text = NmeaFormat.decimal(this, 1, 3).trimEnd('0')
-    return if (text.endsWith('.')) text + "0" else text
-  }
 
   public companion object {
     /**
@@ -118,9 +109,14 @@ public data class Waypoint(
  *
  * @property id satellite PRN, kept as a string because the field is zero-padded and its numbering
  *   depends on the constellation
- * @property elevation degrees above the horizon, 0 to 90
- * @property azimuth degrees true, 0 to 359
- * @property noise signal-to-noise ratio in dB, 0 to 99, or `null` when the satellite is not tracked
+ * @property elevation degrees above the horizon, -90 to 90. gpsd's reference documents the negative
+ *   half of that range; the Java implementation rejected it, which would fail on a receiver
+ *   reporting a satellite below the horizon.
+ * @property azimuth degrees true, 0 to 360. The format says 000 to 359, but 360 is accepted because
+ *   the Java implementation accepted it and rejecting a whole sentence over it would lose data.
+ * @property noise signal-to-noise ratio in dB, 0 to 99, or `null` when the satellite is in view but
+ *   not tracked. The Java implementation substituted 0 there, which is indistinguishable from a
+ *   tracked satellite with no usable signal.
  */
 public data class SatelliteInfo(
   val id: String,
@@ -129,7 +125,7 @@ public data class SatelliteInfo(
   val noise: Int? = null,
 ) {
   init {
-    require(elevation in 0..90) { "Elevation out of bounds [0..90]: $elevation" }
+    require(elevation in -90..90) { "Elevation out of bounds [-90..90]: $elevation" }
     require(azimuth in 0..360) { "Azimuth out of bounds [0..360]: $azimuth" }
     require(noise == null || noise in 0..99) { "Noise out of bounds [0..99]: $noise" }
   }

@@ -1,5 +1,13 @@
 package io.github.solcott.marineapi.nmea
 
+import io.github.solcott.marineapi.nmea.sentence.Gga
+import io.github.solcott.marineapi.nmea.sentence.Gll
+import io.github.solcott.marineapi.nmea.sentence.Gsa
+import io.github.solcott.marineapi.nmea.sentence.Gsv
+import io.github.solcott.marineapi.nmea.sentence.Rmc
+import io.github.solcott.marineapi.nmea.sentence.Vtg
+import io.github.solcott.marineapi.nmea.sentence.Zda
+
 /**
  * Builds a [Sentence] from the fields of a recognised sentence type.
  *
@@ -108,10 +116,21 @@ private constructor(private val factories: Map<String, SentenceFactory>) {
     /**
      * The registry of every sentence type this library implements.
      *
-     * Empty for now: the sentence types are being ported in batches, and anything not yet ported
-     * parses as [UnknownSentence].
+     * The sentence types are being ported in batches; anything not yet ported parses as
+     * [UnknownSentence] rather than failing.
      */
-    public val Default: SentenceRegistry = SentenceRegistry(emptyMap())
+    public val Default: SentenceRegistry =
+      SentenceRegistry(
+        mapOf(
+          Gga.ID to SentenceFactory(Gga::from),
+          Gll.ID to SentenceFactory(Gll::from),
+          Gsa.ID to SentenceFactory(Gsa::from),
+          Gsv.ID to SentenceFactory(Gsv::from),
+          Rmc.ID to SentenceFactory(Rmc::from),
+          Vtg.ID to SentenceFactory(Vtg::from),
+          Zda.ID to SentenceFactory(Zda::from),
+        )
+      )
 
     /** An empty registry, for parsing into [UnknownSentence] only. */
     public val Empty: SentenceRegistry = SentenceRegistry(emptyMap())

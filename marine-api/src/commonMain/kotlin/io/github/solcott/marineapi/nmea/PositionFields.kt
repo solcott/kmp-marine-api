@@ -32,17 +32,42 @@ public object Degrees {
     return degrees + minutes / 60.0
   }
 
+  /** Fewest minute decimals written, matching what most receivers emit. */
+  public const val MIN_MINUTE_DECIMALS: Int = 3
+
+  /** Most minute decimals written; beyond this the digits are below any receiver's resolution. */
+  public const val MAX_MINUTE_DECIMALS: Int = 7
+
   /**
    * Formats decimal [degrees] as `ddmm.mmm`, with [degreeDigits] digits of degrees.
    *
    * Pass 2 for a latitude and 3 for a longitude. The sign is dropped: NMEA carries the hemisphere
    * in its own field.
+   *
+   * How many minute decimals a sentence carries is model-dependent, so with [minuteDecimals] left
+   * at `null` every significant decimal is written, between [MIN_MINUTE_DECIMALS] and
+   * [MAX_MINUTE_DECIMALS]. A fixed three would quietly discard precision -- receivers commonly
+   * report four or more, and `3748.4051` would be written back as `3748.405`.
    */
-  public fun format(degrees: Double, degreeDigits: Int, minuteDecimals: Int = 3): String {
+  public fun format(degrees: Double, degreeDigits: Int, minuteDecimals: Int? = null): String {
     val magnitude = abs(degrees)
     val whole = floor(magnitude).toInt()
     val minutes = (magnitude - whole) * 60.0
-    return NmeaFormat.integer(whole, degreeDigits) + NmeaFormat.decimal(minutes, 2, minuteDecimals)
+
+    val text =
+      if (minuteDecimals != null) {
+        NmeaFormat.decimal(minutes, 2, minuteDecimals)
+      } else {
+        val trimmed = NmeaFormat.decimal(minutes, 2, MAX_MINUTE_DECIMALS).trimEnd('0')
+        val decimals = trimmed.length - trimmed.indexOf('.') - 1
+        if (decimals < MIN_MINUTE_DECIMALS) {
+          NmeaFormat.decimal(minutes, 2, MIN_MINUTE_DECIMALS)
+        } else {
+          trimmed
+        }
+      }
+
+    return NmeaFormat.integer(whole, degreeDigits) + text
   }
 
   /** Applies a hemisphere indicator to positive [degrees], negating for south and west. */

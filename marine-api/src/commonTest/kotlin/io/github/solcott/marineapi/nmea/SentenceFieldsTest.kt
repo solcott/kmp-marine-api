@@ -14,8 +14,7 @@ private const val RMC =
 /** Field accessors, exercised through a real sentence rather than a synthetic field list. */
 class SentenceFieldsTest {
 
-  private val fields =
-    (SentenceRegistry.Default.parse(RMC).sentenceOrNull() as UnknownSentence).data
+  private val fields = (SentenceRegistry.Empty.parse(RMC).sentenceOrNull() as UnknownSentence).data
 
   @Test
   fun readsTypedFields() {
@@ -74,7 +73,7 @@ class SentenceFieldsTest {
   }
 
   private fun fieldsOf(sentence: String): SentenceFields =
-    (SentenceRegistry.Default.parse(Checksum.append(sentence)).sentenceOrNull() as UnknownSentence)
+    (SentenceRegistry.Empty.parse(Checksum.append(sentence)).sentenceOrNull() as UnknownSentence)
       .data
 }
 

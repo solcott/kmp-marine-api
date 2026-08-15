@@ -13,7 +13,9 @@ private const val PROPRIETARY = "\$PGRMZ,93,f,3*21"
 
 class SentenceRegistryTest {
 
-  private val registry = SentenceRegistry.Default
+  // Empty rather than Default: these cover the parsing mechanics, so every sentence
+  // should reach UnknownSentence regardless of which types happen to be registered.
+  private val registry = SentenceRegistry.Empty
 
   @Test
   fun parsesTalkerAndType() {

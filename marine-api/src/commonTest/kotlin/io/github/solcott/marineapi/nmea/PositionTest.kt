@@ -125,6 +125,26 @@ class DegreesTest {
   }
 
   @Test
+  fun keepsWhateverPrecisionTheDeviceReported() {
+    // How many minute decimals a sentence carries is model-dependent. Writing a fixed three would
+    // turn 3748.4051 into 3748.405, which is a real position error of about 18 cm.
+    assertEquals("3748.4051", Degrees.format(Degrees.parse("3748.4051"), degreeDigits = 2))
+    assertEquals("4404.14012", Degrees.format(Degrees.parse("4404.14012"), degreeDigits = 2))
+    assertEquals("12118.85993", Degrees.format(Degrees.parse("12118.85993"), degreeDigits = 3))
+  }
+
+  @Test
+  fun padsUpToTheMinimumPrecision() {
+    // A whole number of minutes still gets the three decimals receivers expect.
+    assertEquals("6011.000", Degrees.format(60.0 + 11.0 / 60.0, degreeDigits = 2))
+  }
+
+  @Test
+  fun honoursAnExplicitPrecision() {
+    assertEquals("6011.55200", Degrees.format(Degrees.parse("6011.552"), 2, minuteDecimals = 5))
+  }
+
+  @Test
   fun appliesHemisphere() {
     assertEquals(60.0, Degrees.applyHemisphere(60.0, CompassPoint.NORTH))
     assertEquals(-60.0, Degrees.applyHemisphere(60.0, CompassPoint.SOUTH))
