@@ -57,20 +57,7 @@ public data class Rmc(
 ) : Sentence {
 
   init {
-    require(magneticVariation == null || magneticVariation >= 0.0) {
-      "Magnetic variation is an unsigned magnitude; the direction goes in variationDirection: " +
-        "$magneticVariation"
-    }
-    require(
-      variationDirection == null ||
-        variationDirection == CompassPoint.EAST ||
-        variationDirection == CompassPoint.WEST
-    ) {
-      "Variation direction must be EAST or WEST: $variationDirection"
-    }
-    require(magneticVariation == null || variationDirection != null) {
-      "A magnetic variation of $magneticVariation needs a direction to mean anything"
-    }
+    requireEastWest(magneticVariation, variationDirection, "variation")
   }
 
   override val id: String
@@ -129,8 +116,7 @@ public data class Rmc(
     /** Reads an RMC sentence from its fields. */
     public fun from(fields: SentenceFields): Rmc {
       val variation = fields.doubleAt(MAGNETIC_VARIATION)
-      val direction =
-        fields.codedAt(VARIATION_HEMISPHERE, listOf(CompassPoint.EAST, CompassPoint.WEST))
+      val direction = fields.eastWestAt(VARIATION_HEMISPHERE)
       // A magnitude with no E/W field cannot be signed. Guessing a direction would turn a
       // malformed sentence into a plausible-looking heading error, so report it instead.
       if (variation != null && direction == null) {

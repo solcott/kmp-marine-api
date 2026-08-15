@@ -41,6 +41,22 @@ class FieldExposureTest {
       "\$GPGSV,3,2,12,15,56,182,51,17,38,163,47,18,63,058,50,21,53,329,47,1",
       // time, day, month, year, zone hours, zone minutes
       "\$GPZDA,032915.000,07,08,2004,02,30",
+      // depth feet, f, depth metres, M, depth fathoms, F
+      "\$SDDBT,7.8,f,2.4,M,1.3,F",
+      // depth, transducer offset, maximum range
+      "\$INDPT,2.3,0.5,200.0",
+      // heading, deviation, E/W, variation, E/W
+      "\$HCHDG,123.4,1.2,E,4.8,W",
+      // heading, M
+      "\$HCHDM,123.4,M",
+      // heading, T
+      "\$GPHDT,274.07,T",
+      // temperature, C
+      "\$INMTW,17.9,C",
+      // direction true, T, direction magnetic, M, speed knots, N, speed m/s, M
+      "\$WIMWD,302.4,T,289.6,M,10.5,N,5.4,M",
+      // wind angle, reference, speed, units, status
+      "\$IIMWV,125.1,T,5.5,M,A",
     )
 
   @Test

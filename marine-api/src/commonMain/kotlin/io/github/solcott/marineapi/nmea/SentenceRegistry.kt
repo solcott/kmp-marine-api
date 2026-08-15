@@ -1,9 +1,17 @@
 package io.github.solcott.marineapi.nmea
 
+import io.github.solcott.marineapi.nmea.sentence.Dbt
+import io.github.solcott.marineapi.nmea.sentence.Dpt
 import io.github.solcott.marineapi.nmea.sentence.Gga
 import io.github.solcott.marineapi.nmea.sentence.Gll
 import io.github.solcott.marineapi.nmea.sentence.Gsa
 import io.github.solcott.marineapi.nmea.sentence.Gsv
+import io.github.solcott.marineapi.nmea.sentence.Hdg
+import io.github.solcott.marineapi.nmea.sentence.Hdm
+import io.github.solcott.marineapi.nmea.sentence.Hdt
+import io.github.solcott.marineapi.nmea.sentence.Mtw
+import io.github.solcott.marineapi.nmea.sentence.Mwd
+import io.github.solcott.marineapi.nmea.sentence.Mwv
 import io.github.solcott.marineapi.nmea.sentence.Rmc
 import io.github.solcott.marineapi.nmea.sentence.Vtg
 import io.github.solcott.marineapi.nmea.sentence.Zda
@@ -122,10 +130,18 @@ private constructor(private val factories: Map<String, SentenceFactory>) {
     public val Default: SentenceRegistry =
       SentenceRegistry(
         mapOf(
+          Dbt.ID to SentenceFactory(Dbt::from),
+          Dpt.ID to SentenceFactory(Dpt::from),
           Gga.ID to SentenceFactory(Gga::from),
           Gll.ID to SentenceFactory(Gll::from),
           Gsa.ID to SentenceFactory(Gsa::from),
           Gsv.ID to SentenceFactory(Gsv::from),
+          Hdg.ID to SentenceFactory(Hdg::from),
+          Hdm.ID to SentenceFactory(Hdm::from),
+          Hdt.ID to SentenceFactory(Hdt::from),
+          Mtw.ID to SentenceFactory(Mtw::from),
+          Mwd.ID to SentenceFactory(Mwd::from),
+          Mwv.ID to SentenceFactory(Mwv::from),
           Rmc.ID to SentenceFactory(Rmc::from),
           Vtg.ID to SentenceFactory(Vtg::from),
           Zda.ID to SentenceFactory(Zda::from),

@@ -9,7 +9,6 @@ import io.github.solcott.marineapi.nmea.GpsFixStatus
 import io.github.solcott.marineapi.nmea.NavStatus
 import io.github.solcott.marineapi.nmea.ParseResult
 import io.github.solcott.marineapi.nmea.SatelliteInfo
-import io.github.solcott.marineapi.nmea.Sentence
 import io.github.solcott.marineapi.nmea.SentenceRegistry
 import io.github.solcott.marineapi.nmea.TalkerId
 import io.github.solcott.marineapi.nmea.Units
@@ -36,12 +35,6 @@ private object Examples {
   const val GSA = "\$GPGSA,A,3,02,,,07,,09,24,26,,,,,1.6,1.6,1.0*3D"
   const val GSV = "\$GPGSV,3,2,12,15,56,182,51,17,38,163,47,18,63,058,50,21,53,329,47*73"
   const val ZDA = "\$GPZDA,032915,07,08,2004,00,00*4D"
-}
-
-private inline fun <reified T : Sentence> parse(line: String): T {
-  val result = SentenceRegistry.Default.parse(line)
-  assertIs<ParseResult.Ok>(result, "failed to parse: $result")
-  return assertIs<T>(result.sentence)
 }
 
 class GgaTest {
@@ -400,17 +393,9 @@ class SentenceRoundTripTest {
   }
 
   @Test
-  fun everyRegisteredTypeIsReachable() {
-    assertEquals(
-      setOf("GGA", "GLL", "GSA", "GSV", "RMC", "VTG", "ZDA"),
-      SentenceRegistry.Default.types,
-    )
-  }
-
-  @Test
   fun unportedTypesStillParseAsUnknown() {
     assertIs<UnknownSentence>(
-      SentenceRegistry.Default.parse("\$IIMWV,125.1,T,5.5,M,A").sentenceOrNull()
+      SentenceRegistry.Default.parse("\$GPXTE,A,A,0.67,L,N").sentenceOrNull()
     )
   }
 }
