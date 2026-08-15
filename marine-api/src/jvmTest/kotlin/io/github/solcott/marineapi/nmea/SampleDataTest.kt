@@ -147,11 +147,17 @@ class SampleDataTest {
     assertEquals(
       setOf(
         "APB",
+        "CUR",
+        "DTA",
+        "DTB",
         "HDG",
+        "HTC",
+        "HTD",
         "MDA",
         "MHU",
         "MMB",
         "OSD",
+        "RPM",
         "RSA",
         "RSD",
         "TLB",

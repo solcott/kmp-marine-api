@@ -127,6 +127,19 @@ class FieldExposureTest {
       // time, lat, N/S, lon, E/W, bearing true, T, bearing magnetic, M, distance, N,
       // waypoint id, FAA mode
       "\$GPBWC,220516,5130.02,N,00046.34,W,213.8,T,218.0,M,0004.6,N,EGLM,A",
+      // source, source number, revolutions, propeller pitch, status
+      "\$IIRPM,E,1,2418.2,10.5,A",
+      // status, data set, layer, depth, direction, T/R, speed, reference depth, heading, T/M,
+      // speed reference
+      "\$INCUR,A,1,2,10.0,45.5,T,1.5,20.0,90.0,T,B",
+      // override, rudder angle, L/R, steering mode, turn mode, rudder limit, off-heading limit,
+      // radius, rate, heading to steer, off-track limit, track, T/M
+      "\$AGHTC,V,0.1,R,M,T,15.0,15.0,20.0,5.0,270.0,0.5,270.0,T",
+      // the same thirteen, then rudder status, off-heading status, off-track status, heading
+      "\$AGHTD,V,0.1,R,M,T,15.0,15.0,20.0,5.0,270.0,0.5,270.0,T,A,A,A,90.3",
+      // channel, concentration, confidence, distance, light level, timestamp, serial, status
+      "\$GFDTA,1,1.5,99,600,11067,2002/03/01 00:30:28,HF-1xxx,1",
+      "\$GFDTB,2,1.5,99,600,11067,2002/03/01 00:30:28,HF-1xxx,1",
     )
 
   @Test
