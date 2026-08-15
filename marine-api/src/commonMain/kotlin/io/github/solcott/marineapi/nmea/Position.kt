@@ -107,6 +107,11 @@ public data class Waypoint(
 /**
  * One satellite's entry in a GSV sentence.
  *
+ * Only the id is required. Receivers routinely report a satellite whose sky position they have not
+ * worked out yet -- `02,,,26` is a satellite with a signal but no elevation or azimuth -- and 98
+ * such quadruples appear in this project's own sample logs. Requiring those fields would mean
+ * discarding a satellite the receiver is telling us about.
+ *
  * @property id satellite PRN, kept as a string because the field is zero-padded and its numbering
  *   depends on the constellation
  * @property elevation degrees above the horizon, -90 to 90. gpsd's reference documents the negative
@@ -120,13 +125,15 @@ public data class Waypoint(
  */
 public data class SatelliteInfo(
   val id: String,
-  val elevation: Int,
-  val azimuth: Int,
+  val elevation: Int? = null,
+  val azimuth: Int? = null,
   val noise: Int? = null,
 ) {
   init {
-    require(elevation in -90..90) { "Elevation out of bounds [-90..90]: $elevation" }
-    require(azimuth in 0..360) { "Azimuth out of bounds [0..360]: $azimuth" }
+    require(elevation == null || elevation in -90..90) {
+      "Elevation out of bounds [-90..90]: $elevation"
+    }
+    require(azimuth == null || azimuth in 0..360) { "Azimuth out of bounds [0..360]: $azimuth" }
     require(noise == null || noise in 0..99) { "Noise out of bounds [0..99]: $noise" }
   }
 }

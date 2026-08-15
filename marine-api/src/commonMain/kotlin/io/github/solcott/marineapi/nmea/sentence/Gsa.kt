@@ -21,12 +21,13 @@ public enum class FixSelection(override val code: Char) : CharCoded {
  *
  * Example: `$GPGSA,A,3,03,05,07,08,10,15,18,19,21,28,,,1.4,0.9,1.1*3A`
  *
- * The sentence always carries twelve satellite slots, empty when unused; [satelliteIds] holds only
- * the ones actually reported.
- *
  * @property selection whether 2D/3D was chosen manually or automatically
  * @property fixStatus dimensionality of the fix
- * @property satelliteIds satellites used for the fix, at most twelve
+ * @property satelliteIds the sentence's twelve satellite slots in order, `null` where a slot is
+ *   empty. The positions are kept rather than compacted because receivers leave interior gaps --
+ *   `,,05,,08,,,18` is one channel per slot, and 920 lines of this project's sample logs look like
+ *   that. Compacting them moves satellites between channels and rewrites the sentence. Use
+ *   [satellitesUsed] for just the ones present.
  * @property positionDop position (3D) dilution of precision
  * @property horizontalDop horizontal dilution of precision
  * @property verticalDop vertical dilution of precision
@@ -37,7 +38,7 @@ public data class Gsa(
   override val talker: TalkerId,
   val selection: FixSelection? = null,
   val fixStatus: GpsFixStatus? = null,
-  val satelliteIds: List<String> = emptyList(),
+  val satelliteIds: List<String?> = emptyList(),
   val positionDop: Double? = null,
   val horizontalDop: Double? = null,
   val verticalDop: Double? = null,
@@ -52,6 +53,10 @@ public data class Gsa(
 
   override val id: String
     get() = ID
+
+  /** The satellites this fix actually used, with the empty slots left out. */
+  public val satellitesUsed: List<String>
+    get() = satelliteIds.filterNotNull()
 
   override fun toNmeaString(): String {
     val slots = List(SATELLITE_SLOTS) { satelliteIds.getOrNull(it) }
@@ -92,7 +97,7 @@ public data class Gsa(
         selection = fields.codedAt(SELECTION, FixSelection.entries),
         fixStatus = fields.intCodedAt(FIX_STATUS, GpsFixStatus.entries),
         satelliteIds =
-          (FIRST_SATELLITE until FIRST_SATELLITE + SATELLITE_SLOTS).mapNotNull(fields::stringAt),
+          (FIRST_SATELLITE until FIRST_SATELLITE + SATELLITE_SLOTS).map(fields::stringAt),
         positionDop = fields.doubleAt(POSITION_DOP),
         horizontalDop = fields.doubleAt(HORIZONTAL_DOP),
         verticalDop = fields.doubleAt(VERTICAL_DOP),

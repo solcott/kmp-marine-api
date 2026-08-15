@@ -260,9 +260,15 @@ class GsaTest {
   }
 
   @Test
-  fun emptySatelliteSlotsAreDropped() {
-    // The sentence always carries twelve slots; only the filled ones are satellites.
-    assertEquals(listOf("02", "07", "09", "24", "26"), gsa.satelliteIds)
+  fun keepsTheSatelliteSlotsWhereTheyWere() {
+    // "A,3,02,,,07,,09,24,26,,,," -- the gaps are channels, so compacting would move satellites
+    // between them and rewrite the sentence.
+    assertEquals(
+      listOf("02", null, null, "07", null, "09", "24", "26", null, null, null, null),
+      gsa.satelliteIds,
+    )
+    assertEquals(listOf("02", "07", "09", "24", "26"), gsa.satellitesUsed)
+    assertEquals(Examples.GSA, gsa.toNmeaString())
   }
 
   @Test
@@ -297,6 +303,19 @@ class GsvTest {
       ),
       gsv.satellites,
     )
+  }
+
+  @Test
+  fun keepsASatelliteThatHasNoSkyPositionYet() {
+    // "02,,,26" is a satellite with a signal but no elevation or azimuth. Requiring those
+    // dropped the satellite outright, losing what the receiver was reporting.
+    val partial = parse<Gsv>("\$GPGSV,3,3,12,02,,,26,24,,,00,26,30,047,48,06,,,25*43")
+    assertEquals(4, partial.satellites.size)
+    assertEquals(
+      SatelliteInfo("02", elevation = null, azimuth = null, noise = 26),
+      partial.satellites[0],
+    )
+    assertEquals(listOf("02", "24", "26", "06"), partial.satellites.map { it.id })
   }
 
   @Test

@@ -61,8 +61,8 @@ public data class Gsv(
         for (slot in 0 until SATELLITES_PER_SENTENCE) {
           val satellite = satellites.getOrNull(slot)
           add(satellite?.id)
-          add(satellite?.let { NmeaFormat.integer(it.elevation, 2) })
-          add(satellite?.let { NmeaFormat.integer(it.azimuth, 3) })
+          add(satellite?.elevation?.let { NmeaFormat.integer(it, 2) })
+          add(satellite?.azimuth?.let { NmeaFormat.integer(it, 3) })
           add(satellite?.noise?.let { NmeaFormat.integer(it, 2) })
         }
         if (signalId != null) add(signalId.toString())
@@ -87,16 +87,17 @@ public data class Gsv(
 
     /** Reads a GSV sentence from its fields. */
     public fun from(fields: SentenceFields): Gsv {
+      // A satellite counts as reported once it has an id. Its sky position may be missing --
+      // "02,,,26" is a satellite with a signal but no fix on where it is -- and requiring
+      // elevation and azimuth here silently dropped those.
       val satellites =
         (0 until SATELLITES_PER_SENTENCE).mapNotNull { slot ->
           val base = FIRST_SATELLITE + slot * FIELDS_PER_SATELLITE
           val id = fields.stringAt(base) ?: return@mapNotNull null
-          val elevation = fields.intAt(base + ELEVATION_OFFSET) ?: return@mapNotNull null
-          val azimuth = fields.intAt(base + AZIMUTH_OFFSET) ?: return@mapNotNull null
           SatelliteInfo(
             id = id,
-            elevation = elevation,
-            azimuth = azimuth,
+            elevation = fields.intAt(base + ELEVATION_OFFSET),
+            azimuth = fields.intAt(base + AZIMUTH_OFFSET),
             noise = fields.intAt(base + NOISE_OFFSET),
           )
         }
