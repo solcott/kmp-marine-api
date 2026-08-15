@@ -6,6 +6,7 @@ import io.github.solcott.marineapi.nmea.Degrees
 import io.github.solcott.marineapi.nmea.FaaMode
 import io.github.solcott.marineapi.nmea.NavStatus
 import io.github.solcott.marineapi.nmea.NmeaDateTime
+import io.github.solcott.marineapi.nmea.NmeaFieldException
 import io.github.solcott.marineapi.nmea.Position
 import io.github.solcott.marineapi.nmea.Sentence
 import io.github.solcott.marineapi.nmea.SentenceFields
@@ -32,8 +33,11 @@ import kotlinx.datetime.LocalTime
  * @property speedKnots speed over ground, knots
  * @property courseTrue track made good, degrees true
  * @property magneticVariation degrees, **positive east**. NMEA carries a magnitude and a separate
- *   `E`/`W` field, so the sign is this library's choice; it follows the usual geophysical
- *   convention. The Java implementation used the opposite sign, negating easterly variation.
+ *   `E`/`W` field rather than a signed number, so the sign is this library's choice. East-positive
+ *   is the usual convention for magnetic declination, and it is the one that makes the relation
+ *   `magnetic = true - variation` hold -- which is what [the reference](https://aprs.gids.nl/nmea/)
+ *   means by "easterly variation subtracts from true course". The Java implementation used the
+ *   opposite sign, negating easterly variation, so a caller moving across will see values flip.
  * @property faaMode FAA mode indicator, added in NMEA 2.3
  * @property navStatus navigational status, added in NMEA 4.1
  */
@@ -101,6 +105,14 @@ public data class Rmc(
       val variation = fields.doubleAt(MAGNETIC_VARIATION)
       val direction =
         fields.codedAt(VARIATION_HEMISPHERE, listOf(CompassPoint.EAST, CompassPoint.WEST))
+      // A magnitude with no E/W field cannot be signed. Guessing a direction would turn a
+      // malformed sentence into a plausible-looking heading error, so report it instead.
+      if (variation != null && direction == null) {
+        throw NmeaFieldException(
+          "${fields.talker}$ID field $VARIATION_HEMISPHERE: magnetic variation " +
+            "$variation has no E/W direction"
+        )
+      }
       return Rmc(
         talker = fields.talker,
         time = fields.timeAt(TIME),

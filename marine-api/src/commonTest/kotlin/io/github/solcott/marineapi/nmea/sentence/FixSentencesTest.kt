@@ -136,6 +136,76 @@ class RmcTest {
     assertEquals(DataStatus.VOID, noFix.status)
     assertEquals(LocalDate(2017, 1, 10), noFix.date)
   }
+
+  /**
+   * The three worked examples from https://aprs.gids.nl/nmea/, checksums verified. Each states in
+   * prose what its fields mean, so they pin the reading rather than just the parsing.
+   */
+  @Test
+  fun matchesTheReferenceWorkedExamples() {
+    val southernHemisphere =
+      parse<Rmc>("\$GPRMC,081836,A,3751.65,S,14507.36,E,000.0,360.0,130998,011.3,E*62")
+    assertEquals(CompassPoint.SOUTH, southernHemisphere.position!!.latitudeHemisphere)
+    assertEquals(-(37.0 + 51.65 / 60.0), southernHemisphere.position!!.latitude, 1e-12)
+    assertEquals(145.0 + 7.36 / 60.0, southernHemisphere.position!!.longitude, 1e-12)
+    assertEquals(LocalDate(1998, 9, 13), southernHemisphere.date)
+    assertEquals(11.3, southernHemisphere.magneticVariation)
+
+    // "225446 Time of fix 22:54:46 UTC ... 4916.45,N Latitude 49 deg. 16.45 min North
+    //  ... 191194 Date of fix 19 November 1994 ... 020.3,E Magnetic variation 20.3 deg East"
+    val documented =
+      parse<Rmc>("\$GPRMC,225446,A,4916.45,N,12311.12,W,000.5,054.7,191194,020.3,E*68")
+    assertEquals(LocalTime(22, 54, 46), documented.time)
+    assertEquals(49.0 + 16.45 / 60.0, documented.position!!.latitude, 1e-12)
+    assertEquals(-(123.0 + 11.12 / 60.0), documented.position!!.longitude, 1e-12)
+    assertEquals(LocalDate(1994, 11, 19), documented.date)
+    assertEquals(0.5, documented.speedKnots)
+    assertEquals(54.7, documented.courseTrue)
+    assertEquals(20.3, documented.magneticVariation)
+
+    val westerly = parse<Rmc>("\$GPRMC,220516,A,5133.82,N,00042.24,W,173.8,231.8,130694,004.2,W*70")
+    assertEquals(-4.2, westerly.magneticVariation)
+    assertEquals(173.8, westerly.speedKnots)
+    assertEquals(231.8, westerly.courseTrue)
+  }
+
+  @Test
+  fun theVariationSignMeansMagneticIsTrueMinusVariation() {
+    // The reference puts it as "easterly variation subtracts from true course", so an easterly
+    // variation must be positive for that subtraction to be the right one. This pins the meaning,
+    // which a sign check alone would not.
+    val easterly = parse<Rmc>("\$GPRMC,225446,A,4916.45,N,12311.12,W,000.5,054.7,191194,020.3,E*68")
+    val magnetic = easterly.courseTrue!! - easterly.magneticVariation!!
+    assertEquals(54.7 - 20.3, magnetic, 1e-9)
+    assertTrue(magnetic < easterly.courseTrue!!, "easterly variation must subtract")
+
+    val westerly = parse<Rmc>("\$GPRMC,220516,A,5133.82,N,00042.24,W,173.8,231.8,130694,004.2,W*70")
+    assertTrue(
+      westerly.courseTrue!! - westerly.magneticVariation!! > westerly.courseTrue!!,
+      "westerly variation must add",
+    )
+  }
+
+  @Test
+  fun variationWithoutADirectionIsMalformed() {
+    // Signing it either way would turn a malformed sentence into a plausible heading error.
+    val result =
+      SentenceRegistry.Default.parse(
+        Checksum.append("\$GPRMC,225446,A,4916.45,N,12311.12,W,000.5,054.7,191194,020.3,")
+      )
+    val malformed = assertIs<ParseResult.Malformed>(result)
+    assertTrue("no E/W direction" in malformed.reason, malformed.reason)
+  }
+
+  @Test
+  fun bothVariationFieldsEmptyIsFine() {
+    // The common case: most receivers do not report variation at all.
+    val none = parse<Rmc>("\$GNRMC,001031.00,A,4404.13993,N,12118.86023,W,0.146,,100117,,,A*7B")
+    assertNull(none.magneticVariation)
+    assertNull(none.variationDirection)
+    assertEquals(0.146, none.speedKnots)
+    assertNull(none.courseTrue)
+  }
 }
 
 class VtgTest {
