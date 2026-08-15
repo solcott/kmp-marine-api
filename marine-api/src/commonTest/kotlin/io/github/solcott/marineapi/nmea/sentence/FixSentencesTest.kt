@@ -105,7 +105,7 @@ class RmcTest {
     assertEquals(360.0, rmc.courseTrue)
     assertEquals(LocalDate(2005, 7, 16), rmc.date)
     assertEquals(FaaMode.AUTOMATIC, rmc.faaMode)
-    assertEquals(NavStatus.SIMULATOR, rmc.navStatus)
+    assertEquals(NavStatus.SAFE, rmc.navStatus, "S is Safe here, not Simulator as in FaaMode")
   }
 
   @Test

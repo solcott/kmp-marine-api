@@ -72,20 +72,25 @@ public enum class FaaMode(override val code: Char) : CharCoded {
   NONE('N'),
 }
 
-/** Navigational status, as reported in NMEA 4.1 and later RMC sentences. */
+/**
+ * Navigational status: whether a fix is fit to navigate on, as opposed to how it was obtained.
+ *
+ * Added in NMEA 4.1 and carried by RMC and GNS. Not to be confused with [FaaMode], which shares the
+ * letter `S` and means something else by it -- an earlier revision of this enum copied FaaMode's
+ * codes wholesale and so read `V` as "valid" when it means the opposite.
+ *
+ * Treat it with suspicion. Every one of the 342 sentences carrying this field in the gpsd corpus
+ * reports [NOT_VALID], including sentences whose own status field says the fix is good. gpsd
+ * records the same observation and declines to parse the field at all. A receiver appears to emit
+ * `V` whether or not it means it, so acting on this in isolation would reject perfectly good fixes.
+ */
 public enum class NavStatus(override val code: Char) : CharCoded {
-  /** Autonomous. */
-  AUTONOMOUS('A'),
-  /** Differential. */
-  DIFFERENTIAL('D'),
-  /** Estimated, dead reckoning. */
-  ESTIMATED('E'),
-  /** Manual input. */
-  MANUAL('M'),
-  /** Not valid. */
-  NOT_VALID('N'),
-  /** Simulator. */
-  SIMULATOR('S'),
-  /** Valid. */
-  VALID('V'),
+  /** Safe to navigate on. */
+  SAFE('S'),
+  /** Usable with caution. */
+  CAUTION('C'),
+  /** Unsafe to navigate on. */
+  UNSAFE('U'),
+  /** Not valid for navigation. */
+  NOT_VALID('V'),
 }

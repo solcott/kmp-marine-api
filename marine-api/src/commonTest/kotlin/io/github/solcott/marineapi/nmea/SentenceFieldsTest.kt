@@ -30,7 +30,7 @@ class SentenceFieldsTest {
     assertEquals(DataStatus.ACTIVE, fields.codedAt(1, DataStatus.entries))
     assertEquals(CompassPoint.NORTH, fields.codedAt(3, CompassPoint.entries))
     assertEquals(FaaMode.AUTOMATIC, fields.codedAt(11, FaaMode.entries))
-    assertEquals(NavStatus.SIMULATOR, fields.codedAt(12, NavStatus.entries))
+    assertEquals(NavStatus.SAFE, fields.codedAt(12, NavStatus.entries))
   }
 
   @Test
