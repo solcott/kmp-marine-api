@@ -85,6 +85,22 @@ class FieldExposureTest {
       // wind angle, side, knots, N, m/s, M, km/h, K
       "\$IIVWR,088,L,24.5,N,12.6,M,45.4,K",
       "\$IIVWT,088,L,24.7,N,12.6,M,45.7,K",
+      // rate of turn, status
+      "\$HEROT,-0.3,A",
+      // starboard angle, status, port angle, status
+      "\$IIRSA,1.2,A,2.3,V",
+      // heading, status, course, course reference, speed, speed reference, set, drift, units
+      "\$RAOSD,35.1,A,36.0,P,10.2,P,15.3,0.1,N",
+      // origin 1 range/bearing, VRM 1, EBL 1, origin 2 range/bearing, VRM 2, EBL 2,
+      // cursor range/bearing, range scale, range units, display rotation
+      "\$RARSD,12,90,24,45,6,270,12,315,6.5,118,96,N,N",
+      // number, distance, bearing, T/R, speed, course, T/R, CPA distance, CPA time, units,
+      // name, status, reference target, time, acquisition type
+      "\$RATTM,11,25.3,13.7,T,7.0,20.0,T,10.1,20.2,N,NAME,Q,R,175550.24,A",
+      // number, lat, N/S, lon, E/W, name, time, status, reference target
+      "\$RATLL,01,3731.512,N,02436.000,E,ANDROS,163700.86,T,R",
+      // three target number and label pairs
+      "\$RATLB,1,SHIPONE,2,SHIPTWO,3,SHIPTHREE",
     )
 
   @Test

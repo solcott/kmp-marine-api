@@ -1,5 +1,6 @@
 package io.github.solcott.marineapi.nmea.sentence
 
+import io.github.solcott.marineapi.nmea.AngleReference
 import io.github.solcott.marineapi.nmea.Checksum
 import io.github.solcott.marineapi.nmea.CompassPoint
 import io.github.solcott.marineapi.nmea.DataStatus
@@ -24,7 +25,7 @@ class MwvTest {
   fun readsEveryField() {
     assertEquals(TalkerId.II, mwv.talker)
     assertEquals(125.1, mwv.windAngle)
-    assertEquals(WindReference.TRUE, mwv.reference)
+    assertEquals(AngleReference.TRUE, mwv.reference)
     assertEquals(5.5, mwv.windSpeed)
     assertEquals(Units.METER, mwv.speedUnits)
     assertEquals(DataStatus.ACTIVE, mwv.status)
@@ -33,7 +34,7 @@ class MwvTest {
   @Test
   fun readsRelativeWind() {
     // R is what a masthead vane reports before correcting for the vessel's own motion.
-    assertEquals(WindReference.RELATIVE, parse<Mwv>("\$IIMWV,125.1,R,5.5,N,A").reference)
+    assertEquals(AngleReference.RELATIVE, parse<Mwv>("\$IIMWV,125.1,R,5.5,N,A").reference)
   }
 
   @Test

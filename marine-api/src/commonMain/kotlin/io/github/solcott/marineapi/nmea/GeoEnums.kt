@@ -25,6 +25,21 @@ public enum class Direction(override val code: Char) : CharCoded {
 }
 
 /**
+ * Whether an angle is absolute or measured from the vessel's own heading.
+ *
+ * Wind sentences and radar target sentences ask the same question of their angles, so they share
+ * one type: MWV's wind angle and TTM's target bearing and course all carry `T` or `R`. Not to be
+ * confused with [BearingReference], which chooses between true and *magnetic* north -- a different
+ * question with a different second option.
+ */
+public enum class AngleReference(override val code: Char) : CharCoded {
+  /** Relative to the vessel: for wind, the angle off the bow; for a target, off own heading. */
+  RELATIVE('R'),
+  /** True, independent of where the vessel is pointing. */
+  TRUE('T'),
+}
+
+/**
  * Which north a bearing or heading is measured from.
  *
  * Sentences that report a bearing follow it with a `T`/`M` field saying which. Unlike the fixed

@@ -1,6 +1,6 @@
 package io.github.solcott.marineapi.nmea.sentence
 
-import io.github.solcott.marineapi.nmea.CharCoded
+import io.github.solcott.marineapi.nmea.AngleReference
 import io.github.solcott.marineapi.nmea.DataStatus
 import io.github.solcott.marineapi.nmea.Direction
 import io.github.solcott.marineapi.nmea.Sentence
@@ -9,14 +9,6 @@ import io.github.solcott.marineapi.nmea.TalkerId
 import io.github.solcott.marineapi.nmea.Units
 import io.github.solcott.marineapi.nmea.buildNmea
 import io.github.solcott.marineapi.nmea.field
-
-/** What a wind angle is measured against. */
-public enum class WindReference(override val code: Char) : CharCoded {
-  /** Relative to the vessel's bow, the angle a masthead vane reads. */
-  RELATIVE('R'),
-  /** True, corrected for the vessel's own motion. */
-  TRUE('T'),
-}
 
 /**
  * Wind speed and angle, as a masthead instrument reports it.
@@ -32,7 +24,7 @@ public enum class WindReference(override val code: Char) : CharCoded {
 public data class Mwv(
   override val talker: TalkerId,
   val windAngle: Double? = null,
-  val reference: WindReference? = null,
+  val reference: AngleReference? = null,
   val windSpeed: Double? = null,
   val speedUnits: Units? = null,
   val status: DataStatus? = null,
@@ -69,7 +61,7 @@ public data class Mwv(
       Mwv(
         talker = fields.talker,
         windAngle = fields.doubleAt(WIND_ANGLE),
-        reference = fields.codedAt(REFERENCE, WindReference.entries),
+        reference = fields.codedAt(REFERENCE, AngleReference.entries),
         windSpeed = fields.doubleAt(WIND_SPEED),
         speedUnits = fields.codedAt(SPEED_UNITS, Units.entries),
         status = fields.codedAt(STATUS, DataStatus.entries),
