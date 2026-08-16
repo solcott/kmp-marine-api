@@ -1,5 +1,6 @@
 [versions]
 agp = "9.3.1"
+dokka = "2.2.0"
 kotlin = "2.4.10"
 junit = "4.13.2"
 kotlinx-coroutines = "1.10.2"
@@ -32,6 +33,7 @@ nrjavaserial = { module = "com.neuronrobotics:nrjavaserial", version.ref = "nrja
 
 [plugins]
 android-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 publish = { id = "com.vanniktech.maven.publish", version.ref = "publish" }

@@ -1,6 +1,5 @@
 Java Marine API - README
-Version @VERSION@ (@BUILD_ID@)
-https://github.com/ktuukkan/marine-api
+https://github.com/solcott/kmp-marine-api
 
 Java Marine API is an NMEA-0183 library for decoding and encoding the data
 provided by various electronic marine instruments such as GPS, echo sounder and
@@ -37,4 +36,5 @@ should never be your only reference.
 
 DEVELOPERS
 
-* Kimmo Tuukkanen (kimmo.tuukkanen@gmail.com)
+* Kimmo Tuukkanen (kimmo.tuukkanen@gmail.com) -- original Java Marine API
+* Scott Olcott -- Kotlin Multiplatform fork
