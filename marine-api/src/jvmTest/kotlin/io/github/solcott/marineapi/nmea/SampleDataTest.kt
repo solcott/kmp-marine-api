@@ -137,36 +137,66 @@ class SampleDataTest {
 
   @Test
   fun everyPortedTypeWithCorpusDataIsExercised() {
-    // A registered type that either corpus can validate should be validated. What is left is the
-    // set resting only on reference tables and the fixtures of the suite this replaces -- weaker
-    // evidence, worth naming rather than assuming. It is now the radar and autopilot group, the
-    // meteorological composite and its single-value siblings, plus HDG, VBW and VDR: instrument
-    // sentences that no GPS receiver emits and so appear in no capture anyone has published.
+    // A registered type that either corpus can validate should be validated. What is left rests
+    // only on reference tables -- weaker evidence, worth naming rather than assuming.
+    //
+    // It grew sharply when the gap against gpsd's sentence list was closed: 27 of the 34 types
+    // added then have no device data anywhere in this project. The trawl group -- HFB, ITS, TDS,
+    // TFI, TPC, TPR, TPT -- is the weakest of all, since gpsd sources those from a single vendor
+    // document rather than from the standard. The rest are instrument and autopilot sentences no
+    // GPS receiver emits, so they appear in no capture anyone has published.
     val withRealData = expectedCoverage.keys + GpsdCorpusTest.typeCoverage().keys
     val withoutCorpusData = SentenceRegistry.Default.types - withRealData
     assertEquals(
       setOf(
+        "AAM",
+        "ALK",
+        "ALM",
+        "APA",
         "APB",
+        "BWR",
+        "BWW",
         "CUR",
+        "DBK",
+        "DBS",
         "DTA",
         "DTB",
+        "FSI",
         "HDG",
+        "HFB",
+        "HSC",
         "HTC",
         "HTD",
+        "ITS",
         "MDA",
         "MHU",
         "MMB",
+        "MSK",
         "OSD",
+        "R00",
+        "RLM",
+        "RMA",
         "RPM",
         "RSA",
         "RSD",
-        "ALK",
+        "SFI",
+        "STN",
+        "TDS",
+        "TFI",
         "TLB",
         "TLL",
+        "TPC",
+        "TPR",
+        "TPT",
         "TTM",
         "UBX",
         "VBW",
         "VDR",
+        "WCV",
+        "WNC",
+        "XTR",
+        "ZFO",
+        "ZTG",
       ),
       withoutCorpusData,
     )

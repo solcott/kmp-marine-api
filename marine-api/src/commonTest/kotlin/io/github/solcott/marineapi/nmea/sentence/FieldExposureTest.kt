@@ -147,6 +147,72 @@ class FieldExposureTest {
       "\$STALK,52,A1,00,00",
       // u-blox message id, then whatever that message id defines
       "\$PUBX,00,125926.00,4717.11337,N,00833.91163,E,111.5,GLL,20,15,0.007,0.0,1.0,2.0,3.0,3.0",
+      // --- types added to close the gap against gpsd's sentence list ---
+      // time, mode, twelve satellite residuals, system id, signal id
+      "\$GPGRS,150119.000,1,-0.33,-2.59,3.03,-0.09,-2.98,7.12,-15.6,17.0,1.1,2.2,3.3,4.4,1,1",
+      // heading, status
+      "\$GNTHS,244.28,A",
+      // heading true, T, heading magnetic, M
+      "\$IIHSC,241.0,T,238.7,M",
+      // signal strength, SNR, beacon frequency, bit rate, channel
+      "\$GPMSS,55,27,318.0,100,3",
+      // frequency, frequency mode, bit rate, bit rate mode, status interval
+      "\$GPMSK,318.0,A,100,M,10",
+      // count, index, PRN, week, then eleven raw hex orbital fields
+      "\$GPALM,32,1,01,1122,00,441d,4e,16be,fd5e,a10c9f,4a2da4,686e81,58cbe1,0a4,001",
+      // beacon id, time, message code, message body
+      "\$GPRLM,12345678,123456.00,1,ABCDEF",
+      // talker id number
+      "\$IISTN,02",
+      // transmit frequency, receive frequency, mode, power level
+      "\$CTFSI,020230,020230,m,5",
+      // count, index, then frequency/mode pairs
+      "\$CTSFI,2,1,020230,m,021500,m",
+      // arrival circle entered, perpendicular passed, radius, N, waypoint
+      "\$GPAAM,A,A,0.10,N,DEST",
+      // time, lat, N/S, lon, E/W, bearing true, T, bearing magnetic, M, distance, N, waypoint, FAA
+      "\$GPBWR,220516,5130.02,N,00046.34,W,213.8,T,218.0,M,0004.6,N,EGLM,A",
+      // bearing true, T, bearing magnetic, M, to waypoint, from waypoint
+      "\$GPBWW,213.8,T,218.0,M,DEST,ORIGIN",
+      // distance nm, N, distance km, K, to waypoint, from waypoint
+      "\$GPWNC,4.6,N,8.5,K,DEST,ORIGIN",
+      // velocity, N, waypoint, FAA mode
+      "\$GPWCV,4.5,N,DEST,A",
+      // three waypoint names
+      "\$GPR00,MELIN,RUSKI,KNUDAN",
+      // status, cycle lock, XTE, steer to, units, arrival, perpendicular, bearing, M/T, destination
+      "\$GPAPA,A,A,0.10,R,N,V,V,011,M,DEST",
+      // XTE, steer to, units
+      "\$GPXTR,0.10,R,N",
+      // status, lat, N/S, lon, E/W, time difference A, B, speed, track, variation, E/W
+      "\$GPRMA,A,4916.45,N,12311.12,W,1.5,2.5,000.5,054.7,020.3,E",
+      // time, time remaining, destination
+      "\$GPZTG,092204,010000,DEST",
+      // time, elapsed time, origin
+      "\$GPZFO,092204,003500,ORIGIN",
+      // depth feet, f, depth metres, M, depth fathoms, F
+      "\$SDDBK,7.8,f,2.4,M,1.3,F",
+      "\$SDDBS,7.9,f,2.5,M,1.4,F",
+      // door spread, M
+      "\$IITDS,120.5,M",
+      "\$IIITS,118.2,M",
+      // headrope to footrope, M, headrope to bottom, M
+      "\$IIHFB,12.5,M,3.2,M",
+      // three catch sensors
+      "\$IITFI,1,0,2",
+      // off centre line, M, along centre line, M, depth, M
+      "\$IITPC,12.5,M,180.3,M,55.0,M",
+      // range, M, bearing, P, depth, M
+      "\$IITPR,120.5,M,15.3,P,55.0,M",
+      "\$IITPT,120.5,M,225.7,P,55.0,M",
+      // horizontal error, M, vertical error, M, spherical error, M
+      "\$PGRME,15.0,M,45.0,M,25.0,M",
+      // altitude feet, f, fix status
+      "\$PGRMZ,246,f,3",
+      // datum name
+      "\$PGRMM,WGS 84",
+      // time, heading, T, roll, pitch, heave, roll acc, pitch acc, heading acc, aiding, IMU
+      "\$PASHR,123816.80,312.95,T,-0.83,-0.42,-0.01,0.234,0.224,0.298,1,0",
     )
 
   @Test

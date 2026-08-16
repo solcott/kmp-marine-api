@@ -1,34 +1,55 @@
 package io.github.solcott.marineapi.nmea
 
+import io.github.solcott.marineapi.nmea.sentence.Aam
+import io.github.solcott.marineapi.nmea.sentence.Alm
+import io.github.solcott.marineapi.nmea.sentence.Apa
 import io.github.solcott.marineapi.nmea.sentence.Apb
 import io.github.solcott.marineapi.nmea.sentence.Bod
 import io.github.solcott.marineapi.nmea.sentence.Bwc
+import io.github.solcott.marineapi.nmea.sentence.Bwr
+import io.github.solcott.marineapi.nmea.sentence.Bww
 import io.github.solcott.marineapi.nmea.sentence.Cur
+import io.github.solcott.marineapi.nmea.sentence.Dbk
+import io.github.solcott.marineapi.nmea.sentence.Dbs
 import io.github.solcott.marineapi.nmea.sentence.Dbt
 import io.github.solcott.marineapi.nmea.sentence.Dpt
 import io.github.solcott.marineapi.nmea.sentence.Dta
 import io.github.solcott.marineapi.nmea.sentence.Dtb
 import io.github.solcott.marineapi.nmea.sentence.Dtm
+import io.github.solcott.marineapi.nmea.sentence.Fsi
 import io.github.solcott.marineapi.nmea.sentence.Gbs
 import io.github.solcott.marineapi.nmea.sentence.Gga
 import io.github.solcott.marineapi.nmea.sentence.Gll
 import io.github.solcott.marineapi.nmea.sentence.Gns
+import io.github.solcott.marineapi.nmea.sentence.Grs
 import io.github.solcott.marineapi.nmea.sentence.Gsa
 import io.github.solcott.marineapi.nmea.sentence.Gst
 import io.github.solcott.marineapi.nmea.sentence.Gsv
 import io.github.solcott.marineapi.nmea.sentence.Hdg
 import io.github.solcott.marineapi.nmea.sentence.Hdm
 import io.github.solcott.marineapi.nmea.sentence.Hdt
+import io.github.solcott.marineapi.nmea.sentence.Hfb
+import io.github.solcott.marineapi.nmea.sentence.Hsc
 import io.github.solcott.marineapi.nmea.sentence.Htc
 import io.github.solcott.marineapi.nmea.sentence.Htd
+import io.github.solcott.marineapi.nmea.sentence.Its
 import io.github.solcott.marineapi.nmea.sentence.Mda
 import io.github.solcott.marineapi.nmea.sentence.Mhu
 import io.github.solcott.marineapi.nmea.sentence.Mmb
+import io.github.solcott.marineapi.nmea.sentence.Msk
+import io.github.solcott.marineapi.nmea.sentence.Mss
 import io.github.solcott.marineapi.nmea.sentence.Mta
 import io.github.solcott.marineapi.nmea.sentence.Mtw
 import io.github.solcott.marineapi.nmea.sentence.Mwd
 import io.github.solcott.marineapi.nmea.sentence.Mwv
 import io.github.solcott.marineapi.nmea.sentence.Osd
+import io.github.solcott.marineapi.nmea.sentence.Pashr
+import io.github.solcott.marineapi.nmea.sentence.Pgrme
+import io.github.solcott.marineapi.nmea.sentence.Pgrmm
+import io.github.solcott.marineapi.nmea.sentence.Pgrmz
+import io.github.solcott.marineapi.nmea.sentence.R00
+import io.github.solcott.marineapi.nmea.sentence.Rlm
+import io.github.solcott.marineapi.nmea.sentence.Rma
 import io.github.solcott.marineapi.nmea.sentence.Rmb
 import io.github.solcott.marineapi.nmea.sentence.Rmc
 import io.github.solcott.marineapi.nmea.sentence.Rot
@@ -36,9 +57,17 @@ import io.github.solcott.marineapi.nmea.sentence.Rpm
 import io.github.solcott.marineapi.nmea.sentence.Rsa
 import io.github.solcott.marineapi.nmea.sentence.Rsd
 import io.github.solcott.marineapi.nmea.sentence.Rte
+import io.github.solcott.marineapi.nmea.sentence.Sfi
 import io.github.solcott.marineapi.nmea.sentence.Stalk
+import io.github.solcott.marineapi.nmea.sentence.Stn
+import io.github.solcott.marineapi.nmea.sentence.Tds
+import io.github.solcott.marineapi.nmea.sentence.Tfi
+import io.github.solcott.marineapi.nmea.sentence.Ths
 import io.github.solcott.marineapi.nmea.sentence.Tlb
 import io.github.solcott.marineapi.nmea.sentence.Tll
+import io.github.solcott.marineapi.nmea.sentence.Tpc
+import io.github.solcott.marineapi.nmea.sentence.Tpr
+import io.github.solcott.marineapi.nmea.sentence.Tpt
 import io.github.solcott.marineapi.nmea.sentence.Ttm
 import io.github.solcott.marineapi.nmea.sentence.Txt
 import io.github.solcott.marineapi.nmea.sentence.Ubx
@@ -52,10 +81,15 @@ import io.github.solcott.marineapi.nmea.sentence.Vpw
 import io.github.solcott.marineapi.nmea.sentence.Vtg
 import io.github.solcott.marineapi.nmea.sentence.Vwr
 import io.github.solcott.marineapi.nmea.sentence.Vwt
+import io.github.solcott.marineapi.nmea.sentence.Wcv
+import io.github.solcott.marineapi.nmea.sentence.Wnc
 import io.github.solcott.marineapi.nmea.sentence.Wpl
 import io.github.solcott.marineapi.nmea.sentence.Xdr
 import io.github.solcott.marineapi.nmea.sentence.Xte
+import io.github.solcott.marineapi.nmea.sentence.Xtr
 import io.github.solcott.marineapi.nmea.sentence.Zda
+import io.github.solcott.marineapi.nmea.sentence.Zfo
+import io.github.solcott.marineapi.nmea.sentence.Ztg
 
 /**
  * Builds a [Sentence] from the fields of a recognised sentence type.
@@ -177,35 +211,56 @@ private constructor(private val factories: Map<String, SentenceFactory>) {
     public val Default: SentenceRegistry =
       SentenceRegistry(
         mapOf(
+          Aam.ID to SentenceFactory(Aam::from),
+          Alm.ID to SentenceFactory(Alm::from),
+          Apa.ID to SentenceFactory(Apa::from),
           Apb.ID to SentenceFactory(Apb::from),
           Bod.ID to SentenceFactory(Bod::from),
           Bwc.ID to SentenceFactory(Bwc::from),
+          Bwr.ID to SentenceFactory(Bwr::from),
+          Bww.ID to SentenceFactory(Bww::from),
           Cur.ID to SentenceFactory(Cur::from),
+          Dbk.ID to SentenceFactory(Dbk::from),
+          Dbs.ID to SentenceFactory(Dbs::from),
           Dbt.ID to SentenceFactory(Dbt::from),
           Dpt.ID to SentenceFactory(Dpt::from),
           Dta.ID to SentenceFactory(Dta::from),
           Dtb.ID to SentenceFactory(Dtb::from),
           Dtm.ID to SentenceFactory(Dtm::from),
+          Fsi.ID to SentenceFactory(Fsi::from),
           Gbs.ID to SentenceFactory(Gbs::from),
           Gga.ID to SentenceFactory(Gga::from),
           Gll.ID to SentenceFactory(Gll::from),
           Gns.ID to SentenceFactory(Gns::from),
+          Grs.ID to SentenceFactory(Grs::from),
           Gsa.ID to SentenceFactory(Gsa::from),
           Gst.ID to SentenceFactory(Gst::from),
           Gsv.ID to SentenceFactory(Gsv::from),
           Hdg.ID to SentenceFactory(Hdg::from),
           Hdm.ID to SentenceFactory(Hdm::from),
           Hdt.ID to SentenceFactory(Hdt::from),
+          Hfb.ID to SentenceFactory(Hfb::from),
+          Hsc.ID to SentenceFactory(Hsc::from),
           Htc.ID to SentenceFactory(Htc::from),
           Htd.ID to SentenceFactory(Htd::from),
+          Its.ID to SentenceFactory(Its::from),
           Mda.ID to SentenceFactory(Mda::from),
           Mhu.ID to SentenceFactory(Mhu::from),
           Mmb.ID to SentenceFactory(Mmb::from),
+          Msk.ID to SentenceFactory(Msk::from),
+          Mss.ID to SentenceFactory(Mss::from),
           Mta.ID to SentenceFactory(Mta::from),
           Mtw.ID to SentenceFactory(Mtw::from),
           Mwd.ID to SentenceFactory(Mwd::from),
           Mwv.ID to SentenceFactory(Mwv::from),
           Osd.ID to SentenceFactory(Osd::from),
+          Pashr.ID to SentenceFactory(Pashr::from),
+          Pgrme.ID to SentenceFactory(Pgrme::from),
+          Pgrmm.ID to SentenceFactory(Pgrmm::from),
+          Pgrmz.ID to SentenceFactory(Pgrmz::from),
+          R00.ID to SentenceFactory(R00::from),
+          Rlm.ID to SentenceFactory(Rlm::from),
+          Rma.ID to SentenceFactory(Rma::from),
           Rmb.ID to SentenceFactory(Rmb::from),
           Rmc.ID to SentenceFactory(Rmc::from),
           Rot.ID to SentenceFactory(Rot::from),
@@ -213,9 +268,17 @@ private constructor(private val factories: Map<String, SentenceFactory>) {
           Rsa.ID to SentenceFactory(Rsa::from),
           Rsd.ID to SentenceFactory(Rsd::from),
           Rte.ID to SentenceFactory(Rte::from),
+          Sfi.ID to SentenceFactory(Sfi::from),
           Stalk.ID to SentenceFactory(Stalk::from),
+          Stn.ID to SentenceFactory(Stn::from),
+          Tds.ID to SentenceFactory(Tds::from),
+          Tfi.ID to SentenceFactory(Tfi::from),
+          Ths.ID to SentenceFactory(Ths::from),
           Tlb.ID to SentenceFactory(Tlb::from),
           Tll.ID to SentenceFactory(Tll::from),
+          Tpc.ID to SentenceFactory(Tpc::from),
+          Tpr.ID to SentenceFactory(Tpr::from),
+          Tpt.ID to SentenceFactory(Tpt::from),
           Ttm.ID to SentenceFactory(Ttm::from),
           Txt.ID to SentenceFactory(Txt::from),
           Ubx.ID to SentenceFactory(Ubx::from),
@@ -229,10 +292,15 @@ private constructor(private val factories: Map<String, SentenceFactory>) {
           Vtg.ID to SentenceFactory(Vtg::from),
           Vwr.ID to SentenceFactory(Vwr::from),
           Vwt.ID to SentenceFactory(Vwt::from),
+          Wcv.ID to SentenceFactory(Wcv::from),
+          Wnc.ID to SentenceFactory(Wnc::from),
           Wpl.ID to SentenceFactory(Wpl::from),
           Xdr.ID to SentenceFactory(Xdr::from),
           Xte.ID to SentenceFactory(Xte::from),
+          Xtr.ID to SentenceFactory(Xtr::from),
           Zda.ID to SentenceFactory(Zda::from),
+          Zfo.ID to SentenceFactory(Zfo::from),
+          Ztg.ID to SentenceFactory(Ztg::from),
         )
       )
 

@@ -1,5 +1,6 @@
 package io.github.solcott.marineapi.nmea
 
+import kotlin.time.Duration
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 
@@ -96,6 +97,20 @@ internal constructor(
     val raw = stringAt(index) ?: return null
     return runCatching { NmeaDateTime.parseDate(raw) }
       .getOrElse { throw NmeaFieldException(fieldError(index, raw, "a date")) }
+  }
+
+  /**
+   * Field at [index] as an `hhmmss[.ss]` elapsed time, or `null` if empty.
+   *
+   * A duration rather than a time of day -- see [NmeaDateTime.parseElapsed] for why the distinction
+   * matters.
+   *
+   * @throws NmeaFieldException if the field is present but not an elapsed time.
+   */
+  public fun elapsedAt(index: Int): Duration? {
+    val raw = stringAt(index) ?: return null
+    return runCatching { NmeaDateTime.parseElapsed(raw) }
+      .getOrElse { throw NmeaFieldException(fieldError(index, raw, "an elapsed time")) }
   }
 
   /**

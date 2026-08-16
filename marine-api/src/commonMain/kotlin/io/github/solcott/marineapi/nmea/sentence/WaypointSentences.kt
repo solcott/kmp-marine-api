@@ -1,5 +1,6 @@
 package io.github.solcott.marineapi.nmea.sentence
 
+import io.github.solcott.marineapi.nmea.DataStatus
 import io.github.solcott.marineapi.nmea.FaaMode
 import io.github.solcott.marineapi.nmea.NmeaDateTime
 import io.github.solcott.marineapi.nmea.Position
@@ -308,3 +309,392 @@ public data class Bwc(
       )
   }
 }
+
+/**
+ * Bearing and distance to a waypoint along a rhumb line: [Bwc] over a different kind of course.
+ *
+ * Example: `$GPBWR,220516,5130.02,N,00046.34,W,213.8,T,218.0,M,0004.6,N,EGLM,A*hh`
+ *
+ * Field for field identical to [Bwc], and it is the difference in meaning that makes both worth
+ * having. BWC gives the great circle, the shortest path across a sphere, whose bearing changes
+ * continuously as you fly it. This gives the rhumb line, which crosses every meridian at the same
+ * angle -- longer, but steerable on one compass course. Over short legs the two agree; over an
+ * ocean they do not.
+ *
+ * @property waypointPosition where the waypoint is
+ * @property bearingTrue degrees true along the rhumb line
+ * @property bearingMagnetic the same bearing, magnetic
+ * @property distanceNauticalMiles rhumb line distance, longer than [Bwc]'s
+ * @property faaMode how the fix behind this was obtained, absent before NMEA 2.3
+ */
+public data class Bwr(
+  override val talker: TalkerId,
+  val time: LocalTime? = null,
+  val waypointPosition: Position? = null,
+  val bearingTrue: Double? = null,
+  val bearingMagnetic: Double? = null,
+  val distanceNauticalMiles: Double? = null,
+  val waypointId: String? = null,
+  val faaMode: FaaMode? = null,
+) : Sentence {
+
+  override val id: String
+    get() = ID
+
+  /** [waypointPosition] and [waypointId] together, or `null` when either is missing. */
+  public val waypoint: Waypoint?
+    get() =
+      if (waypointPosition != null && waypointId != null) {
+        Waypoint(waypointId, waypointPosition)
+      } else {
+        null
+      }
+
+  override fun toNmeaString(): String = bearingToWaypointNmea(talker, ID, this.asBearingFields())
+
+  public companion object {
+    /** Sentence type code. */
+    public const val ID: String = "BWR"
+
+    /** Reads a BWR sentence from its fields. */
+    public fun from(fields: SentenceFields): Bwr =
+      with(fields.bearingToWaypointAt()) {
+        Bwr(
+          talker = fields.talker,
+          time = time,
+          waypointPosition = waypointPosition,
+          bearingTrue = bearingTrue,
+          bearingMagnetic = bearingMagnetic,
+          distanceNauticalMiles = distance,
+          waypointId = waypointId,
+          faaMode = faaMode,
+        )
+      }
+  }
+}
+
+/**
+ * Bearing from one waypoint to the next, with the vessel's own position nowhere in it.
+ *
+ * Example: `$GPBWW,213.8,T,218.0,M,DEST,ORIGIN*hh`
+ *
+ * A property of the route rather than of the voyage: it says which way the leg runs, not how far
+ * along it you are. [Bod] carries the same bearing for the leg currently being steered; this can
+ * describe any pair.
+ *
+ * @property bearingTrue degrees true from [fromWaypointId] to [toWaypointId]
+ * @property bearingMagnetic the same bearing, magnetic
+ * @property toWaypointId the waypoint the leg runs to
+ * @property fromWaypointId the waypoint it runs from
+ */
+public data class Bww(
+  override val talker: TalkerId,
+  val bearingTrue: Double? = null,
+  val bearingMagnetic: Double? = null,
+  val toWaypointId: String? = null,
+  val fromWaypointId: String? = null,
+) : Sentence {
+
+  override val id: String
+    get() = ID
+
+  override fun toNmeaString(): String =
+    buildNmea(
+      talker,
+      ID,
+      listOf(
+        bearingTrue.field(),
+        TRUE_MARKER.toString(),
+        bearingMagnetic.field(),
+        MAGNETIC_MARKER.toString(),
+        toWaypointId,
+        fromWaypointId,
+      ),
+    )
+
+  public companion object {
+    /** Sentence type code. */
+    public const val ID: String = "BWW"
+
+    private const val TRUE_MARKER = 'T'
+    private const val MAGNETIC_MARKER = 'M'
+    private const val BEARING_TRUE = 0
+    private const val BEARING_MAGNETIC = 2
+    private const val TO_WAYPOINT = 4
+    private const val FROM_WAYPOINT = 5
+
+    /** Reads a BWW sentence from its fields. */
+    public fun from(fields: SentenceFields): Bww =
+      Bww(
+        talker = fields.talker,
+        bearingTrue = fields.doubleAt(BEARING_TRUE),
+        bearingMagnetic = fields.doubleAt(BEARING_MAGNETIC),
+        toWaypointId = fields.stringAt(TO_WAYPOINT),
+        fromWaypointId = fields.stringAt(FROM_WAYPOINT),
+      )
+  }
+}
+
+/**
+ * Distance between two waypoints, in both units at once.
+ *
+ * Example: `$GPWNC,4.6,N,8.5,K,DEST,ORIGIN*hh`
+ *
+ * The distance counterpart to [Bww]: that gives the bearing of a leg, this gives its length.
+ *
+ * @property distanceNauticalMiles the leg's length in nautical miles
+ * @property distanceKilometres the same length in kilometres
+ * @property toWaypointId the waypoint the leg runs to
+ * @property fromWaypointId the waypoint it runs from
+ */
+public data class Wnc(
+  override val talker: TalkerId,
+  val distanceNauticalMiles: Double? = null,
+  val distanceKilometres: Double? = null,
+  val toWaypointId: String? = null,
+  val fromWaypointId: String? = null,
+) : Sentence {
+
+  override val id: String
+    get() = ID
+
+  override fun toNmeaString(): String =
+    buildNmea(
+      talker,
+      ID,
+      listOf(
+        distanceNauticalMiles.field(),
+        NAUTICAL_MILES_MARKER.toString(),
+        distanceKilometres.field(),
+        KILOMETRES_MARKER.toString(),
+        toWaypointId,
+        fromWaypointId,
+      ),
+    )
+
+  public companion object {
+    /** Sentence type code. */
+    public const val ID: String = "WNC"
+
+    private const val NAUTICAL_MILES_MARKER = 'N'
+    private const val KILOMETRES_MARKER = 'K'
+    private const val DISTANCE_NAUTICAL = 0
+    private const val DISTANCE_KILOMETRES = 2
+    private const val TO_WAYPOINT = 4
+    private const val FROM_WAYPOINT = 5
+
+    /** Reads a WNC sentence from its fields. */
+    public fun from(fields: SentenceFields): Wnc =
+      Wnc(
+        talker = fields.talker,
+        distanceNauticalMiles = fields.doubleAt(DISTANCE_NAUTICAL),
+        distanceKilometres = fields.doubleAt(DISTANCE_KILOMETRES),
+        toWaypointId = fields.stringAt(TO_WAYPOINT),
+        fromWaypointId = fields.stringAt(FROM_WAYPOINT),
+      )
+  }
+}
+
+/**
+ * How fast the vessel is closing on a waypoint, which is not how fast it is going.
+ *
+ * Example: `$GPWCV,4.5,N,DEST,A*hh`
+ *
+ * The component of velocity along the bearing to the waypoint. A vessel making six knots across the
+ * leg rather than along it closes at nearly nothing, and this is the number that says so -- it is
+ * what an estimated time of arrival should be computed from.
+ *
+ * @property velocityKnots closing velocity, negative when the waypoint is receding
+ * @property waypointId the waypoint being closed on
+ * @property faaMode how the fix behind this was obtained, absent before NMEA 3
+ */
+public data class Wcv(
+  override val talker: TalkerId,
+  val velocityKnots: Double? = null,
+  val waypointId: String? = null,
+  val faaMode: FaaMode? = null,
+) : Sentence {
+
+  override val id: String
+    get() = ID
+
+  override fun toNmeaString(): String =
+    buildNmea(
+      talker,
+      ID,
+      listOf(velocityKnots.field(), KNOTS_MARKER.toString(), waypointId, faaMode.field()),
+    )
+
+  public companion object {
+    /** Sentence type code. */
+    public const val ID: String = "WCV"
+
+    private const val KNOTS_MARKER = 'N'
+    private const val VELOCITY = 0
+    private const val WAYPOINT_ID = 2
+    private const val FAA_MODE = 3
+
+    /** Reads a WCV sentence from its fields. */
+    public fun from(fields: SentenceFields): Wcv =
+      Wcv(
+        talker = fields.talker,
+        velocityKnots = fields.doubleAt(VELOCITY),
+        waypointId = fields.stringAt(WAYPOINT_ID),
+        faaMode = fields.advisoryCodedAt(FAA_MODE, FaaMode.entries),
+      )
+  }
+}
+
+/**
+ * Whether the vessel has arrived at a waypoint, and by which of two tests.
+ *
+ * Example: `$GPAAM,A,A,0.10,N,DEST*hh`
+ *
+ * Arrival is two separate questions and this answers both. [circleEntered] is whether the vessel
+ * came within [arrivalCircleRadius] of the mark; [perpendicularPassed] is whether it crossed the
+ * line through the mark at right angles to the leg. A vessel that passes wide of a waypoint trips
+ * the second without ever tripping the first, which is what stops a route stalling on a mark that
+ * was never quite reached.
+ *
+ * @property circleEntered [DataStatus.ACTIVE] once inside the arrival circle
+ * @property perpendicularPassed [DataStatus.ACTIVE] once past the perpendicular
+ * @property arrivalCircleRadius radius of the circle, in nautical miles
+ * @property waypointId the waypoint being arrived at
+ */
+public data class Aam(
+  override val talker: TalkerId,
+  val circleEntered: DataStatus? = null,
+  val perpendicularPassed: DataStatus? = null,
+  val arrivalCircleRadius: Double? = null,
+  val waypointId: String? = null,
+) : Sentence {
+
+  override val id: String
+    get() = ID
+
+  override fun toNmeaString(): String =
+    buildNmea(
+      talker,
+      ID,
+      listOf(
+        circleEntered.field(),
+        perpendicularPassed.field(),
+        arrivalCircleRadius.field(),
+        NAUTICAL_MILES_MARKER.toString(),
+        waypointId,
+      ),
+    )
+
+  public companion object {
+    /** Sentence type code. */
+    public const val ID: String = "AAM"
+
+    private const val NAUTICAL_MILES_MARKER = 'N'
+    private const val CIRCLE_ENTERED = 0
+    private const val PERPENDICULAR_PASSED = 1
+    private const val RADIUS = 2
+    private const val WAYPOINT_ID = 4
+
+    /** Reads an AAM sentence from its fields. */
+    public fun from(fields: SentenceFields): Aam =
+      Aam(
+        talker = fields.talker,
+        circleEntered = fields.advisoryCodedAt(CIRCLE_ENTERED, DataStatus.entries),
+        perpendicularPassed = fields.advisoryCodedAt(PERPENDICULAR_PASSED, DataStatus.entries),
+        arrivalCircleRadius = fields.doubleAt(RADIUS),
+        waypointId = fields.stringAt(WAYPOINT_ID),
+      )
+  }
+}
+
+/**
+ * The waypoints of the active route, by name, in order.
+ *
+ * Example: `$GPR00,MELIN,RUSKI,KNUDAN*hh`
+ *
+ * A Garmin sentence that gpsd documents alongside the standard ones. It is [Rte] with everything
+ * but the names removed -- no sentence numbering, no route id, no complete-or-working flag -- so a
+ * route too long for one sentence has nowhere to say so.
+ *
+ * @property waypointIds the names, in the order the route visits them
+ */
+public data class R00(override val talker: TalkerId, val waypointIds: List<String> = emptyList()) :
+  Sentence {
+
+  override val id: String
+    get() = ID
+
+  override fun toNmeaString(): String = buildNmea(talker, ID, waypointIds)
+
+  public companion object {
+    /** Sentence type code. */
+    public const val ID: String = "R00"
+
+    /** Reads an R00 sentence from its fields. */
+    public fun from(fields: SentenceFields): R00 =
+      R00(talker = fields.talker, waypointIds = List(fields.size) { fields.stringAt(it).orEmpty() })
+  }
+}
+
+/** The eight fields [Bwc] and [Bwr] share, read once. */
+internal class BearingToWaypoint(
+  val time: LocalTime?,
+  val waypointPosition: Position?,
+  val bearingTrue: Double?,
+  val bearingMagnetic: Double?,
+  val distance: Double?,
+  val waypointId: String?,
+  val faaMode: FaaMode?,
+)
+
+/**
+ * Reads the fields of a bearing-and-distance-to-waypoint sentence.
+ *
+ * [Bwc] and [Bwr] have identical layouts and differ only in whether the bearing describes a great
+ * circle or a rhumb line, so the reading is shared and the meaning is not.
+ */
+internal fun SentenceFields.bearingToWaypointAt(): BearingToWaypoint =
+  BearingToWaypoint(
+    time = timeAt(0),
+    waypointPosition = positionAt(1, 2, 3, 4),
+    bearingTrue = doubleAt(5),
+    bearingMagnetic = doubleAt(7),
+    distance = doubleAt(9),
+    waypointId = stringAt(11),
+    faaMode = advisoryCodedAt(12, FaaMode.entries),
+  )
+
+/** The same eight fields, on the way back out. */
+internal fun Bwr.asBearingFields(): BearingToWaypoint =
+  BearingToWaypoint(
+    time,
+    waypointPosition,
+    bearingTrue,
+    bearingMagnetic,
+    distanceNauticalMiles,
+    waypointId,
+    faaMode,
+  )
+
+/** Renders a bearing-and-distance-to-waypoint sentence. */
+internal fun bearingToWaypointNmea(
+  talker: TalkerId,
+  id: String,
+  fields: BearingToWaypoint,
+): String =
+  buildNmea(
+    talker,
+    id,
+    listOf(fields.time?.let { NmeaDateTime.formatTime(it) }) +
+      positionFields(fields.waypointPosition) +
+      listOf(
+        fields.bearingTrue.field(),
+        "T",
+        fields.bearingMagnetic.field(),
+        "M",
+        fields.distance.field(),
+        "N",
+        fields.waypointId,
+        fields.faaMode.field(),
+      ),
+  )

@@ -1,5 +1,9 @@
 package io.github.solcott.marineapi.nmea
 
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.UtcOffset
@@ -43,6 +47,35 @@ public object NmeaDateTime {
     }
     return LocalDate(expandYear(year), month, day)
   }
+
+  /**
+   * Parses an `hhmmss[.ss]` field as an **elapsed time**, not a time of day.
+   *
+   * The same six digits, a different meaning. ZTG's "time remaining" and ZFO's "elapsed time" are
+   * durations, and reading them as a [LocalTime] would both misdescribe them and break at the first
+   * leg longer than a day -- a passage of 30 hours is a perfectly ordinary thing to have left to
+   * run, and `LocalTime` cannot hold it.
+   *
+   * @throws IllegalArgumentException if [field] is not an elapsed time.
+   */
+  public fun parseElapsed(field: String): Duration {
+    require(field.length >= 6) { "Elapsed time must be at least 6 characters: \"$field\"" }
+    val hours = field.substring(0, 2).toIntOrNull()
+    val minutes = field.substring(2, 4).toIntOrNull()
+    val seconds = field.substring(4).toDoubleOrNull()
+    require(hours != null && minutes != null && seconds != null) {
+      "Elapsed time is not numeric: \"$field\""
+    }
+    return hours.hours + minutes.minutes + seconds.seconds
+  }
+
+  /** Formats [elapsed] as the `hhmmss` field ZTG and ZFO carry. */
+  public fun formatElapsed(elapsed: Duration): String =
+    elapsed.toComponents { hours, minutes, seconds, _ ->
+      NmeaFormat.integer(hours.toInt(), 2) +
+        NmeaFormat.integer(minutes, 2) +
+        NmeaFormat.integer(seconds, 2)
+    }
 
   /** Formats [date] as a `ddmmyy` field, the form every NMEA date field takes. */
   public fun formatDate(date: LocalDate): String =

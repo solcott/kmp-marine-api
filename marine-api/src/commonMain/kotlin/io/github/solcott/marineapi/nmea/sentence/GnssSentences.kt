@@ -296,3 +296,91 @@ public data class Gbs(
       )
   }
 }
+
+/**
+ * Range residuals: how far each satellite's measurement sits from the fix that was computed.
+ *
+ * Example: `$GPGRS,150119.000,1,-0.33,-2.59,3.03,-0.09,-2.98,7.12,-15.6,17.0,,,,*5A`
+ *
+ * The companion to [Gst] and [Gbs]. Where GST reports the shape of the error ellipse and GBS names
+ * the satellite most likely to be at fault, this gives the raw per-satellite disagreement that both
+ * are derived from. A residual far larger than its neighbours is a satellite worth distrusting.
+ *
+ * The residuals are positional: the nth here belongs to the nth satellite in the [Gsa] of the same
+ * cycle, which is the only place their identities appear. Nothing links the two sentences but their
+ * order in the burst.
+ *
+ * @property time UTC of the GGA or GNS fix these residuals belong to
+ * @property computedAfterFix `false` when the residuals were used in computing the fix, `true` when
+ *   they were recomputed from it afterwards. The two are not interchangeable -- residuals that went
+ *   into a solution are smaller than the ones measured against it.
+ * @property residuals metres, up to twelve, ordered to match the GSA of the same cycle. A blank
+ *   slot reads as `null` rather than zero: a satellite that contributed nothing has no residual,
+ *   and zero would mean a perfect one.
+ * @property systemId which constellation, added in NMEA 4.11
+ * @property signalId which signal, added in NMEA 4.11
+ */
+public data class Grs(
+  override val talker: TalkerId,
+  val time: LocalTime? = null,
+  val computedAfterFix: Boolean? = null,
+  val residuals: List<Double?> = emptyList(),
+  val systemId: Int? = null,
+  val signalId: Int? = null,
+) : Sentence {
+
+  init {
+    require(residuals.size <= RESIDUAL_SLOTS) {
+      "GRS carries at most $RESIDUAL_SLOTS residuals, got ${residuals.size}"
+    }
+  }
+
+  override val id: String
+    get() = ID
+
+  /** The residuals the receiver actually reported, with the empty slots left out. */
+  public val reportedResiduals: List<Double>
+    get() = residuals.filterNotNull()
+
+  override fun toNmeaString(): String =
+    buildNmea(
+      talker,
+      ID,
+      buildList {
+        add(time?.let { NmeaDateTime.formatTime(it) })
+        add(computedAfterFix?.let { if (it) "1" else "0" })
+        for (slot in 0 until RESIDUAL_SLOTS) add(residuals.getOrNull(slot).field())
+        if (systemId != null || signalId != null) {
+          add(systemId?.toString())
+          add(signalId?.toString())
+        }
+      },
+    )
+
+  public companion object {
+    /** Sentence type code. */
+    public const val ID: String = "GRS"
+
+    /** Residuals one GRS sentence can carry, matching GSA's twelve satellite slots. */
+    public const val RESIDUAL_SLOTS: Int = 12
+
+    private const val TIME = 0
+    private const val MODE = 1
+    private const val FIRST_RESIDUAL = 2
+
+    /** Reads a GRS sentence from its fields. */
+    public fun from(fields: SentenceFields): Grs {
+      val systemIdIndex = FIRST_RESIDUAL + RESIDUAL_SLOTS
+      return Grs(
+        talker = fields.talker,
+        time = fields.timeAt(TIME),
+        // 0 and 1 are the whole of the defined range, so an unreadable value is not a third
+        // meaning to be preserved -- it is a field that said nothing.
+        computedAfterFix = fields.advisoryIntAt(MODE)?.let { if (it in 0..1) it == 1 else null },
+        residuals = List(RESIDUAL_SLOTS) { fields.doubleAt(FIRST_RESIDUAL + it) },
+        systemId = fields.advisoryIntAt(systemIdIndex),
+        signalId = fields.advisoryIntAt(systemIdIndex + 1),
+      )
+    }
+  }
+}

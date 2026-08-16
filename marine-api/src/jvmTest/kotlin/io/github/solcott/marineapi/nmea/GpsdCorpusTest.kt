@@ -119,10 +119,16 @@ class GpsdCorpusTest {
   fun theCorpusCoversTheseSentenceTypes() {
     // Which ported types this corpus actually exercises. ZDA, HDT, XDR and ROT are the four it
     // added: before it arrived they were registered with no real device data behind them at all.
+    // GRS, MSS and THS joined them when the gap against gpsd's sentence list was closed -- all
+    // three were being emitted by receivers here and parsed as UnknownSentence until then -- and
+    // with them the four proprietary types, ASHR from an Ashtech attitude sensor and GRME, GRMM
+    // and GRMZ from Garmin receivers. Seven of the 34 types added in that round have real device
+    // data behind them; SampleDataTest names the other 27.
     // VDM and VDO joined them once AIS was ported -- the corpus carries several AIS captures, and
     // they had been counted as unrecognised until there was something to recognise them.
     assertEquals(
       setOf(
+        "ASHR",
         "BOD",
         "BWC",
         "DBT",
@@ -132,16 +138,22 @@ class GpsdCorpusTest {
         "GGA",
         "GLL",
         "GNS",
+        "GRME",
+        "GRMM",
+        "GRMZ",
         "GSA",
         "GST",
         "GSV",
+        "GRS",
         "HDM",
         "HDT",
+        "MSS",
         "MTW",
         "RMB",
         "RMC",
         "ROT",
         "RTE",
+        "THS",
         "TXT",
         "VDM",
         "VDO",

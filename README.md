@@ -201,35 +201,57 @@ that keeps its fields and re-encodes intact.
 
 |ID     | Description
 |---    |---
+|AAM    |Waypoint arrival alarm: circle entered and perpendicular passed
 |ALK    |The NMEA 0183 layer of Raymarine SeaTalk<sup>1</sup> (`$STALK`)
+|ALM    |GPS almanac data, with the orbital fields kept as raw hex
+|APA    |Autopilot cross-track error and bearings, the older sibling of APB
 |APB    |Autopilot cross-track error, destination bearings and heading
+|ASHR    |Ashtech roll, pitch and heave (`$PASHR`)
 |BOD    |Bearing from origin to destination
+|BWC    |Bearing and distance to waypoint, great circle
+|BWR    |Bearing and distance to waypoint, rhumb line
+|BWW    |Bearing from one waypoint to another
 |CUR    |Water currents information
+|DBK    |Water depth below the keel in meters, feet and fathoms
+|DBS    |Water depth below the surface in meters, feet and fathoms
 |DBT    |Water depth below transducer in meters, feet and fathoms
 |DPT    |Water depth in meters with offset to transducer
 |DTA    |Boreal GasFinder2 and GasFinderMC
 |DTB    |Boreal GasFinder2 and GasFinderMC
 |DTM    |Datum reference
+|FSI    |Frequency set information for a radio transceiver
 |GBS    |Glonass satellite fault detection (RAIM support)
 |GGA    |GPS fix data
 |GLL    |Current geographic position and time
 |GNS    |Glonass fix data
+|GRME   |Garmin estimated position error, in meters (`$PGRME`)
+|GRMM   |Garmin map datum in use (`$PGRMM`)
+|GRMZ   |Garmin altitude, in feet (`$PGRMZ`)
+|GRS    |GPS range residuals, for checking a fix satellite by satellite
 |GSA    |Precision of GPS fix
 |GST    |GPS pseudorange noise statistics
 |GSV    |Detailed GPS satellite data
 |HDG    |Heading with magnetic deviation and variation
 |HDM    |Magnetic heading in degrees
 |HDT    |True heading in degrees
+|HFB    |Trawl headrope to footrope and to bottom
+|HSC    |Heading steering command, true and magnetic
 |HTC    |Heading/Track control systems input data and commands.
 |HTD    |Heading/Track control systems output data and commands.
+|ITS    |Second trawl door spread distance
 |MDA    |Meteorological composite
 |MHU    |Relative and absolute humidity with dew point
 |MMB    |Barometric pressure
+|MSK    |Beacon receiver tuning command
+|MSS    |Beacon receiver signal strength and status
 |MTA    |Air temperature in degrees Celcius
 |MTW    |Water temperature in degrees Celcius
 |MWD    |Wind speed and direction.
 |MWV    |Wind speed and angle
 |OSD    |Own ship data
+|R00    |Waypoint ids of the active route
+|RLM    |Return link message, an AIS-SART acknowledgement
+|RMA    |Recommended minimum navigation information "type A" (Loran-C)
 |RMB    |Recommended minimum navigation information "type B"
 |RMC    |Recommended minimum navigation information "type C"
 |ROT    |Vessel's rate of turn
@@ -237,22 +259,47 @@ that keeps its fields and re-encodes intact.
 |RSA    |Rudder angle in degrees
 |RSD    |Radar system data
 |RTE    |GPS route data with list of waypoints
+|SFI    |Scanning frequency information, a list of frequency and mode pairs
+|STN    |Multiple data id, naming the talker of the sentences that follow
+|TDS    |Trawl door spread distance
+|TFI    |Trawl filling indicator, from up to three catch sensors
+|THS    |True heading and status
 |TLB    |Target label
+|TLL    |Target latitude and longitude
+|TPC    |Trawl position as offsets from the vessel
+|TPR    |Trawl position, range and bearing relative to the vessel
+|TPT    |Trawl position, range and true bearing
 |TTM    |Tracked target message
 |TXT    |Text message
+|UBX    |The NMEA 0183 layer of u-blox proprietary messages (`$PUBX`)
 |VBW    |Dual ground/water speed.
 |VDM    |The NMEA 0183 layer of AIS: other vessels' data
 |VDO    |The NMEA 0183 layer of AIS: vessel's own data
 |VDR    |Set and drift
 |VHW    |Water speed and heading
 |VLW    |Distance traveled through water
+|VPW    |Speed measured parallel to the wind
 |VTG    |Course and speed over ground
 |VWR    |Relative wind speed and angle
 |VWT    |True wind speed and angle
+|WCV    |Waypoint closure velocity
+|WNC    |Distance between two waypoints
 |WPL    |Destination waypoint location and ID
 |XDR    |Transducer measurements
 |XTE    |Measured cross-track error
+|XTR    |Measured cross-track error, without the status fields of XTE
 |ZDA    |UTC time and date with local time offset
+|ZFO    |Elapsed time from the origin waypoint
+|ZTG    |Time remaining to the destination waypoint
+
+Field layouts follow [gpsd's NMEA reference](https://gpsd.gitlab.io/gpsd/NMEA.html), and
+`GpsdCorpusTest` re-encodes 103 logs from ~90 real receivers on every build. `THS` is the
+exception: gpsd does not document it, and its layout is taken from a capture where a Skytraq
+PX1172RH sends it immediately before an `HDT` carrying the same heading.
+
+The obsolete positioning systems are deliberately absent — Decca (`DCN`), Loran-C (`GLC`,
+`LCD`), Transit (`GTD`, `GXA`, `TRF`) and Omega (`OLN`). Nothing transmits them. They are not
+errors either: an unregistered type arrives as an `UnknownSentence` that keeps its fields.
 
 ### AIS
 

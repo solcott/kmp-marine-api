@@ -1,6 +1,7 @@
 package io.github.solcott.marineapi.nmea.sentence
 
 import io.github.solcott.marineapi.nmea.CompassPoint
+import io.github.solcott.marineapi.nmea.DataStatus
 import io.github.solcott.marineapi.nmea.Sentence
 import io.github.solcott.marineapi.nmea.SentenceFields
 import io.github.solcott.marineapi.nmea.TalkerId
@@ -194,5 +195,106 @@ internal fun requireEastWest(magnitude: Double?, direction: CompassPoint?, name:
   }
   require(magnitude == null || direction != null) {
     "A magnetic $name of $magnitude needs a direction to mean anything"
+  }
+}
+
+/**
+ * True heading with a validity flag: the modern replacement for [Hdt].
+ *
+ * Example: `$GNTHS,244.28,A*11`
+ *
+ * Added in NMEA 4.1 to give HDT something it never had -- a way of saying the heading is not to be
+ * trusted. A gyro that has lost its reference still outputs a number, and an [Hdt] carrying that
+ * number is indistinguishable from a good one.
+ *
+ * **gpsd does not document this sentence**, so unlike every other type here its layout does not
+ * rest on that reference. It rests on the corpus instead, which is unusually direct evidence: a
+ * Skytraq PX1172RH sends `$GNTHS,244.28,A` immediately followed by `$GNHDT,244.28,T`, so field 1 is
+ * the same true heading HDT carries. Only `A` occurs there in the nine sentences available, so
+ * [DataStatus.VOID] is read on the strength of the convention rather than of data.
+ *
+ * @property heading degrees true
+ * @property status whether the heading is usable
+ */
+public data class Ths(
+  override val talker: TalkerId,
+  val heading: Double? = null,
+  val status: DataStatus? = null,
+) : Sentence {
+
+  override val id: String
+    get() = ID
+
+  override fun toNmeaString(): String =
+    buildNmea(talker, ID, listOf(heading.field(), status.field()))
+
+  public companion object {
+    /** Sentence type code. */
+    public const val ID: String = "THS"
+
+    private const val HEADING = 0
+    private const val STATUS = 1
+
+    /** Reads a THS sentence from its fields. */
+    public fun from(fields: SentenceFields): Ths =
+      Ths(
+        talker = fields.talker,
+        heading = fields.doubleAt(HEADING),
+        // Advisory: NMEA 4.1 allows E, M and S here as well, none of which this models, and a
+        // heading is still a heading when the mode letter is one we do not know.
+        status = fields.advisoryCodedAt(STATUS, DataStatus.entries),
+      )
+  }
+}
+
+/**
+ * Heading to steer, as an autopilot or steering gear was commanded.
+ *
+ * Example: `$IIHSC,241.0,T,238.7,M*hh`
+ *
+ * A *command*, not a measurement: what the vessel has been told to steer, against [Hdt] and [Hdm]
+ * which report where the bow is actually pointing. The difference between the two is the error the
+ * steering gear is working to close.
+ *
+ * @property headingTrue degrees true
+ * @property headingMagnetic degrees magnetic
+ */
+public data class Hsc(
+  override val talker: TalkerId,
+  val headingTrue: Double? = null,
+  val headingMagnetic: Double? = null,
+) : Sentence {
+
+  override val id: String
+    get() = ID
+
+  override fun toNmeaString(): String =
+    buildNmea(
+      talker,
+      ID,
+      listOf(
+        headingTrue.field(),
+        TRUE_MARKER.toString(),
+        headingMagnetic.field(),
+        MAGNETIC_MARKER.toString(),
+      ),
+    )
+
+  public companion object {
+    /** Sentence type code. */
+    public const val ID: String = "HSC"
+
+    private const val TRUE_MARKER = 'T'
+    private const val MAGNETIC_MARKER = 'M'
+    private const val HEADING_TRUE = 0
+    private const val HEADING_MAGNETIC = 2
+
+    /** Reads an HSC sentence from its fields. */
+    public fun from(fields: SentenceFields): Hsc =
+      Hsc(
+        talker = fields.talker,
+        headingTrue = fields.doubleAt(HEADING_TRUE),
+        headingMagnetic = fields.doubleAt(HEADING_MAGNETIC),
+      )
   }
 }

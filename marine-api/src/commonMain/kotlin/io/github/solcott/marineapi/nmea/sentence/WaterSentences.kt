@@ -141,3 +141,95 @@ public data class Mtw(override val talker: TalkerId, val temperature: Double? = 
       Mtw(talker = fields.talker, temperature = fields.doubleAt(TEMPERATURE))
   }
 }
+
+/**
+ * Water depth below the keel: how much water is actually under you.
+ *
+ * Example: `$SDDBK,7.8,f,2.4,M,1.3,F*hh`
+ *
+ * The same three units as [Dbt] measured from a different place, and the difference is the one that
+ * matters when it runs out. A transducer sits some way up the hull, so [Dbt] always reads deeper
+ * than the water you have; this has the offset already taken out. [Dpt] carries that offset
+ * separately and lets you do the arithmetic yourself.
+ *
+ * gpsd marks this obsolete as of 2009. Sounders still send it.
+ *
+ * @property depthFeet depth below the keel in feet
+ * @property depthMeters the same depth in metres
+ * @property depthFathoms the same depth in fathoms
+ */
+public data class Dbk(
+  override val talker: TalkerId,
+  val depthFeet: Double? = null,
+  val depthMeters: Double? = null,
+  val depthFathoms: Double? = null,
+) : Sentence {
+
+  override val id: String
+    get() = ID
+
+  override fun toNmeaString(): String =
+    buildNmea(talker, ID, depthTripleFields(depthFeet, depthMeters, depthFathoms))
+
+  public companion object {
+    /** Sentence type code. */
+    public const val ID: String = "DBK"
+
+    /** Reads a DBK sentence from its fields. */
+    public fun from(fields: SentenceFields): Dbk =
+      with(fields.depthTripleAt()) { Dbk(fields.talker, feet, meters, fathoms) }
+  }
+}
+
+/**
+ * Water depth below the surface: the full depth of water, whatever the vessel draws.
+ *
+ * Example: `$SDDBS,7.8,f,2.4,M,1.3,F*hh`
+ *
+ * The third member of the family, measured from the waterline. [Dbt] is from the transducer and
+ * [Dbk] from the keel; this is the chart's depth, the one a survey would report.
+ *
+ * gpsd marks this obsolete as of 2009.
+ *
+ * @property depthFeet depth below the surface in feet
+ * @property depthMeters the same depth in metres
+ * @property depthFathoms the same depth in fathoms
+ */
+public data class Dbs(
+  override val talker: TalkerId,
+  val depthFeet: Double? = null,
+  val depthMeters: Double? = null,
+  val depthFathoms: Double? = null,
+) : Sentence {
+
+  override val id: String
+    get() = ID
+
+  override fun toNmeaString(): String =
+    buildNmea(talker, ID, depthTripleFields(depthFeet, depthMeters, depthFathoms))
+
+  public companion object {
+    /** Sentence type code. */
+    public const val ID: String = "DBS"
+
+    /** Reads a DBS sentence from its fields. */
+    public fun from(fields: SentenceFields): Dbs =
+      with(fields.depthTripleAt()) { Dbs(fields.talker, feet, meters, fathoms) }
+  }
+}
+
+/** One depth in the three units DBT, DBK and DBS all report it in. */
+internal class DepthTriple(val feet: Double?, val meters: Double?, val fathoms: Double?)
+
+/**
+ * Reads the six fields of a depth-in-three-units sentence.
+ *
+ * DBT, DBK and DBS have the same layout and differ only in where they measure from, so the reading
+ * is shared and the meaning stays on each type.
+ */
+internal fun SentenceFields.depthTripleAt(): DepthTriple =
+  DepthTriple(feet = doubleAt(0), meters = doubleAt(2), fathoms = doubleAt(4))
+
+/** The same six fields on the way out, unit markers included. */
+internal fun depthTripleFields(feet: Double?, meters: Double?, fathoms: Double?): List<String?> =
+  listOf(feet.field(), "f", meters.field(), "M", fathoms.field(), "F")
