@@ -24,8 +24,8 @@ kotlin {
 
   jvm {
     // Do not call withJava(), and do not apply the java/java-library plugins: KGP rejects
-    // them as incompatible with KMP. Nothing here needs them -- the Java tree is gone and
-    // src/jvmMain holds only resources.
+    // them as incompatible with KMP. Nothing here needs them: there is no src/jvmMain at
+    // all, so the jvm artifact is built entirely from commonMain.
     compilerOptions {
       jvmTarget = JvmTarget.fromTarget(jvmCompat)
       // Kotlin's equivalent of javac --release: validates against the Java 17 API

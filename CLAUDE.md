@@ -8,7 +8,7 @@ Fork of ktuukkan/marine-api ("Java Marine API") — a parser library for NMEA 01
 
 Gradle Kotlin Multiplatform build, published as `io.github.solcott:kmp-marine-api`.
 
-**The Kotlin port is complete.** All source lives in `marine-api/src/commonMain/kotlin` under `io.github.solcott.marineapi`. The original Java tree under `net.sf.marineapi` was deleted in the phase 6 cutover; `src/jvmMain` now holds only the `doc/` resources that ship in the jvm jar.
+**The Kotlin port is complete.** All source lives in `marine-api/src/commonMain/kotlin` under `io.github.solcott.marineapi` — there is no `src/jvmMain` at all, so every published artifact is built from the same code. The original Java tree under `net.sf.marineapi` was deleted in the phase 6 cutover.
 
 The port was a redesign, not a transliteration: values are immutable, optional NMEA fields are nullable instead of throwing, and line-level failures are returned as `ParseResult` rather than thrown. No reflection — it does not work on Native or JS. See `.claude/plans/` for the phase plan that produced it.
 
