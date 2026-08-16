@@ -107,9 +107,12 @@ public class Sixbit(public val payload: String, public val fillBits: Int = 0) {
    * Bits `[from, to)` as text, six bits per character.
    *
    * AIS text is a 64-character subset of ASCII in its own order, and fields are fixed width. `@` is
-   * the terminator, so it and everything after it is dropped; devices also pad with spaces, and on
-   * both sides -- one transponder in the reference fixtures sends its call sign as `" ZA83R"` -- so
-   * surrounding whitespace goes too.
+   * the terminator, so it and everything after it is dropped, and the **trailing** spaces devices
+   * pad with go too.
+   *
+   * Leading whitespace is kept. gpsd keeps it -- one transponder in the corpus sends its ship name
+   * as `" TINA"` and gpsd reports the space -- and since `@` already marks where the data ends,
+   * anything before that is something the station chose to send.
    *
    * A range running past the end of the payload is read as far as the payload goes, rather than
    * failing the way a numeric one does. Text is the one kind of field where the part that arrived
@@ -130,7 +133,28 @@ public class Sixbit(public val payload: String, public val fillBits: Int = 0) {
       text.append(contentChar(uintAt(index, index + BITS_PER_CHAR)))
       index += BITS_PER_CHAR
     }
-    return text.toString().substringBefore(PAD_CHAR).trim()
+    return text.toString().substringBefore(PAD_CHAR).trimEnd()
+  }
+
+  /**
+   * Bits `[from, to)` as text with nothing stripped, terminator and padding included.
+   *
+   * For the one question [stringAt] cannot answer: whether a fixed-width field was *full*. A type
+   * 21 name that ran to all 20 characters continues into the message's name extension; one that
+   * terminated early does not, and the bits where the extension would have been are spare. They
+   * still decode to characters, so reading them regardless appends plausible-looking garbage --
+   * `"AHAAHA ROCKS NORTH"` becomes `"AHAAHA ROCKS NORTH>S+>N"`.
+   */
+  internal fun rawStringAt(from: Int, to: Int): String {
+    require(from in 0..to) { "Bit range [$from, $to) runs backwards" }
+    val end = minOf(to, payload.length * BITS_PER_CHAR)
+    val text = StringBuilder()
+    var index = from
+    while (index + BITS_PER_CHAR <= end) {
+      text.append(contentChar(uintAt(index, index + BITS_PER_CHAR)))
+      index += BITS_PER_CHAR
+    }
+    return text.toString()
   }
 
   private fun requireRange(from: Int, to: Int) {

@@ -200,14 +200,27 @@ public data class AisAidToNavigationReport(
       )
 
     /**
-     * The mark's name, with the extension field appended.
+     * The mark's name, with the extension field appended **only when there is one**.
      *
      * The extension is optional and variable-length -- a message carrying none simply stops at bit
-     * 272 -- so [Sixbit.stringAt] reading only as far as the payload goes is what makes this one
-     * expression. The Java implementation returned the two fields separately and left joining them
-     * to the caller.
+     * 272 -- and it is meaningful only when the 20-character name field ran out of room. A name
+     * that terminated early with `@` is complete, and the bits past 272 are spare; they still
+     * decode to characters, so appending them regardless turns `"AHAAHA ROCKS NORTH"` into `"AHAAHA
+     * ROCKS NORTH>S+>N"`. That is what this library did until the comparison against gpsd's own
+     * decoder caught it, and the Java implementation before it returned the two fields separately
+     * and left the caller to make the same mistake.
+     *
+     * Verified against every type 21 in the conformance corpus: 84 distinct name-and-extension
+     * combinations, all matching gpsd.
      */
-    private fun Sixbit.aidNameAt(from: Int): String =
-      stringAt(from, NAME_END) + stringAt(NAME_EXTENSION_START, NAME_EXTENSION_END)
+    private fun Sixbit.aidNameAt(from: Int): String {
+      val name = stringAt(from, NAME_END)
+      val ranOutOfRoom = PAD_CHARACTER !in rawStringAt(from, NAME_END)
+      if (!ranOutOfRoom) return name
+      return (name + stringAt(NAME_EXTENSION_START, NAME_EXTENSION_END)).trimEnd()
+    }
+
+    /** Terminator of an AIS text field; its absence is what marks a field as full. */
+    private const val PAD_CHARACTER = '@'
   }
 }

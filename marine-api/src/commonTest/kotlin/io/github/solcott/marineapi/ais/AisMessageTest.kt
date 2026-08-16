@@ -111,17 +111,20 @@ class AisStaticAndVoyageDataTest {
     assertEquals(603_916_439, report.mmsi)
     assertEquals(0, report.aisVersion)
     assertEquals(439_303_422, report.imoNumber)
-    assertEquals("ARCO AVON", report.name)
-    assertEquals("ZA83R", report.callSign)
+    assertEquals("   ARCO AVON", report.name)
+    assertEquals("  ZA83R", report.callSign)
     assertEquals(69, report.shipType)
   }
 
   @Test
-  fun stripsThePaddingFromBothEndsOfAField() {
-    // This transponder pads on the left: the call sign field holds "  ZA83R". The Java
-    // implementation trimmed these three fields of this one message type and no others.
-    assertEquals("ZA83R", report.callSign)
-    assertEquals("HOUSTON", report.destination)
+  fun stripsTheTerminatorAndTrailingPaddingButKeepsWhatCameBefore() {
+    // '@' ends a field and trailing spaces are padding, so both go. Leading spaces stay: gpsd keeps
+    // them, and once '@' has marked where the data ends, anything before it is something the
+    // station chose to send. This transponder pads on the left, and both fields show it.
+    assertEquals("  ZA83R", report.callSign)
+    assertEquals("  HOUSTON", report.destination)
+    // The Java implementation trimmed these three fields of this one message type and no others.
+    assertEquals("   ARCO AVON", report.name)
   }
 
   @Test
@@ -129,7 +132,7 @@ class AisStaticAndVoyageDataTest {
     assertEquals(EstimatedArrival(month = 3, day = 23, hour = 19, minute = 45), report.eta)
     assertFalse(report.eta.isEmpty)
     assertEquals(13.2, report.maximumDraught!!, 1e-9)
-    assertEquals("HOUSTON", report.destination)
+    assertEquals("  HOUSTON", report.destination)
   }
 
   @Test
@@ -368,8 +371,8 @@ class AisRegistryTest {
     // type and threw, discarding a type 5 whose name and destination read perfectly well.
     val truncated = Payloads.STATIC_AND_VOYAGE.dropLast(2)
     val message = decode<AisStaticAndVoyageData>(truncated, fillBits = 0)
-    assertEquals("ARCO AVON", message.name)
-    assertEquals("HOUSTON", message.destination, "text is read as far as the payload goes")
+    assertEquals("   ARCO AVON", message.name)
+    assertEquals("  HOUSTON", message.destination, "text is read as far as the payload goes")
     assertNull(message.isDteReady, "the last bit of the message never arrived")
   }
 

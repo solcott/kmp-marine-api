@@ -5,6 +5,25 @@ Recorded NMEA 0183 output from ~90 GNSS receivers and marine instruments, taken 
 conformance corpus: `SampleDataTest` parses every line of every file and re-encodes each parsed
 sentence, so a sentence type that mishandles what a real device emits fails the build.
 
+## The `.chk` files
+
+Each `<name>.log` has a `<name>.log.chk` beside it holding **gpsd's own decoder output** for that
+input, interleaved line by line. Fetched from the same directory on 2026-08-16; they track gpsd
+master and are a snapshot rather than a live reference.
+
+`"scaled":false` means the numbers are raw bit-field values, so they compare directly against what
+this library decodes with no unit conversion in between — and therefore no way for two errors to
+cancel. `GpsdAisCheckTest` compares 1,308 AIS messages against them field by field.
+
+This makes gpsd's decoder the reference implementation for anything these files cover. **A
+disagreement with them is a bug in this library until shown otherwise.** It has already found two:
+the type 21 name extension was being appended when the name field was not full, and text fields
+were having their leading whitespace stripped where gpsd keeps it.
+
+A sentence gpsd ignores produces no output line, and a type 24 part A produces none either — gpsd
+caches it and emits one merged record when part B arrives, where this library reports the two
+halves separately.
+
 Only the pure-NMEA logs were taken. gpsd's directory also holds ~90 captures of binary protocols
 (SiRF, TSIP, Zodiac, Garmin binary and others) which this library does not parse, and
 `st-teseo-liv4f.log`, whose every line carries a doubled `$$` from a capture artifact.
