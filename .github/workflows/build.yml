@@ -51,6 +51,7 @@ jobs:
         run: >-
           ./gradlew :marine-api:jvmJar :marine-api:jvmTest
           :marine-api:dokkaGeneratePublicationHtml :examples:jvmJar
+          :examples-android:assembleDebug
 
       - name: Upload test report
         if: failure()

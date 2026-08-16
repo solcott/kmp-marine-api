@@ -133,6 +133,27 @@ val nmea = "$GPGSA,A,3,03,05,07,08,10,15,18,19,21,28,,,1.4,0.9,1.1*3A"
 val gsa = SentenceRegistry.Default.parse(nmea).sentenceOrNull() as? Gsa
 ```
 
+**The `Source` is the only part that differs between platforms.** Everything above is common
+code; this is how you get one:
+
+```kotlin
+// JVM, Android, Native, Node — anywhere with a filesystem
+SystemFileSystem.source(Path("nmea.log")).buffered()
+
+// JVM and Android — a serial port, a socket, a process, anything with an InputStream
+port.inputStream.asSource().buffered()
+
+// Android — a file the user picked, with no permission declared
+contentResolver.openInputStream(uri)!!.asSource().buffered()
+
+// Browser — no filesystem, so wrap the bytes you fetched. A WebSocket is the same shape.
+Buffer().also { it.write(bytes) }
+```
+
+Pick the dispatcher to read on at that same edge. There is no one right answer, which is why
+the library will not choose: `Dispatchers.IO` is public API on JVM and Android, is `internal`
+on Kotlin/Native, and does not exist on JS or Wasm.
+
 Sentences are immutable values, so writing one is construction rather than a series of
 setters, and `toNmeaString()` computes the checksum:
 
@@ -154,7 +175,12 @@ longer required: nothing here uses reflection, and the serial port driver was on
 dependency of the examples.
 
 See also:
-- [Examples](examples/src/jvmMain/kotlin/io/github/solcott/marineapi/example)
+- [Examples](examples/src/commonMain/kotlin/io/github/solcott/marineapi/example) — the demo
+  bodies, shared by every platform, with entry points for
+  [the JVM](examples/src/jvmMain/kotlin/io/github/solcott/marineapi/example),
+  [Node and the browser](examples/src/jsMain/kotlin/io/github/solcott/marineapi/example),
+  [macOS](examples/src/macosArm64Main/kotlin/io/github/solcott/marineapi/example) and
+  [Android](examples-android/src/main/kotlin/io/github/solcott/marineapi/example/android)
 - [API documentation](https://javadoc.io/doc/io.github.solcott/kmp-marine-api)
 - [Graphical User Interface](https://github.com/aitov/gps-info) using marine-api by @aitov
 

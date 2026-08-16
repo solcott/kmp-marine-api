@@ -12,10 +12,11 @@ Gradle Kotlin Multiplatform build, published as `io.github.solcott:kmp-marine-ap
 
 The port was a redesign, not a transliteration: values are immutable, optional NMEA fields are nullable instead of throwing, and line-level failures are returned as `ParseResult` rather than thrown. No reflection — it does not work on Native or JS. See `.claude/plans/` for the phase plan that produced it.
 
-Two modules:
+Three modules:
 
 - `:marine-api` — the library. The only published module.
-- `:examples` — six demo applications in `io.github.solcott.marineapi.example`, each a file with a top-level `main`. JVM-only (`jvm()` and nothing else), never published, and depends on `:marine-api`.
+- `:examples` — the demos, in `io.github.solcott.marineapi.example`. Multiplatform: the demo bodies are `commonMain` suspend functions taking a `() -> Source`, and `jvmMain`, `jsMain` (Node **and** browser, one compilation) and `macosArm64Main` each supply an entry point. Never published.
+- `:examples-android` — an Android app, the only non-KMP module in the build. `com.android.application` with **no** `kotlin-android` plugin: AGP 9 has built-in Kotlin support and rejects it. Consumes `:marine-api`'s `android` target through module metadata, as an external consumer would. Never published.
 
 This fork is **not** intended to send PRs upstream — divergence is fine.
 
@@ -29,7 +30,11 @@ This fork is **not** intended to send PRs upstream — divergence is fine.
 ./gradlew :marine-api:jvmTest --tests '*GgaTest.readsEveryField'   # single method
 ./gradlew :marine-api:dokkaGeneratePublicationHtml        # API docs
 ./gradlew :examples:jvmJar                   # compile the examples
-./gradlew :examples:runFileExample --args="nmea.log"      # run one example (see `tasks --group examples`)
+./gradlew :examples:runFileExample --args="nmea.log"      # run one (see `tasks --group examples`)
+./gradlew :examples:jsNodeDevelopmentRun -PdemoArgs="file nmea.log"   # same demo, on Node
+./gradlew :examples:jsBrowserRun             # same demo, in a browser
+./gradlew :examples:runDebugExecutableMacosArm64 -PdemoArgs="file nmea.log"
+./gradlew :examples-android:assembleDebug
 ./gradlew ktfmtFormat                        # format Kotlin/build scripts (ktfmtCheck in CI)
 ./gradlew sortDependencies                   # checkSortDependencies in CI
 ./gradlew :marine-api:publishToMavenLocal
@@ -55,6 +60,8 @@ These are non-obvious and easy to break:
 - **`commonMain` must never go back to being empty.** With no common Kotlin source the Kotlin/Native compilations are `NO-SOURCE`, produce no `.klib`, and the three Apple publications fail. It now holds the whole library, so this is only a hazard if something drastic happens.
 - `explicitApi()` is on for `:marine-api`: every public declaration needs an explicit visibility and return type.
 - **The IO layer must not choose a dispatcher.** `Source.nmeaResults()`/`nmeaSentences()` read blocking sources on the collecting coroutine. There is no one dispatcher to pick: `Dispatchers.IO` is public API on **JVM and Android only** — on Native it exists but is `internal` (`nativeMain/Dispatchers.kt` in coroutines), and JS/Wasm have no threads at all. Callers add `.flowOn(...)` with whatever their platform has. Do not import it into `commonMain`.
+- **The examples' run tasks each work differently, and none of them by accident.** Gradle's `--args` calls `setArgsString()` and **replaces** the argument list, so the JVM tasks pass the demo name as a system property to leave `--args` free for the file path. The Kotlin/Native run task is a plain `Exec` and `jsNodeRun` is a `NodeJsExec`; neither takes `--args`, so both read `-PdemoArgs`. A `CommandLineArgumentProvider` lambda cannot be used to supply them — a SAM conversion in a `.gradle.kts` captures the script object, which the configuration cache refuses to serialize.
+- **Kotlin/Native needs an explicit `entryPoint`.** `binaries.executable()` looks for `main` in the **root** package and fails at the LINK step, not the compile, with "Could not find '/main' function".
 - **Do not replace `NmeaLineReader` with `kotlinx.io.readLine`.** That splits on `LF` alone; NMEA uses `CRLF`, and captures in the corpus use a lone `CR` throughout or mix both in one file. An `LF`-only split turns a `CR`-terminated feed into one unbounded line.
 
 ## Code style
