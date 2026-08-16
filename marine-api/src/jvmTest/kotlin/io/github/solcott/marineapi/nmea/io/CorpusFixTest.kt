@@ -44,9 +44,9 @@ class CorpusFixTest {
     }
     // Pinned, so that a change to the cycle rule has to be a deliberate one: these numbers move
     // together with any change to what delimits a cycle or what makes one worth reporting.
-    assertEquals(1854, fixes)
-    assertEquals(1587, withAltitude, "the rest came from receivers sending no GGA")
-    assertEquals(1833, withDate, "the rest came from cycles carrying neither RMC nor ZDA")
+    assertEquals(2089, fixes)
+    assertEquals(1697, withAltitude, "the rest came from receivers sending no GGA")
+    assertEquals(1848, withDate, "the rest came from cycles carrying neither RMC nor ZDA")
   }
 
   @Test
@@ -62,7 +62,7 @@ class CorpusFixTest {
     assertEquals(
       mapOf(
         "ait250.log" to 34,
-        "april6_2019.log" to 1,
+        "april6_2019.log" to 2,
         "magellan-ec10.log" to 21,
         "meinberg-gps164.log" to 70,
       ),
@@ -72,16 +72,19 @@ class CorpusFixTest {
 
   @Test
   fun reportsNoFixForACaptureWhereTheReceiverNeverHadOne() = runTest {
-    // Sixteen logs yield nothing. Seven are receivers indoors or still searching -- every GGA
-    // reports quality 0 or 8 and every RMC and GLL reports a void status -- and the rest carry no
-    // position sentence at all, being AIS captures, a depth sounder and an autopilot.
+    // Fourteen logs yield nothing. Nine are receivers indoors, still searching, or running in
+    // simulator mode -- every GGA reports quality 0 or 8 and every RMC and GLL a void status --
+    // and the rest carry no position sentence at all, being AIS captures and an autopilot.
+    //
+    // sounder.log and mr-350p.log used to be here. They are not receivers with no fix: they are
+    // receivers with no VELOCITY, and requiring one discarded 136 real positions between them.
     val silent =
       GpsdCorpusTest.corpusFiles()
         .filter { sentencesOf(it).positions().toList().isEmpty() }
         .map { it.name }
-    assertEquals(16, silent.size, "silent logs: $silent")
+    assertEquals(14, silent.size, "silent logs: $silent")
     assertTrue("skytraq.log" in silent, "a full sentence set, every one of them reporting no fix")
-    assertTrue("sounder.log" in silent, "a depth sounder reports no position at all")
+    assertTrue("GPSmap-76S.log" in silent, "a receiver in simulator mode: quality 8, FAA mode S")
   }
 
   @Test

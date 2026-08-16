@@ -59,11 +59,22 @@ private fun sentencesOf(lines: List<String>): Flow<Sentence> = flow {
 class PositionsTest {
 
   @Test
-  fun reportsNothingForACycleWithNoVelocityInIt() = runTest {
-    // GGA says where the vessel is but not how fast it is going, and a fix is both.
-    assertEquals(emptyList(), sentencesOf(Examples.GGA).positions().toList())
-    assertEquals(emptyList(), sentencesOf(Examples.GGA, Examples.GLL).positions().toList())
+  fun reportsAFixFromAPositionWithNoVelocityAtAll() = runTest {
+    // A receiver that says where it is without saying how fast it is going has still said where it
+    // is, and speedKnots is nullable for exactly that. Requiring a velocity used to discard 136
+    // real positions in the conformance corpus -- a depth sounder's 122 GLL fixes and 14 GGA from
+    // an mr-350p -- every one of which gpsd reports.
+    val fromGga = sentencesOf(Examples.GGA).positions().toList().single()
+    assertEquals(GpsFixQuality.NORMAL, fromGga.fixQuality)
+    assertNull(fromGga.speedKnots, "nothing in this cycle reported a speed")
+
     assertEquals(1, sentencesOf(Examples.GGA, Examples.RMC).positions().toList().size)
+  }
+
+  @Test
+  fun reportsNothingForACycleWithNoPositionInIt() = runTest {
+    // The one thing a fix does require. A VTG carries velocity and nothing else.
+    assertEquals(emptyList(), sentencesOf(Examples.VTG).positions().toList())
   }
 
   @Test
@@ -211,21 +222,25 @@ class PositionsTest {
 
   @Test
   fun aRepeatedSentenceTypeStartsANewCycle() = runTest {
-    // Two GGAs with no RMC between them cannot be one cycle: the receiver moved on. The second
-    // one is what the eventual fix is built from, and the first is not silently blended into it.
+    // Two GGAs with no RMC between them cannot be one cycle: the receiver moved on. Each closes a
+    // cycle of its own, and the first is not silently blended into the second.
     val second =
       Checksum.append("\$GPGGA,120045.567,6012.552,N,02501.941,E,1,00,2.0,30.0,M,19.6,M,,")
-    val fix = sentencesOf(Examples.GGA, second, Examples.RMC).positions().toList().single()
-    assertEquals(60.0 + 12.552 / 60.0, fix.position.latitude, 1e-12)
-    assertEquals(30.0, fix.position.altitude)
+    val fixes = sentencesOf(Examples.GGA, second, Examples.RMC).positions().toList()
+    assertEquals(2, fixes.size)
+    assertEquals(60.0 + 11.552 / 60.0, fixes[0].position.latitude, 1e-12)
+    assertEquals(60.0 + 12.552 / 60.0, fixes[1].position.latitude, 1e-12)
+    assertEquals(30.0, fixes[1].position.altitude, "the second GGA's altitude, not the first's")
   }
 
   @Test
-  fun boundsTheStateItHoldsDuringAWarmUp() = runTest {
-    // A device emitting nothing but GGA forever reports no fix and accumulates nothing: each
-    // repeat replaces the last. This is what the predecessor's expiry timer was for.
-    val warmUp = List(500) { Examples.GGA }
-    assertEquals(emptyList(), sentencesOf(warmUp).positions().toList())
+  fun holdsOneCycleHoweverLongTheFeedRuns() = runTest {
+    // A device emitting nothing but GGA accumulates nothing: each repeat closes the cycle before
+    // it and replaces it, so the state held is one cycle whether the feed is three sentences or
+    // three million. This is what the predecessor's expiry timer was for.
+    val fixes = sentencesOf(List(500) { Examples.GGA }).positions().toList()
+    assertEquals(500, fixes.size)
+    assertTrue(fixes.all { it == fixes.first() }, "every cycle held exactly one GGA")
   }
 
   @Test

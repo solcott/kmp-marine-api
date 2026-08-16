@@ -41,8 +41,10 @@ class GpsdCorpusTest {
       // SiRF firmware banners: "$PSRFTXTVersion GSW3.2.2..." with no comma anywhere. NMEA fields
       // are comma-delimited, so there is no tag to separate from the body.
       "blumax-gps009.log" to 8,
-      // One RMC carrying "2208-1" where the ddmmyy date belongs.
-      "april6_2019.log" to 1,
+      // april6_2019.log used to be here, for one RMC carrying "2208-1" where the ddmmyy date
+      // belongs. It parses now: RMC's date is advisory, so a corrupt one nulls the date rather
+      // than discarding a position and a speed that are both fine. gpsd keeps that position too,
+      // which is what prompted the change.
       // Truncated or empty checksum fields: "*7", "*".
       "garmin48.log" to 1,
       "garmin-geko201.log" to 1,

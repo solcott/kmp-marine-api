@@ -122,7 +122,7 @@ public data class Rmc(
           fields.positionAt(LATITUDE, LATITUDE_HEMISPHERE, LONGITUDE, LONGITUDE_HEMISPHERE),
         speedKnots = fields.doubleAt(SPEED),
         courseTrue = fields.doubleAt(COURSE),
-        date = fields.dateAt(DATE),
+        date = fields.advisoryDateAt(DATE),
         magneticVariation = variation.magnitude,
         variationDirection = variation.direction,
         faaMode = fields.advisoryCodedAt(FAA_MODE, FaaMode.entries),

@@ -67,11 +67,11 @@ class CorpusFlowTest {
           if (Nmea.isBeginChar(line[0])) nmeaLooking++ else extra += line
         }
       }
-      // One more than GpsdCorpusTest's 120, and the difference is deliberate: that test trims
-      // each line before parsing, and one capture carries a sentence with a stray leading space.
-      // A sentence begins with `$`, so the flow reports it rather than tidying it up first.
-      assertEquals(121, nmeaLooking)
-      assertEquals(126, everything)
+      // Equal to GpsdCorpusTest's 120 now. It used to be one more -- that test trims each line
+      // before parsing and one capture carries a sentence with a stray leading space -- but the
+      // corrupt-date RMC that made up the difference parses since RMC's date became advisory.
+      assertEquals(120, nmeaLooking)
+      assertEquals(125, everything)
       assertEquals(5, extra.size)
       assertEquals(3, extra.count { it.startsWith("{") }, "gpsd JSON control records")
     }

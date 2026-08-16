@@ -99,6 +99,22 @@ internal constructor(
   }
 
   /**
+   * Field at [index] as a `ddmmyy` date, or `null` if it is empty **or unreadable**.
+   *
+   * The tolerant counterpart to [dateAt], for a sentence whose date is advisory by the rule
+   * [advisoryCodedAt] describes: nothing else in the sentence is read differently because of it.
+   * RMC is the case that matters. Its date sits six fields after its position, and one receiver in
+   * the conformance corpus sends `2208-1` there -- a corrupt date attached to a position that is
+   * perfectly good, which [dateAt] would discard the whole sentence over. gpsd keeps the position.
+   *
+   * ZDA keeps [dateAt]: a ZDA whose date will not read has nothing left worth having.
+   */
+  public fun advisoryDateAt(index: Int): LocalDate? {
+    val raw = stringAt(index) ?: return null
+    return runCatching { NmeaDateTime.parseDate(raw) }.getOrNull()
+  }
+
+  /**
    * Field at [index] as one of [entries], matched on [CharCoded.code], or `null` if empty.
    *
    * ```

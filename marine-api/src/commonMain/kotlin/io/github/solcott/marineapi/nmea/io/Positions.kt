@@ -92,12 +92,16 @@ public data class PositionFix(
  * operator that stopped at the first complete-looking cycle would silently lose that device's
  * altitude and those devices' dates.
  *
- * A cycle is reported when it holds a position -- `GGA`, `RMC` or `GLL` -- **and** a velocity, from
- * `RMC` or `VTG`. `RMC` alone satisfies both, which the predecessor's rule did not allow: it
- * demanded a `GGA` or `GLL` in every cycle, and so reported nothing at all for the four receivers
- * in the corpus that send `RMC` and no other position sentence. Nothing is reported for a cycle
- * whose sentences say the data is bad -- a void `RMC` or `GLL` status, an `RMC` in [FaaMode.NONE],
- * or a `GGA` reporting [GpsFixQuality.INVALID] -- nor for one whose position fields are empty.
+ * **A cycle is reported when it holds a position** -- `GGA`, `RMC` or `GLL` -- and nothing else is
+ * required. A velocity is not: a receiver that reports where it is without reporting how fast it is
+ * going has still reported where it is, and [PositionFix.speedKnots] is nullable for exactly that
+ * case. Two rules were tried before this one and both discarded real fixes: the predecessor
+ * demanded a `GGA` or `GLL` in every cycle, losing everything from the four corpus receivers that
+ * send `RMC` alone, and requiring a velocity lost another 136 positions from the two that send none
+ * -- 122 `$ECGLL` sentences from a depth sounder and 14 `GGA` from an `mr-350p`. gpsd reports a fix
+ * for every one of them, which is what settled it. Nothing is reported for a cycle whose sentences
+ * say the data is bad -- a void `RMC` or `GLL` status, an `RMC` in [FaaMode.NONE], or a `GGA`
+ * reporting [GpsFixQuality.INVALID] -- nor for one whose position fields are empty.
  *
  * Where two sentences carry the same value the more informative one wins: position from `GGA` (it
  * is the one with altitude) before `RMC` before `GLL`, velocity from `VTG` before `RMC`, and either
@@ -167,9 +171,8 @@ private class PositionCycle {
     }
   }
 
-  /** Whether the cycle has both halves of a fix: somewhere to be, and how fast it got there. */
-  private fun isComplete(): Boolean =
-    (gga != null || rmc != null || gll != null) && (rmc != null || vtg != null)
+  /** Whether the cycle carries a position. That is the whole of what a fix requires. */
+  private fun isComplete(): Boolean = gga != null || rmc != null || gll != null
 
   /**
    * Whether the cycle's own status fields say the data is worth reporting.
@@ -181,7 +184,11 @@ private class PositionCycle {
   private fun reportsGoodData(): Boolean {
     rmc?.let { if (it.status == DataStatus.VOID || it.faaMode == FaaMode.NONE) return false }
     gga?.let { if (it.fixQuality == GpsFixQuality.INVALID) return false }
-    gll?.let { if (it.status == DataStatus.VOID) return false }
+    // ACTIVE specifically, not "anything but VOID". A status this library could not read is not
+    // the same as a station saying nothing: an eXplorist 110 in the corpus sends `N` there, and
+    // reading that as permission would report 11 fixes gpsd reports as no-fix. Of the 1,025 GLL
+    // sentences in the corpus not one omits the field, so demanding it costs nothing real.
+    gll?.let { if (it.status != DataStatus.ACTIVE) return false }
     return true
   }
 
