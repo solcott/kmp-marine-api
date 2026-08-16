@@ -6,3 +6,8 @@
 # data and throws away a property the parser is supposed to handle: SentenceRegistry.parse trims
 # CR and LF, and the corpus is where that gets exercised against real hardware output.
 marine-api/src/jvmTest/resources/data/** -text
+
+# The browser demo's feed, for the same reason: it is a slice of one of those captures and is
+# CRLF-terminated like the hardware that produced it. Normalized to LF it would still parse -- the
+# reader handles all three terminators -- but it would stop being a truthful sample.
+examples/src/jsMain/resources/sample.log -text
