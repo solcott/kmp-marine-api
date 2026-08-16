@@ -32,9 +32,11 @@ import kotlinx.io.Source
  * source is not closed when the flow ends; whoever opened it still owns it.
  *
  * **Reading blocks the collecting coroutine.** [Source] is a blocking interface, and this library
- * cannot choose a dispatcher for you: `Dispatchers.IO` exists on JVM and Native but not on JS or
- * Wasm. On a platform where it exists and a source that can stall -- a socket, a serial port -- add
- * `.flowOn(Dispatchers.IO)`.
+ * cannot choose a dispatcher for you, because there is no one dispatcher to choose:
+ * `Dispatchers.IO` is public API on JVM and Android only. On Kotlin/Native it exists but is
+ * `internal`, so use `Dispatchers.Default` or a pool of your own there; on JS and Wasm there are no
+ * threads to move the work to at all. Given a source that can stall -- a socket, a serial port --
+ * add `.flowOn(...)` with whatever your platform provides.
  *
  * @param registry which sentence types to recognise; unregistered types arrive as
  *   [io.github.solcott.marineapi.nmea.UnknownSentence] rather than as failures.
