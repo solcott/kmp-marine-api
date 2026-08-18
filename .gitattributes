@@ -1,0 +1,13 @@
+# Recorded device output is data, not source. Store it byte for byte.
+#
+# NMEA terminates a sentence with CRLF, and these captures carry it -- some with CRLF throughout,
+# some with a lone CR, some with both in one file. With core.autocrlf=input, which is set on at
+# least one machine here, git rewrites those to LF on commit. That silently edits third-party test
+# data and throws away a property the parser is supposed to handle: SentenceRegistry.parse trims
+# CR and LF, and the corpus is where that gets exercised against real hardware output.
+marine-api/src/jvmTest/resources/data/** -text
+
+# The browser demo's feed, for the same reason: it is a slice of one of those captures and is
+# CRLF-terminated like the hardware that produced it. Normalized to LF it would still parse -- the
+# reader handles all three terminators -- but it would stop being a truthful sample.
+examples/src/jsMain/resources/sample.log -text

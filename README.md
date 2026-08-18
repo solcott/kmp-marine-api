@@ -2,8 +2,7 @@
 [![License](https://img.shields.io/badge/License-LGPL%20v3-brightgreen.svg)](./LICENSE)
 [![Build & Test](https://github.com/solcott/kmp-marine-api/actions/workflows/build.yml/badge.svg)](https://github.com/solcott/kmp-marine-api/actions/workflows/build.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.solcott/kmp-marine-api)](https://central.sonatype.com/artifact/io.github.solcott/kmp-marine-api)
-[![Download Java Marine API](https://img.shields.io/sourceforge/dm/marineapi.svg)](https://sourceforge.net/projects/marineapi/files/Releases/)
-[![Javadocs](http://www.javadoc.io/badge/net.sf.marineapi/marineapi.svg)](http://www.javadoc.io/doc/net.sf.marineapi/marineapi)
+[![Javadocs](https://javadoc.io/badge2/io.github.solcott/kmp-marine-api/javadoc.svg)](https://javadoc.io/doc/io.github.solcott/kmp-marine-api)
 
 - [Java Marine API](#java-marine-api)
   - [About](#about)
@@ -18,7 +17,6 @@
     - [Raymarine SeaTalk<sup>1</sup>](#raymarine-seatalksup1sup)
     - [u-blox](#u-blox)
   - [Distribution](#distribution)
-    - [Pre-built JARs](#pre-built-jars)
     - [Gradle](#gradle)
     - [Maven](#maven)
     - [Building from source](#building-from-source)
@@ -37,20 +35,26 @@ Java Marine API is an [NMEA 0183](http://en.wikipedia.org/wiki/NMEA_0183) parser
 library for decoding and encoding the data provided by various electronic marine
 devices such as GPS, echo sounder and weather instruments.
 
+Originally a Java library, it is now **Kotlin Multiplatform**: the same code runs on the
+JVM, Android, iOS, macOS, JS and WebAssembly.
+
 ### Features
 
-- Generic and extentable API
-- Detects NMEA 0183 sentences from most input streams
-    - E.g. from file, serial port, TCP/IP or UDP socket
-    - The provided data readers can be overridden with custom implementation
-- Converts the ASCII data stream to event/listener model with interfaces and parsers for [selected sentences](#nmea-0183)
-- Additional parsers may be added by extending the provided base classes
-    - This can be done at runtime and does not require compiling the library
-- Sentence encoding with common validation and unified formatting
-- Several sentences can be aggregated to single event by using [providers](marine-api/src/jvmMain/java/net/sf/marineapi/provider)
-    - For example, to record current position and depth of water
-- Decoding of selected [AIS messages](#ais)
-- The NMEA 0183 layer of [Raymarine SeaTalk<sup>1</sup>](http://www.raymarine.com/view/?id=5535)
+- Reads NMEA 0183 from anything that can produce a `kotlinx-io` `Source`
+    - A file, a serial port, a TCP/IP or UDP socket, an in-memory buffer
+    - The library never opens one itself, so it needs no platform IO of its own
+- Turns the stream into a `Flow` of immutable sentence values for [selected sentences](#nmea-0183)
+    - `filterIsInstance<Gga>()` picks a type; no listener interfaces, no reflection
+- Optional NMEA fields are **nullable**, not exceptions: an empty field reads as `null`
+- Line-level failures are **values**, not exceptions: a bad checksum arrives as a `ParseResult`
+  you can count, log or ignore
+- Additional sentence types may be registered at runtime, without compiling the library
+- Sentence encoding with a checksum that always matches the body
+- Several sentences aggregate into one value with the flow operators `positions()`,
+  `headings()` and `satellites()` — for example, to record current position and speed
+- Decoding of selected [AIS messages](#ais), reassembled across multiple sentences
+- The [u-blox](#u-blox) vendor extension, and the NMEA 0183 layer of
+  [Raymarine SeaTalk<sup>1</sup>](http://www.raymarine.com/view/?id=5535)
 - Utilities and enumerations for handling the extracted data
 
 ### Licensing
@@ -85,8 +89,9 @@ should never be your only reference.
 
 ### Requirements
 
-* Java SE JRE/JDK 17 or newer
-* For serial port communication (choose one):
+* Kotlin 2.1 or newer
+* On the JVM: Java SE JRE/JDK 17 or newer
+* For serial port communication on the JVM (choose one):
   * [Neuron Robotics Java Serial Library](https://github.com/NeuronRobotics/nrjavaserial)
   * [PureJavaComm](http://www.sparetimelabs.com/purejavacomm)
   * [RXTX library](http://rxtx.qbang.org)
@@ -94,48 +99,89 @@ should never be your only reference.
 
 ### Usage
 
-Write a listener:
+Read a log, and act on one sentence type:
 
-```java
-class GGAListener extends AbstractSentenceListener<GGASentence> {
-    public void sentenceRead(GGASentence gga) {
-        Position pos = gga.getPosition();
-        // .. your code
-    }
+```kotlin
+SystemFileSystem.source(Path("/var/log/nmea.log")).buffered()
+    .nmeaSentences()
+    .filterIsInstance<Gga>()
+    .flowOn(Dispatchers.IO)          // the library will not choose a dispatcher for you
+    .collect { gga -> println(gga.position) }
+```
+
+`nmeaSentences()` drops the lines that did not parse. To see them instead — a feed from real
+hardware always carries some corruption — use `nmeaResults()`, which reports every line:
+
+```kotlin
+source.nmeaResults()
+    .onEach { if (it !is ParseResult.Ok) log(it) }
+    .sentences()
+```
+
+A whole fix is spread across several sentences, so gather one update cycle into one value:
+
+```kotlin
+source.nmeaSentences().positions().collect { fix ->
+    println("${fix.dateTime}  ${fix.position}  ${fix.speedKnots} kn")
 }
 ```
 
-Set up the reader:
+Parsing a single line, with no IO and no coroutines:
 
-```java
-File file = new File("/var/log/nmea.log");
-SentenceReader reader = new SentenceReader(new FileInputStream(file));
-reader.addSentenceListener(new GGAListener());
-reader.start();
+```kotlin
+val nmea = "$GPGSA,A,3,03,05,07,08,10,15,18,19,21,28,,,1.4,0.9,1.1*3A"
+val gsa = SentenceRegistry.Default.parse(nmea).sentenceOrNull() as? Gsa
 ```
 
-Manual parsing:
+**The `Source` is the only part that differs between platforms.** Everything above is common
+code; this is how you get one:
 
-```java
-String nmea = "$GPGSA,A,3,03,05,07,08,10,15,18,19,21,28,,,1.4,0.9,1.1*3A";
-SentenceFactory sf = SentenceFactory.getInstance();
-GSASentence gsa = (GSASentence) sf.createParser(nmea);
+```kotlin
+// JVM, Android, Native, Node — anywhere with a filesystem
+SystemFileSystem.source(Path("nmea.log")).buffered()
+
+// JVM and Android — a serial port, a socket, a process, anything with an InputStream
+port.inputStream.asSource().buffered()
+
+// Android — a file the user picked, with no permission declared
+contentResolver.openInputStream(uri)!!.asSource().buffered()
+
+// Browser — no filesystem, so wrap the bytes you fetched. A WebSocket is the same shape.
+Buffer().also { it.write(bytes) }
+```
+
+Pick the dispatcher to read on at that same edge. There is no one right answer, which is why
+the library will not choose: `Dispatchers.IO` is public API on JVM and Android, is `internal`
+on Kotlin/Native, and does not exist on JS or Wasm.
+
+Sentences are immutable values, so writing one is construction rather than a series of
+setters, and `toNmeaString()` computes the checksum:
+
+```kotlin
+Mwv(TalkerId.II, windAngle = 43.7, reference = AngleReference.TRUE,
+    windSpeed = 4.5, speedUnits = Units.METER, status = DataStatus.ACTIVE)
+    .toNmeaString()          // $IIMWV,43.7,T,4.5,M,A*09
 ```
 
 Recommended Android Proguard settings when `minifyEnabled` is set `true`:
 
 ```
--keep class net.sf.marineapi.** { *; }
--keep interface net.sf.marineapi.** { *; }
--keepattributes MethodParameters
--dontwarn gnu.io.CommPortIdentifier
--dontwarn gnu.io.RXTXPort
--dontwarn gnu.io.SerialPort
+-keep class io.github.solcott.marineapi.** { *; }
+-keep interface io.github.solcott.marineapi.** { *; }
 ```
 
+The `-keepattributes MethodParameters` and the `gnu.io` rules the Java version needed are no
+longer required: nothing here uses reflection, and the serial port driver was only ever a
+dependency of the examples.
+
 See also:
-- [Examples](examples/src/jvmMain/java/net/sf/marineapi/example)
-- [Javadocs](http://www.javadoc.io/doc/net.sf.marineapi/marineapi)
+- [Examples](examples/src/commonMain/kotlin/io/github/solcott/marineapi/example) — the demo
+  bodies, shared by every platform, with entry points for
+  [the JVM](examples/src/jvmMain/kotlin/io/github/solcott/marineapi/example),
+  [Node and the browser](examples/src/jsMain/kotlin/io/github/solcott/marineapi/example),
+  [macOS](examples/src/macosArm64Main/kotlin/io/github/solcott/marineapi/example) and
+  [Android](examples-android/src/main/kotlin/io/github/solcott/marineapi/example/android)
+- [API documentation](https://javadoc.io/doc/io.github.solcott/kmp-marine-api)
 - [Graphical User Interface](https://github.com/aitov/gps-info) using marine-api by @aitov
 
 
@@ -143,42 +189,69 @@ See also:
 
 ### NMEA 0183
 
-The following sentences are decoded and encoded. The provided parsers may be
-overridden and additional parsers may be added at runtime, _without compiling_
-the library. See wiki for
-[instructions](https://github.com/ktuukkan/marine-api/wiki/Integrating-your-own-parsers-&-contributing).
+The following sentences are decoded and encoded. Additional types may be registered at
+runtime, _without compiling_ the library:
+
+```kotlin
+val registry = SentenceRegistry.Default.with("XYZ") { fields -> MyXyz.from(fields) }
+```
+
+A sentence type that is not registered is not an error: it arrives as an `UnknownSentence`
+that keeps its fields and re-encodes intact.
 
 |ID     | Description
 |---    |---
+|AAM    |Waypoint arrival alarm: circle entered and perpendicular passed
 |ALK    |The NMEA 0183 layer of Raymarine SeaTalk<sup>1</sup> (`$STALK`)
+|ALM    |GPS almanac data, with the orbital fields kept as raw hex
+|APA    |Autopilot cross-track error and bearings, the older sibling of APB
 |APB    |Autopilot cross-track error, destination bearings and heading
+|ASHR    |Ashtech roll, pitch and heave (`$PASHR`)
 |BOD    |Bearing from origin to destination
+|BWC    |Bearing and distance to waypoint, great circle
+|BWR    |Bearing and distance to waypoint, rhumb line
+|BWW    |Bearing from one waypoint to another
 |CUR    |Water currents information
+|DBK    |Water depth below the keel in meters, feet and fathoms
+|DBS    |Water depth below the surface in meters, feet and fathoms
 |DBT    |Water depth below transducer in meters, feet and fathoms
 |DPT    |Water depth in meters with offset to transducer
 |DTA    |Boreal GasFinder2 and GasFinderMC
 |DTB    |Boreal GasFinder2 and GasFinderMC
 |DTM    |Datum reference
+|FSI    |Frequency set information for a radio transceiver
 |GBS    |Glonass satellite fault detection (RAIM support)
 |GGA    |GPS fix data
 |GLL    |Current geographic position and time
 |GNS    |Glonass fix data
+|GRME   |Garmin estimated position error, in meters (`$PGRME`)
+|GRMM   |Garmin map datum in use (`$PGRMM`)
+|GRMZ   |Garmin altitude, in feet (`$PGRMZ`)
+|GRS    |GPS range residuals, for checking a fix satellite by satellite
 |GSA    |Precision of GPS fix
 |GST    |GPS pseudorange noise statistics
 |GSV    |Detailed GPS satellite data
 |HDG    |Heading with magnetic deviation and variation
 |HDM    |Magnetic heading in degrees
 |HDT    |True heading in degrees
+|HFB    |Trawl headrope to footrope and to bottom
+|HSC    |Heading steering command, true and magnetic
 |HTC    |Heading/Track control systems input data and commands.
 |HTD    |Heading/Track control systems output data and commands.
+|ITS    |Second trawl door spread distance
 |MDA    |Meteorological composite
 |MHU    |Relative and absolute humidity with dew point
 |MMB    |Barometric pressure
+|MSK    |Beacon receiver tuning command
+|MSS    |Beacon receiver signal strength and status
 |MTA    |Air temperature in degrees Celcius
 |MTW    |Water temperature in degrees Celcius
 |MWD    |Wind speed and direction.
 |MWV    |Wind speed and angle
 |OSD    |Own ship data
+|R00    |Waypoint ids of the active route
+|RLM    |Return link message, an AIS-SART acknowledgement
+|RMA    |Recommended minimum navigation information "type A" (Loran-C)
 |RMB    |Recommended minimum navigation information "type B"
 |RMC    |Recommended minimum navigation information "type C"
 |ROT    |Vessel's rate of turn
@@ -186,22 +259,47 @@ the library. See wiki for
 |RSA    |Rudder angle in degrees
 |RSD    |Radar system data
 |RTE    |GPS route data with list of waypoints
+|SFI    |Scanning frequency information, a list of frequency and mode pairs
+|STN    |Multiple data id, naming the talker of the sentences that follow
+|TDS    |Trawl door spread distance
+|TFI    |Trawl filling indicator, from up to three catch sensors
+|THS    |True heading and status
 |TLB    |Target label
+|TLL    |Target latitude and longitude
+|TPC    |Trawl position as offsets from the vessel
+|TPR    |Trawl position, range and bearing relative to the vessel
+|TPT    |Trawl position, range and true bearing
 |TTM    |Tracked target message
 |TXT    |Text message
+|UBX    |The NMEA 0183 layer of u-blox proprietary messages (`$PUBX`)
 |VBW    |Dual ground/water speed.
 |VDM    |The NMEA 0183 layer of AIS: other vessels' data
 |VDO    |The NMEA 0183 layer of AIS: vessel's own data
 |VDR    |Set and drift
 |VHW    |Water speed and heading
 |VLW    |Distance traveled through water
+|VPW    |Speed measured parallel to the wind
 |VTG    |Course and speed over ground
 |VWR    |Relative wind speed and angle
 |VWT    |True wind speed and angle
+|WCV    |Waypoint closure velocity
+|WNC    |Distance between two waypoints
 |WPL    |Destination waypoint location and ID
 |XDR    |Transducer measurements
 |XTE    |Measured cross-track error
+|XTR    |Measured cross-track error, without the status fields of XTE
 |ZDA    |UTC time and date with local time offset
+|ZFO    |Elapsed time from the origin waypoint
+|ZTG    |Time remaining to the destination waypoint
+
+Field layouts follow [gpsd's NMEA reference](https://gpsd.gitlab.io/gpsd/NMEA.html), and
+`GpsdCorpusTest` re-encodes 103 logs from ~90 real receivers on every build. `THS` is the
+exception: gpsd does not document it, and its layout is taken from a capture where a Skytraq
+PX1172RH sends it immediately before an `HDT` carrying the same heading.
+
+The obsolete positioning systems are deliberately absent — Decca (`DCN`), Loran-C (`GLC`,
+`LCD`), Transit (`GTD`, `GXA`, `TRF`) and Omega (`OLN`). Nothing transmits them. They are not
+errors either: an unregistered type arrives as an `UnknownSentence` that keeps its fields.
 
 ### AIS
 
@@ -215,6 +313,7 @@ messages are decoded.
 |03     |Position Report Class A (Response to interrogation)
 |04     |Base Station Report
 |05     |Static and Voyage Related Data
+|07     |Binary Acknowledge
 |09     |Standard SAR Aircraft Position Report
 |18     |Standard Class B CS Position Report
 |19     |Extended Class B Equipment Position Report
@@ -227,8 +326,9 @@ messages are decoded.
 *Not to be confused with SeaTalk<sup>ng</sup> derived from NMEA 2000.*
 
 Only the NMEA layer is currently supported, see
-[STALKSentence](marine-api/src/jvmMain/java/net/sf/marineapi/nmea/sentence/STALKSentence.java)
-and [Issue #67](https://github.com/ktuukkan/marine-api/issues/67).
+[Stalk](marine-api/src/commonMain/kotlin/io/github/solcott/marineapi/nmea/sentence/ProprietarySentences.kt)
+and [Issue #67](https://github.com/ktuukkan/marine-api/issues/67). The datagram is delivered
+intact; interpreting it needs a SeaTalk reference this library does not implement.
 
 ### u-blox
 
@@ -237,24 +337,14 @@ vendor extension messages are supported:
 
 | ID      | Description
 |---      |---
-| PUBX,01 |Lat/Long Position Data
-| PUBX,03 |Satellite Status
+| PUBX,00 |Lat/Long position, velocity and time, with accuracy estimates in metres
+| PUBX,03 |Satellite status, including per-satellite carrier lock times
 
 ## Distribution
 
 Releases and snapshots are published every now and then, but there is no clear
 plan or schedule for this as most of the development happens per user requests
 or contribution.
-
-### Pre-built JARs
-
-Release JARs may be downloaded from [releases](https://github.com/ktuukkan/marine-api/releases)
-and [Sourceforge.net](https://sourceforge.net/projects/marineapi/files/Releases/).
-The ZIP package should contain all to get you going.
-
-The project was first published in Sourceforge, hence the `net.sf.marineapi`
-package naming.
-
 
 ### Gradle
 
@@ -284,6 +374,8 @@ metadata. Maven consumers must depend on the JVM artifact directly:
 ```
 ./gradlew build                 # all targets (requires macOS for the Apple targets)
 ./gradlew :marine-api:jvmTest   # JVM tests only
+./gradlew :marine-api:allTests  # every target's test suite
+./gradlew tasks --group examples
 ```
 
 Requires JDK 17+ and an Android SDK (`ANDROID_HOME`) — the Android Gradle plugin is needed

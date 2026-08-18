@@ -13,7 +13,7 @@ concurrency:
 jobs:
   # Fast feedback: the equivalent of the old `mvn package`.
   jvm:
-    name: JVM (compile, test, javadoc)
+    name: JVM (compile, test, docs)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -43,8 +43,15 @@ jobs:
       - name: Check dependency sorting
         run: ./gradlew checkSortDependencies
 
+      # Dokka replaces the old javadocJvm task, which documented the deleted Java tree. On
+      # Linux the Apple targets are disabled (kotlin.native.ignoreDisabledTargets), so this
+      # documents fewer source sets here than the macOS job does; the jar that ships is built
+      # by the release workflow, which runs on macOS.
       - name: Build JVM target
-        run: ./gradlew :marine-api:jvmJar :marine-api:jvmTest :marine-api:javadocJvm :examples:jvmJar
+        run: >-
+          ./gradlew :marine-api:jvmJar :marine-api:jvmTest
+          :marine-api:dokkaGeneratePublicationHtml :examples:jvmJar
+          :examples-android:assembleDebug
 
       - name: Upload test report
         if: failure()

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>kmp-marine-api in the browser</title>
+    <style>
+      body {
+        font: 14px/1.5 system-ui, sans-serif;
+        margin: 2rem;
+        max-width: 60rem;
+      }
+      pre {
+        background: #f4f4f4;
+        padding: 1rem;
+        overflow-x: auto;
+        white-space: pre-wrap;
+      }
+      nav a {
+        margin-right: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>kmp-marine-api in the browser</h1>
+    <p>
+      The same parsing code the JVM, Node, macOS and Android demos run — compiled to
+      WebAssembly-free JavaScript, reading NMEA fetched over HTTP rather than off a disk. There is
+      no filesystem here, so the demo wraps the fetched bytes in a <code>Buffer</code> and hands
+      that to the identical common code.
+    </p>
+    <nav>
+      Demo:
+      <a href="#positions">positions</a>
+      <a href="#file">file</a>
+      <a href="#ais">ais</a>
+      <a href="#ublox">ublox</a>
+      <a href="#output">output</a>
+    </nav>
+    <p><em>Pick one, then reload — the demo is read from the URL fragment.</em></p>
+    <pre id="output"></pre>
+
+    <script>
+      // The Kotlin demos call println, which is console.log on this platform. Mirroring it onto the
+      // page here means the demo code needs no browser-specific output path -- it stays byte for
+      // byte the code every other platform runs, which is the thing worth demonstrating.
+      (function () {
+        const out = document.getElementById("output");
+        const log = console.log.bind(console);
+        console.log = function (...args) {
+          log(...args);
+          out.textContent += args.join(" ") + "\n";
+        };
+      })();
+    </script>
+    <script src="examples.js"></script>
+  </body>
+</html>

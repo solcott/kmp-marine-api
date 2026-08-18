@@ -6,9 +6,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.tool_input.file_path // .tool_response.filePath // empty' | { read -r f; case \"$f\" in *.java) head -25 \"$f\" | grep -q 'GNU Lesser General Public License' || printf '{\"systemMessage\":\"%s is missing the LGPL v3 license header. Copy it from a neighbouring file and update the filename and copyright lines.\"}\\n' \"$f\";; esac; } 2>/dev/null || true",
+            "command": "\"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-registration.sh\" 2>/dev/null || true",
             "timeout": 10,
-            "statusMessage": "Checking LGPL header..."
+            "statusMessage": "Checking registration..."
           }
         ]
       }
