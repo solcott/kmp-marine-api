@@ -96,9 +96,9 @@ The old signal was the test count, which spanned two suites and is meaningless n
 
 - `FieldExposureTest.theExamplesCoverEveryRegisteredType` — every registered type has a fully populated example, round-tripped and checked for silently dropped fields.
 - `GpsdCorpusTest` — per-file counts of legitimately failing lines across 103 device logs; a count moving in **either** direction fails.
-- `CorpusFixTest` — 1854 fixes, 2201 satellite views, 36 headings across the corpus.
+- `CorpusFixTest` — 2089 fixes, 2201 satellite views, 36 headings across the corpus. It pins more than those three (fixes with altitude, fixes with a date, satellites counted, silent logs); the assertions themselves are the record, so read them rather than this line.
 - `SampleDataTest.everyPortedTypeWithCorpusDataIsExercised` — names the types resting only on reference tables rather than real device data.
-- Common tests per target: **383**. One suite, so this number is comparable over time. JVM runs 405 (383 common + the corpus tests, which need classpath resources).
+- Common tests per target: **403**. One suite, so this number is comparable over time. JVM runs 428 — the same 403 plus the 25 corpus tests, which need classpath resources and so live in `jvmTest`.
 
 ## Repo etiquette
 
