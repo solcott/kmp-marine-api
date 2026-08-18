@@ -98,7 +98,7 @@ The old signal was the test count, which spanned two suites and is meaningless n
 - `GpsdCorpusTest` — per-file counts of legitimately failing lines across 103 device logs; a count moving in **either** direction fails.
 - `CorpusFixTest` — 2089 fixes, 2201 satellite views, 36 headings across the corpus. It pins more than those three (fixes with altitude, fixes with a date, satellites counted, silent logs); the assertions themselves are the record, so read them rather than this line.
 - `SampleDataTest.everyPortedTypeWithCorpusDataIsExercised` — names the types resting only on reference tables rather than real device data.
-- Common tests per target: **403**. One suite, so this number is comparable over time. JVM runs 428 — the same 403 plus the 25 corpus tests, which need classpath resources and so live in `jvmTest`.
+- Common tests per target: **408**. One suite, so this number is comparable over time. JVM runs 433 — the same 408 plus the 25 corpus tests, which need classpath resources and so live in `jvmTest`.
 
 When one of these numbers moves, `/repin-regressions` covers deciding whether to re-pin it and where each pin lives. A number is never nudged to make the build green.
 

@@ -114,6 +114,7 @@ public class AisRegistry private constructor(private val factories: Map<Int, Ais
           for (type in AisBaseStationReport.TYPES) {
             put(type, AisMessageFactory(AisBaseStationReport::from))
           }
+          put(AisBinaryAcknowledge.TYPE, AisMessageFactory(AisBinaryAcknowledge::from))
           put(AisStaticAndVoyageData.TYPE, AisMessageFactory(AisStaticAndVoyageData::from))
           put(
             AisSarAircraftPositionReport.TYPE,

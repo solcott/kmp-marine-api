@@ -25,6 +25,9 @@ private object Payloads {
   const val STATIC_DATA_A = "H1c2;qA@PU>0U>060<h5=>0:1Dp"
   const val STATIC_DATA_B = "H1c2;qDTijklmno31<<C970`43<1"
   const val LONG_RANGE = "Kk:qFP0?fhT8=7m@"
+
+  /** From `ais-nmea-type6-fid55.log`; gpsd's `.chk` gives mmsi 244620320 and mmsi1 2268402. */
+  const val BINARY_ACKNOWLEDGE = "73aBL800RW?;"
 }
 
 private inline fun <reified T : AisMessage> decode(payload: String, fillBits: Int = 0): T {
@@ -338,6 +341,86 @@ class AisLongRangePositionReportTest {
   @Test
   fun carriesNoTimeOfFix() {
     assertNull(report.utcSecond, "type 27 has no timestamp field at all")
+  }
+}
+
+/** A field as a fixed-width binary string, for assembling a payload the corpus does not contain. */
+private fun bits(value: Int, width: Int): String = value.toString(2).padStart(width, '0')
+
+/**
+ * Bits as six-bit payload characters: the transport encoding, not the six-bit ASCII of text fields.
+ *
+ * [AisBinaryAcknowledgeTest.readsAllFourAcknowledgementSlots] checks this against a real capture
+ * before relying on it, so a synthetic payload cannot pass by being wrong in the same way twice.
+ */
+private fun payloadOf(bits: String): String =
+  bits.chunked(6).joinToString("") { chunk ->
+    val value = chunk.toInt(2)
+    (if (value < 40) value + 48 else value + 56).toChar().toString()
+  }
+
+class AisBinaryAcknowledgeTest {
+
+  private val message = decode<AisBinaryAcknowledge>(Payloads.BINARY_ACKNOWLEDGE)
+
+  @Test
+  fun readsEveryField() {
+    assertEquals(7, message.messageType)
+    assertEquals(0, message.repeatIndicator)
+    assertEquals(244620320, message.mmsi)
+    // gpsd's record for this payload gives mmsi1 as 2268402 and emits no sequence numbers at all,
+    // so the 3 is the two bits after the MMSI gpsd does confirm.
+    assertEquals(listOf(AisAcknowledgement(2268402, 3)), message.acknowledgements)
+  }
+
+  @Test
+  fun reportsOnlyTheAcknowledgementSlotsThatArrived() {
+    // 72 bits: header, two spare bits and one slot. gpsd prints the other three as "mmsi2":0 and
+    // so on, but an MMSI of 0 is not a station.
+    assertEquals(1, message.acknowledgements.size)
+  }
+
+  @Test
+  fun readsAllFourAcknowledgementSlots() {
+    // No four-slot type 7 is in the corpus, so the stride is checked against a payload assembled
+    // here. The assembly is only trustworthy if it reproduces the capture that is in the corpus:
+    val header = bits(7, 6) + bits(0, 2) + bits(244620320, 30) + bits(0, 2)
+    assertEquals(
+      Payloads.BINARY_ACKNOWLEDGE,
+      payloadOf(header + bits(2268402, 30) + bits(3, 2)),
+      "the synthetic encoding disagrees with the capture it is modelled on",
+    )
+
+    val slots = (1..4).joinToString("") { bits(it, 30) + bits(it - 1, 2) }
+    val four = decode<AisBinaryAcknowledge>(payloadOf(header + slots))
+    assertEquals(
+      listOf(
+        AisAcknowledgement(1, 0),
+        AisAcknowledgement(2, 1),
+        AisAcknowledgement(3, 2),
+        AisAcknowledgement(4, 3),
+      ),
+      four.acknowledgements,
+    )
+  }
+
+  @Test
+  fun ignoresSlotsBeyondTheFourTheStandardAllows() {
+    val header = bits(7, 6) + bits(0, 2) + bits(244620320, 30) + bits(0, 2)
+    val slots = (1..5).joinToString("") { bits(it, 30) + bits(it - 1, 2) }
+    // Five slots run to 200 bits, which is not a character boundary; the last four bits are fill.
+    val overlong = decode<AisBinaryAcknowledge>(payloadOf(header + slots + "0000"), fillBits = 4)
+    assertEquals(4, overlong.acknowledgements.size)
+  }
+
+  @Test
+  fun acknowledgesNothingWhenTheSlotsNeverArrived() {
+    // Truncated to 42 bits. Permissive by design, as everywhere else here: the sending station is
+    // still identified, and the alternative is discarding a message that read fine as far as it
+    // went.
+    val truncated = decode<AisBinaryAcknowledge>(Payloads.BINARY_ACKNOWLEDGE.take(7))
+    assertEquals(244620320, truncated.mmsi)
+    assertEquals(emptyList(), truncated.acknowledgements)
   }
 }
 

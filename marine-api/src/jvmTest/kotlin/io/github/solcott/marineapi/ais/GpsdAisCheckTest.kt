@@ -69,10 +69,10 @@ class GpsdAisCheckTest {
 
     // Pinned so that losing the comparison shows up as a failure rather than as a green build that
     // checks nothing.
-    assertEquals(1308, compared, "messages compared against gpsd")
+    assertEquals(1310, compared, "messages compared against gpsd")
     assertTrue(fields > 9_000, "expected thousands of individual field comparisons, got $fields")
     assertEquals(
-      mapOf(6 to 68, 7 to 2, 8 to 73, 17 to 5, 20 to 14, 23 to 2),
+      mapOf(6 to 68, 8 to 73, 17 to 5, 20 to 14, 23 to 2),
       unsupported.toSortedMap(),
       "message types gpsd decodes and this library does not",
     )
@@ -217,6 +217,15 @@ class GpsdAisCheckTest {
         // gpsd's "gnss" is the position-latency bit: false means the position is current.
         check("gnss", json.bool("gnss"), !message.isCurrent)
       }
+      is AisBinaryAcknowledge -> {
+        // gpsd always prints four slots, zero-filling the ones a short payload never carried; we
+        // keep only the slots that arrived. It emits no sequence numbers at all, so those go
+        // unchecked -- see the note on AisBinaryAcknowledge.
+        for (slot in 0 until 4) {
+          val ours = message.acknowledgements.getOrNull(slot)?.mmsi ?: 0
+          check("mmsi${slot + 1}", json.int("mmsi${slot + 1}"), ours)
+        }
+      }
       // gpsd emits nothing for a type 24 part A: it caches the name and merges it into the record
       // it emits for part B. So a part A never reaches this comparison.
       else -> bad += "no comparison written for ${message::class.simpleName}"
@@ -321,6 +330,7 @@ class GpsdAisCheckTest {
         3 to 13,
         4 to 8,
         5 to 16,
+        7 to 7,
         18 to 15,
         19 to 15,
         21 to 14,

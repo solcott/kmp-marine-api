@@ -313,6 +313,7 @@ messages are decoded.
 |03     |Position Report Class A (Response to interrogation)
 |04     |Base Station Report
 |05     |Static and Voyage Related Data
+|07     |Binary Acknowledge
 |09     |Standard SAR Aircraft Position Report
 |18     |Standard Class B CS Position Report
 |19     |Extended Class B Equipment Position Report
