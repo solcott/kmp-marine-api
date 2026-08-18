@@ -43,6 +43,12 @@ jobs:
       - name: Check dependency sorting
         run: ./gradlew checkSortDependencies
 
+      # Runs on the Linux job even though `build` on the macOS job also triggers it via `check`:
+      # detekt reads source rather than compiled output, so it covers the Apple source sets here
+      # too, and a lint failure is worth hearing about before the 20-minute all-targets job.
+      - name: Static analysis
+        run: ./gradlew detekt
+
       # Dokka replaces the old javadocJvm task, which documented the deleted Java tree. On
       # Linux the Apple targets are disabled (kotlin.native.ignoreDisabledTargets), so this
       # documents fewer source sets here than the macOS job does; the jar that ships is built

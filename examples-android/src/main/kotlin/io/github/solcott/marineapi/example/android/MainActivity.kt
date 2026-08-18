@@ -42,6 +42,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.solcott.marineapi.nmea.io.nmeaSentences
 import io.github.solcott.marineapi.nmea.io.positions
+import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
@@ -162,7 +164,7 @@ private fun LogReaderScreen(
           }
         is ReadState.Failed ->
           Message(
-            stringResource(R.string.read_failed, state.message ?: ""),
+            stringResource(R.string.read_failed, state.message.orEmpty()),
             color = MaterialTheme.colorScheme.error,
           )
         is ReadState.Read ->
@@ -240,13 +242,15 @@ private fun ExampleTheme(content: @Composable () -> Unit) {
  * The result is returned in one piece rather than streamed into the UI: a long log would otherwise
  * recompose the list thousands of times to show rows nobody can read as they go past.
  */
-private suspend fun readFixes(contentResolver: ContentResolver, uri: Uri): ReadState {
+private suspend fun readFixes(
+  contentResolver: ContentResolver,
+  uri: Uri,
+  dispatcher: CoroutineDispatcher = Dispatchers.IO,
+): ReadState {
   val shown = mutableListOf<String>()
   var total = 0
   return try {
-    withContext(Dispatchers.IO) {
-        contentResolver.openInputStream(uri) ?: error("could not open $uri")
-      }
+    withContext(dispatcher) { contentResolver.openInputStream(uri) ?: error("could not open $uri") }
       .use { stream ->
         stream.asSource().buffered().nmeaSentences().positions().flowOn(Dispatchers.IO).collect {
           fix ->
@@ -255,8 +259,14 @@ private suspend fun readFixes(contentResolver: ContentResolver, uri: Uri): ReadS
         }
       }
     ReadState.Read(shown, total)
-  } catch (e: Exception) {
-    // A picked file may be anything at all. Report it rather than crashing the demo.
+  } catch (e: CancellationException) {
+    // Cancellation is not a read failure. `catch (e: Exception)` swallows it, so leaving the
+    // catch-all on its own would turn navigating away mid-read into a "Failed" screen and would
+    // stop the enclosing LaunchedEffect from actually being cancellable.
+    throw e
+  } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
+    // A picked file may be anything at all -- a JPEG, a directory, a file whose permission was
+    // revoked between picking and reading. Report it rather than crashing the demo.
     ReadState.Failed(e.message)
   }
 }
