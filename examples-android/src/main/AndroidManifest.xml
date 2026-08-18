@@ -7,7 +7,7 @@
     <application
         android:label="Marine API example"
         android:allowBackup="false"
-        android:theme="@android:style/Theme.Material.Light">
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity
             android:name=".MainActivity"
             android:exported="true">

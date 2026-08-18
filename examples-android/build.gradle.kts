@@ -6,6 +6,10 @@ plugins {
   // There is no kotlin-android plugin: AGP 9 has built-in Kotlin support and REJECTS
   // org.jetbrains.kotlin.android outright.
   id("com.android.application")
+  // The Compose compiler is a Kotlin compiler plugin, so it is versioned with Kotlin rather than
+  // with the Compose libraries. It attaches to whatever compiles Kotlin here, which under AGP 9 is
+  // AGP's built-in support rather than org.jetbrains.kotlin.android.
+  alias(libs.plugins.kotlin.compose)
   id("project-config")
   alias(libs.plugins.sort.dependencies)
 }
@@ -28,6 +32,8 @@ android {
     versionName = project.version.toString()
   }
 
+  buildFeatures { compose = true }
+
   compileOptions {
     sourceCompatibility = JavaVersion.toVersion(libs.versions.jvm.compat.get())
     targetCompatibility = JavaVersion.toVersion(libs.versions.jvm.compat.get())
@@ -35,13 +41,19 @@ android {
 }
 
 dependencies {
+  // The BOM sets every androidx.compose.* version, which is why those entries in the catalog
+  // carry no version of their own.
+  implementation(platform(libs.androidx.compose.bom))
   implementation(project(":marine-api"))
-  // activity for ComponentActivity and registerForActivityResult. NOT activity-ktx: since 1.13.0
-  // that artifact is an empty shim that adds nothing but a dependency on `activity` and three
-  // legacy -ktx transitives (lifecycle-runtime-ktx, lifecycle-viewmodel-ktx, savedstate-ktx),
-  // none of which this example uses. No Compose either: this repository uses none, and adding it
-  // would make the example about Compose rather than about reading NMEA.
-  implementation(libs.androidx.activity)
+  // Brings plain `activity` with it, so ComponentActivity, enableEdgeToEdge and
+  // rememberLauncherForActivityResult all come from this one line.
+  implementation(libs.androidx.activity.compose)
+  implementation(libs.androidx.compose.material3)
+  implementation(libs.androidx.compose.ui)
+  implementation(libs.androidx.compose.ui.tooling.preview)
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.io.core)
+
+  // Powers the @Preview rendering and the layout inspector; debug-only so it stays out of release.
+  debugImplementation(libs.androidx.compose.ui.tooling)
 }

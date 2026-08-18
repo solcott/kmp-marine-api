@@ -16,7 +16,7 @@ Three modules:
 
 - `:marine-api` — the library. The only published module.
 - `:examples` — the demos, in `io.github.solcott.marineapi.example`. Multiplatform: the demo bodies are `commonMain` suspend functions taking a `() -> Source`, and `jvmMain`, `jsMain` (Node **and** browser, one compilation) and `macosArm64Main` each supply an entry point. Never published.
-- `:examples-android` — an Android app, the only non-KMP module in the build. `com.android.application` with **no** `kotlin-android` plugin: AGP 9 has built-in Kotlin support and rejects it. Consumes `:marine-api`'s `android` target through module metadata, as an external consumer would. Never published.
+- `:examples-android` — an Android app, the only non-KMP module in the build. `com.android.application` with **no** `kotlin-android` plugin: AGP 9 has built-in Kotlin support and rejects it. The UI is Compose, and `org.jetbrains.kotlin.plugin.compose` attaches to AGP's built-in Kotlin perfectly well without `kotlin-android` — the Compose compiler is versioned with Kotlin, not with the Compose BOM, so the two move independently. Consumes `:marine-api`'s `android` target through module metadata, as an external consumer would. Never published.
 
 This fork is **not** intended to send PRs upstream — divergence is fine.
 
