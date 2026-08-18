@@ -8,6 +8,7 @@ import io.github.solcott.marineapi.nmea.TalkerId
 import io.github.solcott.marineapi.nmea.buildNmea
 import io.github.solcott.marineapi.nmea.field
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.number
 
 /**
  * A gas concentration reading from a Boreal Laser open-path detector.
@@ -186,9 +187,9 @@ private fun SentenceFields.instrumentDateTimeAt(index: Int): LocalDateTime? {
 private fun formatInstrumentDateTime(value: LocalDateTime): String =
   NmeaFormat.integer(value.year, 4) +
     "/" +
-    NmeaFormat.integer(value.monthNumber, 2) +
+    NmeaFormat.integer(value.month.number, 2) +
     "/" +
-    NmeaFormat.integer(value.dayOfMonth, 2) +
+    NmeaFormat.integer(value.day, 2) +
     " " +
     NmeaFormat.integer(value.hour, 2) +
     ":" +

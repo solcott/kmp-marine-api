@@ -40,7 +40,7 @@ import kotlinx.io.buffered
  *
  * Views are built in code and there is no Compose: this repository uses none, and pulling it in
  * would make the example about Compose rather than about reading NMEA. The one AndroidX dependency,
- * activity-ktx, is what [ComponentActivity] and [registerForActivityResult] come from.
+ * activity, is what [ComponentActivity] and [registerForActivityResult] come from.
  */
 class MainActivity : ComponentActivity() {
 

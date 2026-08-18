@@ -45,7 +45,11 @@ public object NmeaDateTime {
     require(day != null && month != null && year != null) {
       "Date field is not numeric: \"$field\""
     }
-    return LocalDate(expandYear(year), month, day)
+    // orNull rather than the throwing constructor so the message names the field that carried the
+    // bad value; kotlinx-datetime's own message names only the component it rejected.
+    return requireNotNull(LocalDate.orNull(expandYear(year), month, day)) {
+      "Date field is not a valid date: \"$field\""
+    }
   }
 
   /**
@@ -120,7 +124,10 @@ public object NmeaDateTime {
     val wholeSeconds = seconds.toInt()
     // Round rather than truncate: 44.567 must not become 566999999 nanoseconds.
     val nanoseconds = ((seconds - wholeSeconds) * 1_000_000_000).toLong()
-    return LocalTime(hour, minute, wholeSeconds, nanoseconds.toInt())
+    // See parseDate: orNull to keep the field in the message.
+    return requireNotNull(LocalTime.orNull(hour, minute, wholeSeconds, nanoseconds.toInt())) {
+      "Time field is not a valid time: \"$field\""
+    }
   }
 
   /**
@@ -144,11 +151,18 @@ public object NmeaDateTime {
    *
    * The sign of [hours] governs: a ZDA reporting `-05` hours and `30` minutes is offset -05:30, not
    * -04:30. Returns `null` if either field is absent.
+   *
+   * @throws IllegalArgumentException if the two fields together are not a UTC offset.
    */
   public fun utcOffset(hours: Int?, minutes: Int?): UtcOffset? {
     if (hours == null || minutes == null) return null
     val magnitude = minutes.absoluteValueOf()
-    return UtcOffset(hours = hours, minutes = if (hours < 0) -magnitude else magnitude)
+    val signed = if (hours < 0) -magnitude else magnitude
+    // See parseDate. Still throws rather than returning null: a ZDA whose zone fields will not
+    // read is a malformed sentence, not a sentence with an absent offset.
+    return requireNotNull(UtcOffset.orNull(hours = hours, minutes = signed)) {
+      "Not a UTC offset: $hours hours, $minutes minutes"
+    }
   }
 
   private fun Int.absoluteValueOf(): Int = if (this < 0) -this else this

@@ -36,8 +36,11 @@ android {
 
 dependencies {
   implementation(project(":marine-api"))
-  // activity-ktx for registerForActivityResult. No Compose: this repository uses none, and adding
-  // it would make the example about Compose rather than about reading NMEA.
+  // activity for ComponentActivity and registerForActivityResult. NOT activity-ktx: since 1.13.0
+  // that artifact is an empty shim that adds nothing but a dependency on `activity` and three
+  // legacy -ktx transitives (lifecycle-runtime-ktx, lifecycle-viewmodel-ktx, savedstate-ktx),
+  // none of which this example uses. No Compose either: this repository uses none, and adding it
+  // would make the example about Compose rather than about reading NMEA.
   implementation(libs.androidx.activity)
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.io.core)
