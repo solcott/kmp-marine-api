@@ -74,7 +74,7 @@ jobs:
 
   # Full multiplatform build. macOS is required -- the Apple targets cannot be linked on Linux,
   # and everything else cross-compiles here, which is what lets the release workflow publish all
-  # fourteen publications from a single macOS runner.
+  # sixteen publications from a single macOS runner.
   all-targets:
     name: All targets (jvm, android, apple, linux, mingw, android native, js, wasm)
     runs-on: macos-latest

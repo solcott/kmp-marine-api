@@ -1,4 +1,5 @@
 import java.io.File
+import kotlinx.validation.ExperimentalBCVApi
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -9,10 +10,29 @@ plugins {
   id("kmp-android")
   id("kmp-targets")
   alias(libs.plugins.publish)
+  alias(libs.plugins.binary.compatibility.validator)
   alias(libs.plugins.sort.dependencies)
 }
 
 val jvmCompat = libs.versions.jvm.compat.get()
+
+// Applied here rather than in project-config, because this is the only published module and an ABI
+// is only worth pinning where someone can depend on it. `apiCheck` runs under `check`, so a change
+// to the public API fails the build until `./gradlew :marine-api:apiDump` is run and the diff is
+// committed deliberately -- which is the point, given explicitApi() means the surface is explicit
+// but not immutable.
+apiValidation {
+  @OptIn(ExperimentalBCVApi::class)
+  klib {
+    // The .api dump covers the JVM ABI only, which on a fourteen-target library would leave the
+    // native, JS and Wasm surface unguarded. This adds a merged .klib.api across every klib target.
+    enabled = true
+    // Left false deliberately. On a host that cannot build every target -- the ubuntu CI job, where
+    // the Apple targets are disabled -- BCV infers the missing ones from the targets it does have
+    // and warns. Strict would turn that into a failure and make the dump host-dependent.
+    strictValidation = false
+  }
+}
 
 kotlin {
   // Every public declaration needs an explicit visibility and return type. This is a

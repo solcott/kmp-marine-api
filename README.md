@@ -375,6 +375,7 @@ metadata. Maven consumers must depend on the JVM artifact directly:
 ./gradlew build                 # all targets (requires macOS for the Apple targets)
 ./gradlew :marine-api:jvmTest   # JVM tests only
 ./gradlew :marine-api:allTests  # every target's test suite
+./gradlew :marine-api:apiDump   # re-pin the public ABI in marine-api/api/
 ./gradlew tasks --group examples
 ```
 

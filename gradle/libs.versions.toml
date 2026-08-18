@@ -2,6 +2,7 @@
 agp = "9.3.1"
 androidx-activity = "1.13.0"
 androidx-compose-bom = "2026.08.00"
+binary-compatibility-validator = "0.18.1"
 detekt = "2.0.0-alpha.6"
 dokka = "2.2.0"
 kotlin = "2.4.10"
@@ -41,6 +42,7 @@ nrjavaserial = { module = "com.neuronrobotics:nrjavaserial", version.ref = "nrja
 
 [plugins]
 android-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
