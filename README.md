@@ -36,7 +36,7 @@ library for decoding and encoding the data provided by various electronic marine
 devices such as GPS, echo sounder and weather instruments.
 
 Originally a Java library, it is now **Kotlin Multiplatform**: the same code runs on the
-JVM, Android, iOS, macOS, JS and WebAssembly.
+JVM, Android, iOS, macOS, Linux, Windows, Android NDK, JS and WebAssembly.
 
 ### Features
 
