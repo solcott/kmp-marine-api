@@ -43,9 +43,14 @@ kotlin {
 
   sourceSets {
     commonMain.dependencies {
+      // api, not implementation: the demo bodies take a `() -> Source` and Cli.kt hands back a
+      // Buffer, so kotlinx-io is in this module's own signatures rather than behind them. Nothing
+      // consumes :examples, so this changes no artifact -- it just stops the ABI claim being a lie.
+      api(libs.kotlinx.io.core)
+
       implementation(project(":marine-api"))
       implementation(libs.kotlinx.coroutines.core)
-      implementation(libs.kotlinx.io.core)
+      implementation(libs.kotlinx.datetime)
     }
     jvmMain.dependencies {
       // gnu.io.*, used by SerialPortExample. This was compileOnly on the library (Maven

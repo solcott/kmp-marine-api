@@ -45,13 +45,26 @@ dependencies {
   // carry no version of their own.
   implementation(platform(libs.androidx.compose.bom))
   implementation(project(":marine-api"))
-  // Brings plain `activity` with it, so ComponentActivity, enableEdgeToEdge and
-  // rememberLauncherForActivityResult all come from this one line.
+  // Compose is split across many small artifacts, and the ones a file imports from are rarely the
+  // ones it declares: `ui` alone does not carry Modifier's `dp`, Color or FontFamily. Each artifact
+  // this module actually imports is listed, so a transitive re-shuffle upstream cannot silently
+  // take one away. `activity` is here for ComponentActivity and enableEdgeToEdge, which arrive via
+  // activity-compose but are not its API.
+  implementation(libs.androidx.activity)
   implementation(libs.androidx.activity.compose)
+  implementation(libs.androidx.compose.foundation)
+  implementation(libs.androidx.compose.foundation.layout)
   implementation(libs.androidx.compose.material3)
+  implementation(libs.androidx.compose.runtime)
   implementation(libs.androidx.compose.ui)
+  implementation(libs.androidx.compose.ui.graphics)
+  implementation(libs.androidx.compose.ui.text)
   implementation(libs.androidx.compose.ui.tooling.preview)
+  implementation(libs.androidx.compose.ui.unit)
   implementation(libs.kotlinx.coroutines.core)
+  // Fix.dateTime and Fix.time are kotlinx-datetime types, reached through :marine-api's `api`
+  // dependency. Declared directly because this module names them, not because it adds anything.
+  implementation(libs.kotlinx.datetime)
   implementation(libs.kotlinx.io.core)
 
   // Powers the @Preview rendering and the layout inspector; debug-only so it stays out of release.

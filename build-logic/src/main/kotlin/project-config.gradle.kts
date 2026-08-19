@@ -3,6 +3,10 @@
 plugins {
   id("com.ncorti.ktfmt.gradle")
   id("dev.detekt")
+  // DAGP must be applied to every project, root included -- the project plugin does not cascade,
+  // and buildHealth aggregates the per-project advice. It lives here rather than in a settings
+  // plugins block because it must share a classloader with KGP and AGP, which build-logic owns.
+  id("com.autonomousapps.dependency-analysis")
 }
 
 ktfmt {
