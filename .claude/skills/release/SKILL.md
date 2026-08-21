@@ -80,9 +80,14 @@ Then inspect what `publishToMavenLocal` produced in `~/.m2/repository/io/github/
 - **`Bundle-Version` matches the release version** and is OSGi-legal (step 0).
 - **The javadoc jars carry real content.** Dokka is applied and the publish plugin picks it up on its
   own; an empty javadoc jar is a Central validation failure.
-- **The publication set is complete**: `kmp-marine-api` (root, module metadata),
+- **The publication set is complete** -- sixteen of them: `kmp-marine-api` (root, module metadata),
   `-jvm`, `-android`, `-js`, `-wasm-js`, `-wasm-wasi`, `-iosarm64`, `-iossimulatorarm64`,
-  `-macosarm64`. A missing Apple artifact means the build did not run on macOS.
+  `-macosarm64`, `-linuxx64`, `-linuxarm64`, `-mingwx64`, `-androidnativearm32`,
+  `-androidnativearm64`, `-androidnativex86`, `-androidnativex64`. A missing Apple artifact means
+  the build did not run on macOS; everything else cross-compiles from any host, so a missing
+  linux/mingw/androidNative artifact means something else went wrong. Note the suffix convention is
+  not uniform -- the wasm pair is hyphenated, the rest are the target name lowercased. Check against
+  `publishToMavenLocal` rather than against this list if they ever disagree.
 - **No `nrjavaserial` in any POM.** It is an `implementation` dependency of `:examples` only, and
   `:examples` is not published.
 

@@ -13,7 +13,7 @@ concurrency:
 jobs:
   # Fast feedback: the equivalent of the old `mvn package`.
   jvm:
-    name: JVM (compile, test, docs)
+    name: JVM and Linux native (compile, test, docs)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -43,13 +43,23 @@ jobs:
       - name: Check dependency sorting
         run: ./gradlew checkSortDependencies
 
+      # Runs on the Linux job even though `build` on the macOS job also triggers it via `check`:
+      # detekt reads source rather than compiled output, so it covers the Apple source sets here
+      # too, and a lint failure is worth hearing about before the 20-minute all-targets job.
+      - name: Static analysis
+        run: ./gradlew detekt
+
       # Dokka replaces the old javadocJvm task, which documented the deleted Java tree. On
       # Linux the Apple targets are disabled (kotlin.native.ignoreDisabledTargets), so this
       # documents fewer source sets here than the macOS job does; the jar that ships is built
       # by the release workflow, which runs on macOS.
+      # linuxX64Test runs HERE and nowhere else: a Linux binary only executes on a Linux host, so
+      # the macOS job skips it. It is the second Kotlin/Native target to actually run the common
+      # suite -- of the seven native targets added alongside it, only linuxX64 and mingwX64 have a
+      # test run at all, and mingw's needs a Windows runner this build does not have.
       - name: Build JVM target
         run: >-
-          ./gradlew :marine-api:jvmJar :marine-api:jvmTest
+          ./gradlew :marine-api:jvmJar :marine-api:jvmTest :marine-api:linuxX64Test
           :marine-api:dokkaGeneratePublicationHtml :examples:jvmJar
           :examples-android:assembleDebug
 
@@ -58,12 +68,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jvm-test-report
-          path: marine-api/build/reports/tests/jvmTest
+          path: |
+            marine-api/build/reports/tests/jvmTest
+            marine-api/build/reports/tests/linuxX64Test
 
-  # Full multiplatform build. macOS is required -- the Apple targets cannot be linked
-  # on Linux.
+  # Full multiplatform build. macOS is required -- the Apple targets cannot be linked on Linux,
+  # and everything else cross-compiles here, which is what lets the release workflow publish all
+  # sixteen publications from a single macOS runner.
   all-targets:
-    name: All targets (jvm, android, apple, js, wasm)
+    name: All targets (jvm, android, apple, linux, mingw, android native, js, wasm)
     runs-on: macos-latest
     steps:
       - name: Checkout

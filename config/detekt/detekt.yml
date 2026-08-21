@@ -1,0 +1,79 @@
+# Overrides on top of detekt's own defaults. `buildUponDefaultConfig = true` is set in
+# build-logic/src/main/kotlin/project-config.gradle.kts, so only the deviations belong here and an
+# upgrade brings detekt's new rules with it instead of pinning a snapshot of the old ones.
+#
+# Every entry below has a reason. A rule is never relaxed just to make the build green -- where a
+# finding was real it was fixed in the code instead, and the two rules this project keeps at their
+# defaults but violates deliberately carry a local @Suppress with the reason at the site.
+
+complexity:
+  ComplexCondition:
+    # 4, not 3. The one condition this catches is a validity guard that reads its four clauses in a
+    # row -- `count == null || index == null || index < 1 || index > count`. Splitting a guard like
+    # that across named booleans hides what it rejects.
+    allowedConditions: 4
+  CyclomaticComplexMethod:
+    # detekt excludes the test source sets from most rules by default; these three it does not, and
+    # the suites it flags are the corpus and gpsd cross-check drivers, which are one long branch per
+    # message type on purpose. Complexity in a test is a different question from complexity in a
+    # library, and this suite is not where that question gets asked.
+    excludes: &testSourceSets
+      - '**/test/**'
+      - '**/androidTest/**'
+      - '**/commonTest/**'
+      - '**/jvmTest/**'
+      - '**/androidUnitTest/**'
+      - '**/androidInstrumentedTest/**'
+      - '**/jsTest/**'
+      - '**/iosTest/**'
+  LongMethod:
+    excludes: *testSourceSets
+  TooManyFunctions:
+    # SentenceFields is a field-accessor facade: one reader per field type, each two lines long.
+    # Seventeen small accessors on one class is the shape of that job, not a class doing too much.
+    allowedFunctionsPerClass: 20
+
+naming:
+  FunctionNaming:
+    # @Composable functions are PascalCase by Compose convention, which is what :examples-android
+    # follows. Kotlin's own naming rules make the same exception.
+    ignoreAnnotated:
+      - 'Composable'
+  MatchingDeclarationName:
+    # Files here are named for what they are about rather than for the one class they happen to
+    # declare: Satellites.kt holds SatelliteView *and* the satellites() operator, Headings.kt the
+    # same for Heading. CLAUDE.md makes the grouping explicit for the sentence types. Renaming the
+    # files to match the type would point them at the smaller half of their contents.
+    active: false
+
+style:
+  DestructuringDeclarationWithTooManyEntries:
+    excludes: *testSourceSets
+  LoopWithTooManyJumpStatements:
+    # 2, not 1: a read loop that breaks at end-of-input and skips a blank line is two jumps and is
+    # the clearest way to write it. Three still means something is worth extracting.
+    maxJumpCount: 2
+    excludes: *testSourceSets
+  MagicNumber:
+    # Off. This is a parser for two binary-ish wire formats, and the numbers it is built from are
+    # the specifications' own coordinates: AIS bit ranges (`uintAt(38, 42)`), zero-based NMEA field
+    # indices and fixed digit widths. 347 of them, and naming each one would replace a range the
+    # standard states outright with an indirection to look up. The sentence classes already keep
+    # named field-index constants where a reader benefits -- see CLAUDE.md -- and that convention is
+    # enforced by review, not by this rule.
+    active: false
+  ReturnCount:
+    # Guard clauses do not count. Reading a coordinate out of a sentence is half a dozen "this
+    # field is absent or unreadable, there is no position" checks in a row; folding them into two
+    # exits means nesting them, which is what the guard-clause style exists to avoid.
+    excludeGuardClauses: true
+    # 5, not 2, on top of that. The parsers are built out of early exits by design -- an optional
+    # NMEA field that will not read is a null, not an exception -- and detekt's guard-clause
+    # heuristic only sees the ones written as a bare statement, not the `x?.let { if (..) return }`
+    # veto that PositionCycle.reportsGoodData and NmeaLineReader.readLine are made of. This is high
+    # enough for those and still low enough to catch genuinely tangled control flow.
+    max: 5
+  UnusedPrivateFunction:
+    # Ignore private functions annotated with Preview
+    ignoreAnnotated:
+      - 'Preview'
