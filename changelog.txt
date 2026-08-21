@@ -1,5 +1,62 @@
-Java Marine API - changelog
-<http://ktuukkan.github.io/marine-api/>
+KMP Marine API - changelog
+<https://github.com/solcott/kmp-marine-api>
+
+Version 0.12.0 and every entry below it describe the upstream Java library,
+ktuukkan/marine-api (net.sf.marineapi), under its own numbering. The Kotlin
+fork restarts at 0.5.0 -- the drop is deliberate, not a mistake.
+
+Version 0.5.0 (unreleased)
+
+  - Rewritten in Kotlin as a Kotlin Multiplatform library. The Java
+    implementation under net.sf.marineapi is gone; the whole library is built
+    from one commonMain source set and published for fourteen targets: JVM,
+    Android, iOS, macOS, Linux, Windows, Android NDK, JS and WebAssembly.
+  - Coordinates changed to io.github.solcott:kmp-marine-api, package root to
+    io.github.solcott.marineapi. Gradle consumers use the one coordinate;
+    plain Maven consumers cannot read module metadata and need the -jvm
+    artifact, kmp-marine-api-jvm.
+  - Version numbering restarts here. 0.5.0 does not continue from 0.12.0 --
+    it is a different library under different coordinates.
+  - Sentences are immutable data classes, built by construction rather than
+    by creating a parser and calling setters on it.
+  - Optional fields are nullable. An empty field reads as null instead of
+    throwing DataNotAvailableException.
+  - Line-level failures are returned as ParseResult values rather than thrown,
+    so a bad checksum can be counted, logged or ignored without a try/catch.
+  - An unregistered sentence type is no longer an error: it arrives as an
+    UnknownSentence that keeps its fields and re-encodes intact. TalkerId
+    likewise accepts an unknown mnemonic instead of throwing.
+  - SentenceReader, the listener interfaces and the *Provider classes are
+    replaced by kotlinx.coroutines Flow, with positions(), headings() and
+    satellites() doing the aggregating the providers did. The library reads
+    a kotlinx-io Source and never opens one itself, so it needs no platform
+    IO and chooses no dispatcher -- callers add .flowOn(...).
+  - No reflection. Sentence and AIS types are registered as lambdas rather
+    than instantiated by class name, which is what makes the Native and JS
+    targets possible and reduces the Android Proguard configuration to two
+    -keep rules.
+  - Added a VPW parser, which the Java implementation did not have.
+  - GSA now reads its system id field and GSV its signal id field, both added
+    in NMEA 4.11 and neither read by the Java implementation.
+  - MDA writes N for the correct wind speed unit, where the Java
+    implementation wrote K (kilometres) and produced a sentence it could not
+    read back.
+  - Behaviour deliberately corrected against 0.12.0, each one recorded in
+    KDoc on the declaration:
+      - AIS types 4, 18 and 27 read the position accuracy bit one place
+        early.
+      - AIS type 27's navigational status bit range was reversed.
+      - AIS type 9's flags were off by one and its speed was scaled by ten.
+      - AIS type 21's name extension was appended even when the name field
+        was not full, and AIS text lost its leading whitespace.
+      - isDteReady returned the bit uninverted; the bit means the opposite
+        of its name, as 0 is ready.
+      - NavStatus read V as valid.
+      - PositionProvider required a GGA or GLL in every update cycle, and
+        required a velocity.
+      - RMC's date was treated as load-bearing when it is not.
+      - Position altitude defaulted to 0.0, which is a real altitude and
+        indistinguishable from a missing one; it is null now.
 
 Version 0.12.0 (2023-02-26)
 

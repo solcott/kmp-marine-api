@@ -1,16 +1,18 @@
-# Java Marine API
+# KMP Marine API
 [![License](https://img.shields.io/badge/License-LGPL%20v3-brightgreen.svg)](./LICENSE)
 [![Build & Test](https://github.com/solcott/kmp-marine-api/actions/workflows/build.yml/badge.svg)](https://github.com/solcott/kmp-marine-api/actions/workflows/build.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.solcott/kmp-marine-api)](https://central.sonatype.com/artifact/io.github.solcott/kmp-marine-api)
-[![Javadocs](https://javadoc.io/badge2/io.github.solcott/kmp-marine-api/javadoc.svg)](https://javadoc.io/doc/io.github.solcott/kmp-marine-api)
+[![API docs](https://javadoc.io/badge2/io.github.solcott/kmp-marine-api/API%20docs.svg)](https://javadoc.io/doc/io.github.solcott/kmp-marine-api)
 
-- [Java Marine API](#java-marine-api)
+- [KMP Marine API](#kmp-marine-api)
   - [About](#about)
     - [Features](#features)
+    - [Supported platforms](#supported-platforms)
     - [Licensing](#licensing)
     - [Disclaimer](#disclaimer)
     - [Requirements](#requirements)
     - [Usage](#usage)
+  - [Differences from Java Marine API](#differences-from-java-marine-api)
   - [Supported Protocols](#supported-protocols)
     - [NMEA 0183](#nmea-0183)
     - [AIS](#ais)
@@ -31,12 +33,16 @@
 
 ## About
 
-Java Marine API is an [NMEA 0183](http://en.wikipedia.org/wiki/NMEA_0183) parser
-library for decoding and encoding the data provided by various electronic marine
-devices such as GPS, echo sounder and weather instruments.
+KMP Marine API is a **Kotlin Multiplatform** parser library for
+[NMEA 0183](http://en.wikipedia.org/wiki/NMEA_0183), AIS, u-blox and Raymarine
+SeaTalk<sup>1</sup> — the data produced by electronic marine devices such as GPS receivers,
+echo sounders, AIS transponders and weather instruments.
 
-Originally a Java library, it is now **Kotlin Multiplatform**: the same code runs on the
-JVM, Android, iOS, macOS, Linux, Windows, Android NDK, JS and WebAssembly.
+It is a fork of [ktuukkan/marine-api](https://github.com/ktuukkan/marine-api) ("Java Marine
+API"), rewritten in Kotlin. The same code now runs on the JVM, Android, iOS, macOS, Linux,
+Windows, Android NDK, JS and WebAssembly. The rewrite was a redesign rather than a
+transliteration — see [Differences from Java Marine API](#differences-from-java-marine-api)
+before upgrading from the Java library.
 
 ### Features
 
@@ -48,6 +54,8 @@ JVM, Android, iOS, macOS, Linux, Windows, Android NDK, JS and WebAssembly.
 - Optional NMEA fields are **nullable**, not exceptions: an empty field reads as `null`
 - Line-level failures are **values**, not exceptions: a bad checksum arrives as a `ParseResult`
   you can count, log or ignore
+- **No reflection anywhere** — which is what lets the same code run on Native and JS, and what
+  makes the Proguard configuration two lines instead of a list of kept attributes
 - Additional sentence types may be registered at runtime, without compiling the library
 - Sentence encoding with a checksum that always matches the body
 - Several sentences aggregate into one value with the flow operators `positions()`,
@@ -57,26 +65,44 @@ JVM, Android, iOS, macOS, Linux, Windows, Android NDK, JS and WebAssembly.
   [Raymarine SeaTalk<sup>1</sup>](http://www.raymarine.com/view/?id=5535)
 - Utilities and enumerations for handling the extracted data
 
+### Supported platforms
+
+Fourteen targets, all built from the same `commonMain` source — there is no per-platform
+source set in the library at all.
+
+|Platform |Targets
+|---      |---
+|JVM      |`jvm` — bytecode 17
+|Android  |`android` — minSdk 24, compileSdk 37
+|Apple    |`iosArm64`, `iosSimulatorArm64`, `macosArm64`
+|Native   |`linuxX64`, `linuxArm64`, `mingwX64`
+|Android NDK |`androidNativeArm32`, `androidNativeArm64`, `androidNativeX86`, `androidNativeX64`
+|Web      |`js` (browser and Node), `wasmJs` (browser and Node), `wasmWasi` (Node)
+
+The x64 Apple variants are deliberately absent: `macosX64` and `iosX64` are deprecated, and
+arm64 covers current hardware and simulators.
+
 ### Licensing
 
-Java Marine API is free software: you can redistribute it and/or modify it
+KMP Marine API is free software: you can redistribute it and/or modify it
 under the terms of the [GNU Lesser General Public License](./LICENSE) published
 by the Free Software Foundation, either version 3 of the License, or (at your
 option) any later version.
 
-Java Marine API is distributed in the hope that it will be useful, but
+KMP Marine API is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
 for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with Java Marine API. If not, see http://www.gnu.org/licenses/.
+along with KMP Marine API. If not, see http://www.gnu.org/licenses/.
 
-- See also: [LGPL and Java](https://www.gnu.org/licenses/lgpl-java.en.html)
+- See also: [LGPL and Java](https://www.gnu.org/licenses/lgpl-java.en.html), which covers what
+  dynamic linking means for the JVM and Android targets
 
 ### Disclaimer
 
-Java Marine API is not official NMEA 0183 software. Further, it is not related
+KMP Marine API is not official NMEA 0183 software. Further, it is not related
 to [National Marine Electronics Association](http://www.nmea.org/).
 
 The interpretation of NMEA 0183 and related protocols is based entirely on
@@ -89,13 +115,23 @@ should never be your only reference.
 
 ### Requirements
 
-* Kotlin 2.1 or newer
-* On the JVM: Java SE JRE/JDK 17 or newer
-* For serial port communication on the JVM (choose one):
-  * [Neuron Robotics Java Serial Library](https://github.com/NeuronRobotics/nrjavaserial)
-  * [PureJavaComm](http://www.sparetimelabs.com/purejavacomm)
-  * [RXTX library](http://rxtx.qbang.org)
-  * [Java Communications API](http://www.oracle.com/technetwork/java/index-jsp-141752.html)
+* Kotlin 2.4 or newer, and a build that reads Gradle module metadata — see
+  [Maven](#maven) if yours does not
+* On the JVM: Java 17 or newer
+* On Android: minSdk 24
+
+These arrive transitively, and are part of the public API rather than hidden behind it:
+[kotlinx-coroutines-core](https://github.com/Kotlin/kotlinx.coroutines),
+[kotlinx-datetime](https://github.com/Kotlin/kotlinx-datetime) and
+[kotlinx-io-core](https://github.com/Kotlin/kotlinx-io).
+
+**Serial port drivers are not a dependency of this library.** It reads a `Source` and never opens
+a port, so the driver is yours to choose. On the JVM,
+[nrjavaserial](https://github.com/NeuronRobotics/nrjavaserial) is what `:examples` uses;
+[PureJavaComm](http://www.sparetimelabs.com/purejavacomm),
+[RXTX](http://rxtx.qbang.org) and the original Java Communications API work the same way. On
+Android, a USB-serial library or `UsbDeviceConnection` gives you an `InputStream`, which is all
+`asSource()` needs.
 
 ### Usage
 
@@ -182,8 +218,43 @@ See also:
   [macOS](examples/src/macosArm64Main/kotlin/io/github/solcott/marineapi/example) and
   [Android](examples-android/src/main/kotlin/io/github/solcott/marineapi/example/android)
 - [API documentation](https://javadoc.io/doc/io.github.solcott/kmp-marine-api)
-- [Graphical User Interface](https://github.com/aitov/gps-info) using marine-api by @aitov
+- [Graphical User Interface](https://github.com/aitov/gps-info) by @aitov, built against the
+  original Java library
 
+
+## Differences from Java Marine API
+
+The Kotlin rewrite is source-incompatible with `net.sf.marineapi` throughout — this is a port
+to move to deliberately, not a drop-in upgrade.
+
+- **Coordinates and packages changed.** `net.sf.marineapi:marineapi` becomes
+  `io.github.solcott:kmp-marine-api`, and the package root `net.sf.marineapi` becomes
+  `io.github.solcott.marineapi`.
+- **Sentences are immutable `data class` values.** You build one by construction rather than by
+  creating a parser and calling setters on it, and reading one is property access.
+- **Optional fields are nullable.** An empty field reads as `null` instead of throwing
+  `DataNotAvailableException`.
+- **Parse failures are values.** A bad checksum or an unreadable field arrives as a
+  `ParseResult` you can count, log or ignore, rather than as a thrown exception.
+- **`Flow` replaces the listener and provider model.** `SentenceReader`, the listener
+  interfaces and `PositionProvider` and friends are gone; `nmeaSentences()` gives you a flow,
+  and `positions()`, `headings()` and `satellites()` do the aggregating those providers did.
+- **No reflection.** Sentence and AIS types are registered as lambdas rather than looked up by
+  class name, which is what allows the Native and JS targets.
+- **An unregistered sentence is not an error.** It arrives as an `UnknownSentence` that keeps
+  its fields and re-encodes intact, where the Java library threw.
+
+### Bugs deliberately not carried over
+
+Where behaviour differs from the Java library because the Java library was wrong, the reason is
+recorded in KDoc on the declaration. Do not expect these to match a `net.sf.marineapi` release:
+
+- AIS types 4, 18 and 27 read the position-accuracy bit one place early
+- AIS type 27's navigational status bit range was reversed
+- AIS type 9's flags were off by one, and its speed was scaled by ten
+- `isDteReady` returned the bit uninverted — the bit means the opposite of its name
+- `NavStatus` read `V` as valid
+- `PositionProvider` required a GGA or GLL in every update cycle
 
 ## Supported Protocols
 
@@ -342,17 +413,19 @@ vendor extension messages are supported:
 
 ## Distribution
 
-Releases and snapshots are published every now and then, but there is no clear
-plan or schedule for this as most of the development happens per user requests
-or contribution.
+Releases are published to [Maven Central](https://central.sonatype.com/artifact/io.github.solcott/kmp-marine-api)
+as `io.github.solcott:kmp-marine-api`. This fork has not released yet, so the coordinates below
+describe the version in development; there is no schedule, as development happens per user
+request or contribution.
 
 ### Gradle
 
-Releases are published to Maven Central as `io.github.solcott:kmp-marine-api`.
+Gradle reads the module metadata and resolves the variant for whichever target you are
+building — one coordinate for every platform:
 
 ```kotlin
 dependencies {
-    implementation("io.github.solcott:kmp-marine-api:0.12.0")
+    implementation("io.github.solcott:kmp-marine-api:0.5.0")
 }
 ```
 
@@ -365,7 +438,7 @@ metadata. Maven consumers must depend on the JVM artifact directly:
 <dependency>
   <groupId>io.github.solcott</groupId>
   <artifactId>kmp-marine-api-jvm</artifactId>
-  <version>0.12.0</version>
+  <version>0.5.0</version>
 </dependency>
 ```
 
@@ -387,10 +460,13 @@ at configuration time even for JVM-only tasks.
 
 Any feedback or contribution is welcome. You have several options:
 
-- [Contact me](https://github.com/ktuukkan)
-- [Report a bug](https://github.com/ktuukkan/marine-api/issues)
+- [Report a bug](https://github.com/solcott/kmp-marine-api/issues) in this fork
 - [Fork](https://help.github.com/articles/fork-a-repo/) and open a [pull request](https://help.github.com/articles/about-pull-requests/)
 to share improvements.
+
+This fork does not send pull requests upstream, and it has diverged deliberately — a bug in
+`net.sf.marineapi` belongs in [ktuukkan/marine-api's tracker](https://github.com/ktuukkan/marine-api/issues)
+rather than here, and the reverse is equally true.
 
 
 ## References
@@ -399,7 +475,7 @@ All information and specifications for this library has been gathered from the
 following documents, availability last checked on 2020-03-15.
 
 *Notice: any warnings regarding the accuracy of the information in below
-documents apply equally to Java Marine API.*
+documents apply equally to KMP Marine API.*
 
 ### National Marine Electronics Association
 

@@ -8,24 +8,25 @@ description: Cut a release of :marine-api to Maven Central — the version decis
 Published as `io.github.solcott:kmp-marine-api` from the `:marine-api` module. `:examples` and
 `:examples-android` are never published.
 
-## Step 0 — the version decision, which is not yours to make
+## Step 0 — the version
 
-**This fork has never released.** `gradle.properties` carries `version=0.12.0` and the newest
-`changelog.txt` entry is `0.12.0 (2023-02-26)` — both inherited from upstream `ktuukkan/marine-api`,
-for a library that has since had its entire source tree replaced, its group id changed, its artifact
-id changed and its API redesigned (immutable values, nullable optional fields, `ParseResult` instead
-of thrown exceptions).
+**This fork has never released**, but the numbering question is settled: `gradle.properties` carries
+`version=0.5.0`, and `changelog.txt` has a `Version 0.5.0 (unreleased)` entry above upstream's
+`0.12.0 (2023-02-26)`.
 
-So `0.12.0` describes a different library under different coordinates. **Ask for the version number
-explicitly and do not pick one.** The things worth putting in front of whoever decides:
+The restart is deliberate. Upstream's `0.12.0` and everything below it describe the Java library at
+`net.sf.marineapi` — a different source tree, a different group id, a different artifact id and a
+redesigned API (immutable values, nullable optional fields, `ParseResult` instead of thrown
+exceptions). Continuing that numbering would have implied continuity with an API that no longer
+exists. **Do not "fix" the drop from 0.12.0 to 0.5.0**; the changelog header says why it is there.
 
-- Continuing upstream's numbering (`0.13.0`) implies continuity with an API that no longer exists.
-- Starting over (`0.1.0`, `1.0.0`) is honest about the redesign but abandons the shared history that
-  `changelog.txt` records.
-- The coordinates already differ, so nothing technically forces either choice.
+From here it is ordinary pre-1.0 semver judgement — `0.5.1` for a fix, `0.6.0` for anything that
+moves the pinned ABI in `marine-api/api/`, and `1.0.0` when the API is considered settled. That is a
+call worth confirming rather than assuming, but it is no longer a question about which lineage to
+follow.
 
 **OSGi constrains the format.** `Bundle-Version` is set to `project.version` verbatim
-(`marine-api/build.gradle.kts:126`), and OSGi versions are `major.minor.micro[.qualifier]` with a
+(`marine-api/build.gradle.kts:116`), and OSGi versions are `major.minor.micro[.qualifier]` with a
 **dot** before the qualifier and no hyphens. `0.13.0-alpha01` or `1.0.0-SNAPSHOT` produce a malformed
 `Bundle-Version` that only an OSGi resolver will complain about — long after publication. If a
 pre-release qualifier is wanted, that header needs converting rather than passing through.
@@ -36,14 +37,13 @@ pre-release qualifier is wanted, that header needs converting rather than passin
   `build.properties` and `changelog.txt`; the comment above the property says so. Do not add it back
   anywhere.
 - **`changelog.txt` gets a new entry, not a version bump.** It keeps its own historical record, in
-  the existing format: `Version X.Y.Z (YYYY-MM-DD)` followed by indented `-` bullets. Note that every
-  entry currently in it describes the Java library; the first fork entry should say plainly that the
-  implementation was replaced, and what that means for anyone upgrading — the deliberate behavioural
-  differences (AIS types 4/18/27 accuracy bit, type 27 status range, type 9 flags and speed,
-  `isDteReady`, `NavStatus` reading `V`, `PositionProvider` no longer requiring GGA/GLL) are exactly
-  what a changelog is for. Run
+  the existing format: `Version X.Y.Z (YYYY-MM-DD)` followed by indented `-` bullets. The `0.5.0`
+  entry is already written and carries the "the implementation was replaced" story, including the
+  deliberate behavioural differences from the Java library; **it is dated `(unreleased)` and that
+  date is what you fill in when the release is cut.** For a later release, list what changed since
+  the previous entry rather than restating the rewrite. When a behavioural divergence is added, run
   `grep -rn "implementation this replaces\|Java implementation" marine-api/src/commonMain/kotlin/`
-  for the live list.
+  for the live list — those KDoc notes are the source of truth, not the changelog.
 
 ## Step 2 — pre-flight, on macOS
 
@@ -60,8 +60,8 @@ KMP artifacts. `ANDROID_HOME` must be set even for JVM-only tasks: the
 ./gradlew :marine-api:publishToMavenLocal
 ```
 
-Check the test **count**, not the exit code — see the `useJUnit()` hazard: expect 428 on `jvmTest`
-and 403 common tests per target. `regression-checker` will confirm no pinned number moved.
+Check the test **count**, not the exit code — see the `useJUnit()` hazard: expect 433 on `jvmTest`
+and 408 common tests per target. `regression-checker` will confirm no pinned number moved.
 
 Then inspect what `publishToMavenLocal` produced in `~/.m2/repository/io/github/solcott/`:
 

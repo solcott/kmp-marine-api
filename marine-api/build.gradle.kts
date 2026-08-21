@@ -142,7 +142,7 @@ tasks.named<Jar>("jvmJar") {
       "Automatic-Module-Name" to "io.github.solcott.marineapi",
       "Bundle-ManifestVersion" to "2",
       "Bundle-SymbolicName" to "io.github.solcott.marineapi",
-      "Bundle-Name" to "Java Marine API",
+      "Bundle-Name" to "KMP Marine API",
       "Bundle-Version" to bundleVersion,
       "Bundle-License" to "http://www.opensource.org/licenses/lgpl-3.0.html",
       "Bundle-DocURL" to "https://github.com/solcott/kmp-marine-api",
@@ -170,7 +170,7 @@ mavenPublishing {
 
   coordinates(group.toString(), "kmp-marine-api", version.toString())
   pom {
-    name = "Java Marine API"
+    name = "KMP Marine API"
     description = "NMEA 0183, AIS and u-blox parser library for Kotlin Multiplatform."
     url = "https://github.com/solcott/kmp-marine-api"
     licenses {
