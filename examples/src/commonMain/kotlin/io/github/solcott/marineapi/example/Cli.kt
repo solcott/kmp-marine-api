@@ -18,8 +18,12 @@ suspend fun runDemo(demo: String?, open: (() -> Source)?) {
   when (demo) {
     "file" -> withFeed(demo, open, ::demoFile)
     "positions" -> withFeed(demo, open, ::demoPositions)
+    "accuracy" -> withFeed(demo, open, ::demoAccuracy)
     "ais" -> withFeed(demo, open, ::demoAis)
     "traffic" -> withFeed(demo, open, ::demoTraffic)
+    "depth" -> withFeed(demo, open, ::demoDepth)
+    "wind" -> withFeed(demo, open, ::demoWind)
+    "route" -> withFeed(demo, open, ::demoRoute)
     // No sample log in this project carries $PUBX, so this one brings its own feed.
     "ublox" -> demoUblox(open ?: { sourceOf(UBLOX_SAMPLE) })
     "output" -> demoOutput()
@@ -36,7 +40,19 @@ private suspend fun withFeed(
 }
 
 /** The demos [runDemo] knows, in the order the usage text lists them. */
-val DEMOS: List<String> = listOf("file", "positions", "ais", "traffic", "ublox", "output")
+val DEMOS: List<String> =
+  listOf(
+    "file",
+    "positions",
+    "accuracy",
+    "ais",
+    "traffic",
+    "depth",
+    "wind",
+    "route",
+    "ublox",
+    "output",
+  )
 
 private val USAGE =
   """
@@ -44,8 +60,12 @@ private val USAGE =
 
     file       position from every GGA, and a count of the lines that did not parse
     positions  fixes, headings and satellite views, correlated across sentences
+    accuracy   what the receiver says about its own error, and the filters that use it
     ais        AIS traffic, with multi-sentence messages reassembled
     traffic    the same feed as vessels, fused by MMSI, with closest approach
+    depth      soundings normalised to one datum, and a shallow-water alarm
+    wind       apparent, true over the water and ground wind, and why they differ
+    route      an RTE group reassembled and resolved, and the leg being steered
     ublox      ${'$'}PUBX messages; uses a built-in sample if given no file
     output     builds and encodes sentences; needs no file
   """

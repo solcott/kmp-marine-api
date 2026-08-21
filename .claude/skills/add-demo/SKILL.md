@@ -19,12 +19,18 @@ directly, as an external consumer would, and has its own Compose UI that calls
 `nmeaSentences().positions()` itself. It shares no code with `:examples` and adding a demo does not
 touch it.
 
-## The three edits
+## The edits
 
-All in `examples/`.
+All in `examples/` — three, or four for a demo you want working in a browser.
 
-1. **The demo itself** — `src/commonMain/kotlin/io/github/solcott/marineapi/example/Demos.kt`,
-   alongside `demoFile`, `demoPositions`, `demoAis`, `demoUblox` and `demoOutput`:
+1. **The demo itself** — in `src/commonMain/kotlin/io/github/solcott/marineapi/example/`. `Demos.kt`
+   holds the demos of `:marine-api`, the parser (`demoFile`, `demoPositions`, `demoAis`,
+   `demoUblox`, `demoOutput`); each demo of `:marine-api-nav` gets its own file named after it
+   (`AccuracyDemo.kt`, `TrafficDemo.kt`, `DepthDemo.kt`, `WindDemo.kt`, `RouteDemo.kt`). That split
+   is not taste: **detekt caps a file at eleven top-level functions**, private helpers included, and
+   `Demos.kt` reached the cap. A new demo with two or three helpers goes in a new file rather than
+   into an existing one. Formatting shared between demos lives in `Format.kt` and is `internal`,
+   because Kotlin's `private` is file-scoped.
 
    ```kotlin
    /** KDoc saying what the demo shows, and why that is worth showing. */
@@ -49,7 +55,7 @@ All in `examples/`.
    - the name in `DEMOS`;
    - a line in `USAGE`, aligned with the others, in the same order as `DEMOS`.
 
-3. **`build.gradle.kts`** — add the name to `val demos = listOf(...)` (around line 73). That
+3. **`build.gradle.kts`** — add the name to `val demos = listOf(...)`. That
    generates the `run<Name>Example` JavaExec task. The comment there notes that a name in this list
    with no branch in `runDemo` prints the usage text rather than failing, which is the right way round
    for a demo — but it also means **a missing `Cli.kt` branch is silent**. Do both edits together.
@@ -63,7 +69,14 @@ Do not try to unify these. Each is the way it is for a reason recorded in the so
 | JVM | `systemProperty("marineapi.demo", demo)` | Gradle's `--args` calls `setArgsString()`, which **replaces** the argument list. A demo name passed as an argument would vanish the moment a user passed a file path. The system property leaves `--args` free for the path. |
 | macOS native | `-PdemoArgs="xyz nmea.log"` | The run task is a plain `Exec` and does not accept `--args`. |
 | Node | `-PdemoArgs="xyz nmea.log"` | `jsNodeRun` is a `NodeJsExec` and does not accept `--args` either. Defaults to `ublox`, the one demo that carries its own feed. |
-| Browser | the URL fragment, e.g. `#xyz` | No argv. Defaults to `positions`, and fetches `sample.log` over the network. |
+| Browser | the URL fragment, e.g. `#xyz` | No argv. Defaults to `positions`, and fetches a log over the network. |
+
+A browser demo needs a **fourth** edit the others do not: `sampleFor` in `jsMain/Main.kt` picks
+which of the bundled logs to fetch, and `jsMain/resources/index.html` lists the demos as links. No
+NMEA feed carries everything — a masthead unit and an echo sounder share a bus with each other and
+not with a GPS, and only a plotter sends a route — so a demo left on the default `sample.log` prints
+nothing and reads as broken rather than as empty. Add a log to `jsMain/resources/` if none of
+`sample.log`, `instruments.log`, `route.log` or `ais.log` carries what the demo reads.
 
 Two further traps in `build.gradle.kts`, both already commented there:
 
@@ -91,8 +104,12 @@ because the log has already ended by the time it prints.
 
 ## Verify on all four
 
-There is a sample log at `marine-api/src/jvmTest/resources/data/Navibe-GM720.txt`. Run every platform
-— a demo that works on the JVM and nowhere else is the normal failure:
+Pick a log that actually carries what the demo reads, or the run proves nothing. In
+`marine-api/src/jvmTest/resources/data/`: `Navibe-GM720.txt` and `gpsd/skytraq-fix.log` for GPS
+(the latter flips fix quality and sends a `GST`), `sample1.txt` for wind, depth and log
+instruments, `Garmin-GPS76_route.txt` for routes and waypoints, `AIS-VDM-VDO.txt` for AIS.
+
+Run every platform — a demo that works on the JVM and nowhere else is the normal failure:
 
 ```
 ./gradlew :examples:runXyzExample --args="marine-api/src/jvmTest/resources/data/Navibe-GM720.txt"
@@ -103,4 +120,12 @@ There is a sample log at `marine-api/src/jvmTest/resources/data/Navibe-GM720.txt
 ```
 
 `./gradlew :examples:jvmJar` compiles without running. The macOS target cannot be linked on Linux, so
-the native run is macOS-only.
+the native run is macOS-only. To check the browser without a live server run, build
+`:examples:jsBrowserDevelopmentExecutableDistribution` and serve `examples/build/dist/js/
+developmentExecutable` — the logs are copied in beside `examples.js`.
+
+**Compare the output across platforms rather than just checking each one ran.** The demos share
+every line of their code, so a difference is always in something under them, and it is usually
+number formatting: Kotlin/JS renders the `Double` `4.0` as `4` where the JVM and Native render
+`4.0`, so a bare `$someDouble` in a `println` makes one platform's output differ from the others'.
+Send it through `toHundredths()` in `Format.kt`.

@@ -7,7 +7,9 @@
 # CR and LF, and the corpus is where that gets exercised against real hardware output.
 marine-api/src/jvmTest/resources/data/** -text
 
-# The browser demo's feed, for the same reason: it is a slice of one of those captures and is
-# CRLF-terminated like the hardware that produced it. Normalized to LF it would still parse -- the
-# reader handles all three terminators -- but it would stop being a truthful sample.
-examples/src/jsMain/resources/sample.log -text
+# The browser demos' feeds, for the same reason: each is a slice of one of those captures and is
+# CRLF-terminated like the hardware that produced it. Normalized to LF they would still parse -- the
+# reader handles all three terminators -- but they would stop being truthful samples. Matched by
+# glob rather than named one by one, so a log added for a new demo is covered without anyone having
+# to remember this file.
+examples/src/jsMain/resources/*.log -text

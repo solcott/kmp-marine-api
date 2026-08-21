@@ -56,9 +56,10 @@ private suspend fun runInBrowser() {
   val demo = window.location.hash.removePrefix("#").ifEmpty { "positions" }
   println("-- $demo --")
 
-  val response = window.fetch(SAMPLE_URL).await()
+  val url = sampleFor(demo)
+  val response = window.fetch(url).await()
   if (!response.ok) {
-    println("could not fetch $SAMPLE_URL: ${response.status}")
+    println("could not fetch $url: ${response.status}")
     return
   }
   // ByteArray is an Int8Array underneath on Kotlin/JS, so this is a view rather than a copy.
@@ -67,7 +68,24 @@ private suspend fun runInBrowser() {
   runDemo(demo) { Buffer().also { it.write(bytes) } }
 }
 
-private const val SAMPLE_URL = "sample.log"
+/**
+ * Which of the bundled logs to fetch for a demo.
+ *
+ * Every other platform takes a path, so a demo there reads whatever it is pointed at. A browser has
+ * no such argument, and a demo handed a feed carrying none of the sentences it reads prints nothing
+ * and looks broken rather than empty -- so each one is paired here with a log that exercises it. No
+ * NMEA feed carries everything: a masthead unit and an echo sounder share a bus with each other and
+ * not with a GPS, and a plotter is the only thing on board that sends a route.
+ */
+private fun sampleFor(demo: String): String =
+  when (demo) {
+    "depth",
+    "wind" -> "instruments.log"
+    "route" -> "route.log"
+    "ais",
+    "traffic" -> "ais.log"
+    else -> "sample.log"
+  }
 
 /** True under Node, false in a browser. */
 private val isNode: Boolean
