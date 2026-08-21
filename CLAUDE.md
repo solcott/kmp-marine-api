@@ -110,7 +110,7 @@ The old signal was the test count, which spanned two suites and is meaningless n
 - `GpsdCorpusTest` — per-file counts of legitimately failing lines across 103 device logs; a count moving in **either** direction fails.
 - `CorpusFixTest` — 2089 fixes, 2201 satellite views, 36 headings across the corpus. It pins more than those three (fixes with altitude, fixes with a date, satellites counted, silent logs); the assertions themselves are the record, so read them rather than this line.
 - `SampleDataTest.everyPortedTypeWithCorpusDataIsExercised` — names the types resting only on reference tables rather than real device data.
-- Common tests per target: **416** for `:marine-api`, **21** for `:marine-api-nav`. One suite each, so these numbers are comparable over time. `:marine-api`'s JVM run is 441 — the same 416 plus the 25 corpus tests, which need classpath resources and so live in `jvmTest`. Adding a target does not move this number; it only changes how many targets execute it, and most of the native ones execute it nowhere (see the build constraints).
+- Common tests per target: **416** for `:marine-api`, **65** for `:marine-api-nav`. One suite each, so these numbers are comparable over time. `:marine-api`'s JVM run is 441 — the same 416 plus the 25 corpus tests, which need classpath resources and so live in `jvmTest`. Adding a target does not move this number; it only changes how many targets execute it, and most of the native ones execute it nowhere (see the build constraints).
 
 When one of these numbers moves, `/repin-regressions` covers deciding whether to re-pin it and where each pin lives. A number is never nudged to make the build green.
 

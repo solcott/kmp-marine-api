@@ -49,6 +49,7 @@ kotlin {
       api(libs.kotlinx.io.core)
 
       implementation(project(":marine-api"))
+      implementation(project(":marine-api-nav"))
       implementation(libs.kotlinx.coroutines.core)
       implementation(libs.kotlinx.datetime)
     }
@@ -76,7 +77,7 @@ val repositoryRoot = rootProject.layout.projectDirectory.asFile
 
 // Kept in step with DEMOS in commonMain/Cli.kt. A name here with no branch there prints the usage
 // text rather than failing, which is the right way round for a demo.
-val demos = listOf("file", "positions", "ais", "ublox", "output")
+val demos = listOf("file", "positions", "ais", "traffic", "ublox", "output")
 
 demos.forEach { demo ->
   tasks.register<JavaExec>("run${demo.replaceFirstChar(Char::titlecase)}Example") {

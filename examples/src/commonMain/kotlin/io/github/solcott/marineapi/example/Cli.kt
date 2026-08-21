@@ -19,6 +19,7 @@ suspend fun runDemo(demo: String?, open: (() -> Source)?) {
     "file" -> withFeed(demo, open, ::demoFile)
     "positions" -> withFeed(demo, open, ::demoPositions)
     "ais" -> withFeed(demo, open, ::demoAis)
+    "traffic" -> withFeed(demo, open, ::demoTraffic)
     // No sample log in this project carries $PUBX, so this one brings its own feed.
     "ublox" -> demoUblox(open ?: { sourceOf(UBLOX_SAMPLE) })
     "output" -> demoOutput()
@@ -35,7 +36,7 @@ private suspend fun withFeed(
 }
 
 /** The demos [runDemo] knows, in the order the usage text lists them. */
-val DEMOS: List<String> = listOf("file", "positions", "ais", "ublox", "output")
+val DEMOS: List<String> = listOf("file", "positions", "ais", "traffic", "ublox", "output")
 
 private val USAGE =
   """
@@ -44,6 +45,7 @@ private val USAGE =
     file       position from every GGA, and a count of the lines that did not parse
     positions  fixes, headings and satellite views, correlated across sentences
     ais        AIS traffic, with multi-sentence messages reassembled
+    traffic    the same feed as vessels, fused by MMSI, with closest approach
     ublox      ${'$'}PUBX messages; uses a built-in sample if given no file
     output     builds and encodes sentences; needs no file
   """

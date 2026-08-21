@@ -81,6 +81,14 @@ The JS compilation serves Node **and** the browser from one `main`. That is only
 calls `require`. A demo that reaches for `SystemFileSystem` in `commonMain` breaks the browser build.
 Take the `Source` from the caller; that is what the parameter is for.
 
+**The factory may be called more than once**, and `demoTraffic` does: it reads the feed once for own
+ship's position and once for the AIS targets, because a flow has one ending and that demo needs two.
+Every entry point hands back a fresh `Source` each call -- the JVM and Node reopen the file, the
+browser wraps a new `Buffer` over bytes it already holds -- so this is safe from a log. It is *not*
+safe from a live device: reopening a serial port mid-stream loses whatever arrived in between. A
+program reading a device holds the last fix as it goes instead, which is what a demo cannot do
+because the log has already ended by the time it prints.
+
 ## Verify on all four
 
 There is a sample log at `marine-api/src/jvmTest/resources/data/Navibe-GM720.txt`. Run every platform
