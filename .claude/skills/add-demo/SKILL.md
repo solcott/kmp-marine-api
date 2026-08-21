@@ -32,6 +32,12 @@ All in `examples/` — three, or four for a demo you want working in a browser.
    into an existing one. Formatting shared between demos lives in `Format.kt` and is `internal`,
    because Kotlin's `private` is file-scoped.
 
+   A demo that reports what a feed carried besides sentences uses `FeedNoise`, not a counter of its
+   own. **Counting every non-`Ok` `ParseResult` as a failure is wrong**: `#` headers are the
+   ordinary convention in a capture and some streams interleave non-NMEA records, so a bare count
+   turns a log's provenance header into phantom transmission errors. `FeedNoise` splits them the way
+   the corpus tests in `:marine-api` already do.
+
    ```kotlin
    /** KDoc saying what the demo shows, and why that is worth showing. */
    suspend fun demoXyz(open: () -> Source) {

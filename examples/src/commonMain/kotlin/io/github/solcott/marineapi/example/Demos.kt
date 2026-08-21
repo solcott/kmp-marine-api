@@ -7,7 +7,6 @@ import io.github.solcott.marineapi.ais.aisMessages
 import io.github.solcott.marineapi.ais.describeShipType
 import io.github.solcott.marineapi.nmea.AngleReference
 import io.github.solcott.marineapi.nmea.DataStatus
-import io.github.solcott.marineapi.nmea.ParseResult
 import io.github.solcott.marineapi.nmea.Position
 import io.github.solcott.marineapi.nmea.SentenceRegistry
 import io.github.solcott.marineapi.nmea.TalkerId
@@ -49,19 +48,17 @@ import kotlinx.io.Source
  * itself declines to: Dispatchers.IO exists on JVM and Native and not on JS or Wasm.
  */
 
-/** Prints the position from every GGA in the feed, and counts the lines that did not parse. */
+/** Prints the position from every GGA in the feed, and says what else was on the wire. */
 suspend fun demoFile(open: () -> Source) {
-  var failures = 0
-  open()
-    .nmeaResults()
-    .onEach { if (it !is ParseResult.Ok) failures++ }
-    .sentences()
-    .filterIsInstance<Gga>()
-    .collect { gga -> println("${gga.time}  ${gga.position}  ${gga.satelliteCount} satellites") }
+  val noise = FeedNoise()
+  open().nmeaResults().onEach(noise::record).sentences().filterIsInstance<Gga>().collect { gga ->
+    println("${gga.time}  ${gga.position}  ${gga.satelliteCount} satellites")
+  }
 
-  // A feed from real hardware always carries some corruption. `nmeaSentences()` drops those lines;
-  // `nmeaResults()` reports them, which is why this can say how many there were.
-  if (failures > 0) println("($failures lines did not parse)")
+  // A feed from real hardware always carries some corruption, and usually a few lines that were
+  // never sentences. `nmeaSentences()` drops both silently; `nmeaResults()` reports them, which is
+  // why this can tell them apart -- see FeedNoise for why conflating the two is a bug.
+  noise.report()
 }
 
 /**
@@ -106,14 +103,15 @@ suspend fun demoPositions(open: () -> Source) {
  */
 suspend fun demoAis(open: () -> Source) {
   val names = mutableMapOf<Int, String>()
+  val noise = FeedNoise()
   var undecoded = 0
-  var unreadable = 0
 
   open()
     .nmeaResults()
-    // Two layers, two kinds of failure. A sentence whose checksum is wrong never reaches the AIS
-    // decoder at all, so reading with nmeaSentences() alone can drop a message without saying so.
-    .onEach { if (it !is ParseResult.Ok) unreadable++ }
+    // Two layers, and three kinds of thing that is not a decoded message. A sentence whose checksum
+    // is wrong never reaches the AIS decoder at all, so reading with nmeaSentences() alone can drop
+    // a message without saying so.
+    .onEach(noise::record)
     .sentences()
     .aisMessages()
     .collect { result ->
@@ -142,7 +140,7 @@ suspend fun demoAis(open: () -> Source) {
     }
 
   if (undecoded > 0) println("($undecoded messages of types this library does not decode)")
-  if (unreadable > 0) println("($unreadable lines never parsed as sentences)")
+  noise.report()
 }
 
 /**
