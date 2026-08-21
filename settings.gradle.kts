@@ -39,6 +39,8 @@ rootProject.name = "kmp-marine-api"
 
 include(":marine-api")
 
+include(":marine-api-nav")
+
 include(":examples")
 
 include(":examples-android")

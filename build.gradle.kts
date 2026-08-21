@@ -25,6 +25,18 @@ dependencyAnalysis {
       // script here, so "unused, should be removed" points at nothing that can be removed.
       onUnusedDependencies { exclude("org.jetbrains.kotlin:kotlin-dom-api-compat") }
     }
+    project(":marine-api-nav") {
+      onUsedTransitiveDependencies {
+        // Same as :marine-api below -- both modules configure jvmTest with useJUnit().
+        exclude("org.jetbrains.kotlin:kotlin-test-junit")
+        // Declared `api` in commonMain, which every target's compilation extends. DAGP's own
+        // `reason` task shows it one hop away on all 14 compile classpaths and then advises adding
+        // it to `jvmMainApi` regardless: it does not model KMP's source-set hierarchy for an `api`
+        // project dependency. Declaring it per-variant would fix the one target it names and leave
+        // the other thirteen, so the advice is wrong rather than merely redundant.
+        exclude(":marine-api")
+      }
+    }
     project(":marine-api") {
       // jvmTest imports kotlin.test only -- never org.junit. kotlin-test-junit is on the classpath
       // because `useJUnit()` makes kotlin-test resolve to it, and kotlin.test.Test is then a

@@ -60,7 +60,9 @@ jobs:
       - name: Build JVM target
         run: >-
           ./gradlew :marine-api:jvmJar :marine-api:jvmTest :marine-api:linuxX64Test
-          :marine-api:dokkaGeneratePublicationHtml :examples:jvmJar
+          :marine-api:dokkaGeneratePublicationHtml
+          :marine-api-nav:jvmJar :marine-api-nav:jvmTest :marine-api-nav:linuxX64Test
+          :marine-api-nav:dokkaGeneratePublicationHtml :examples:jvmJar
           :examples-android:assembleDebug
 
       - name: Upload test report
@@ -71,6 +73,8 @@ jobs:
           path: |
             marine-api/build/reports/tests/jvmTest
             marine-api/build/reports/tests/linuxX64Test
+            marine-api-nav/build/reports/tests/jvmTest
+            marine-api-nav/build/reports/tests/linuxX64Test
 
   # Full multiplatform build. macOS is required -- the Apple targets cannot be linked on Linux,
   # and everything else cross-compiles here, which is what lets the release workflow publish all

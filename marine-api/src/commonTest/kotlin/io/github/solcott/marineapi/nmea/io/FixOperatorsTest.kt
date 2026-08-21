@@ -406,3 +406,103 @@ class SatellitesTest {
     assertEquals(1, sentencesOf(listOf(unnumbered) + Examples.GSV_GROUP).satellites().toList().size)
   }
 }
+
+class FixAccuracyTest {
+
+  /** u-blox GST and GBS, the two sentences that report an error in metres rather than a ratio. */
+  private companion object {
+    const val GST = "\$GPGST,172814.0,0.006,0.023,0.020,273.6,0.023,0.020,0.031*6A"
+    const val GBS = "\$GPGBS,015509.00,-0.031,-0.186,0.219,19,0.000,-0.354,6.972*4D"
+  }
+
+  @Test
+  fun readsEveryAccuracyFieldFromAWholeCycle() = runTest {
+    val fix =
+      sentencesOf(Examples.GGA, Examples.GSA, Checksum.append(GST)).positions().toList().single()
+
+    with(fix.accuracy) {
+      assertEquals(0.023, latitudeError)
+      assertEquals(0.020, longitudeError)
+      assertEquals(0.031, altitudeError)
+      assertEquals(0.023, semiMajorError)
+      assertEquals(0.020, semiMinorError)
+      assertEquals(273.6, errorEllipseOrientation)
+      assertEquals(0.006, rmsResidual)
+      // GSA's, not GGA's: both sentences in this cycle report a horizontal dilution.
+      assertEquals(1.6, positionDop)
+      assertEquals(1.6, horizontalDop)
+      assertEquals(1.0, verticalDop)
+      assertEquals(0, satelliteCount)
+    }
+  }
+
+  @Test
+  fun combinesTheTwoComponentsIntoAHorizontalError() = runTest {
+    val fix = sentencesOf(Examples.GGA, Checksum.append(GST)).positions().toList().single()
+    // DRMS: sqrt(0.023^2 + 0.020^2). Not CEP and not 2DRMS -- see the KDoc.
+    assertEquals(0.030479, fix.accuracy.horizontalError!!, absoluteTolerance = 1e-6)
+  }
+
+  @Test
+  fun reportsNoHorizontalErrorFromOnlyOneComponent() = runTest {
+    // Half of a horizontal error is not a horizontal error, so it declines rather than guessing.
+    val partial = "\$GPGST,172814.0,0.006,0.023,0.020,273.6,0.023,,*10"
+    val fix = sentencesOf(Examples.GGA, Checksum.append(partial)).positions().toList().single()
+    assertEquals(0.023, fix.accuracy.latitudeError)
+    assertNull(fix.accuracy.horizontalError)
+  }
+
+  @Test
+  fun fallsBackToGbsWhenTheReceiverSendsNoGst() = runTest {
+    val fix = sentencesOf(Examples.GGA, Checksum.append(GBS)).positions().toList().single()
+    assertEquals(-0.031, fix.accuracy.latitudeError)
+    assertEquals(-0.186, fix.accuracy.longitudeError)
+    assertEquals(0.219, fix.accuracy.altitudeError)
+    assertEquals("19", fix.accuracy.suspectSatelliteId)
+  }
+
+  @Test
+  fun prefersGstOverGbsWhereBothReportTheSameQuantity() = runTest {
+    // GST is a direct error estimate; GBS is RAIM output that happens to carry one too.
+    val fix =
+      sentencesOf(Examples.GGA, Checksum.append(GST), Checksum.append(GBS))
+        .positions()
+        .toList()
+        .single()
+    assertEquals(0.023, fix.accuracy.latitudeError)
+    // GBS still contributes what GST has no field for.
+    assertEquals("19", fix.accuracy.suspectSatelliteId)
+  }
+
+  @Test
+  fun fallsBackToGgasDilutionWhenTheReceiverSendsNoGsa() = runTest {
+    val fix = sentencesOf(Examples.GGA).positions().toList().single()
+    assertEquals(2.0, fix.accuracy.horizontalDop)
+    assertNull(fix.accuracy.positionDop, "only GSA reports that one")
+  }
+
+  @Test
+  fun reportsAnEmptyAccuracyWhenTheCycleCarriedNone() = runTest {
+    // The common case: most consumer receivers send neither GST nor GBS.
+    val fix = sentencesOf(Examples.GLL).positions().toList().single()
+    assertTrue(fix.accuracy.isEmpty)
+  }
+
+  @Test
+  fun doesNotLetAnAccuracySentenceEndACycle() = runTest {
+    // The whole risk of gathering these: GST, GBS and GSA must never delimit a cycle, or every
+    // boundary in the feed moves. Two of each here still yields exactly one fix.
+    val fixes =
+      sentencesOf(
+          Examples.GGA,
+          Examples.GSA,
+          Checksum.append(GST),
+          Examples.GSA,
+          Checksum.append(GST),
+          Checksum.append(GBS),
+        )
+        .positions()
+        .toList()
+    assertEquals(1, fixes.size)
+  }
+}

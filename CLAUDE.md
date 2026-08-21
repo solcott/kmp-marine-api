@@ -12,9 +12,14 @@ Gradle Kotlin Multiplatform build, published as `io.github.solcott:kmp-marine-ap
 
 The port was a redesign, not a transliteration: values are immutable, optional NMEA fields are nullable instead of throwing, and line-level failures are returned as `ParseResult` rather than thrown. No reflection — it does not work on Native or JS. See `.claude/plans/` for the phase plan that produced it.
 
-Three modules:
+Four modules:
 
-- `:marine-api` — the library. The only published module.
+- `:marine-api` — the parser. Published.
+- `:marine-api-nav` — higher-level operators built on the parser's flows: fix accuracy filtering,
+  AIS traffic, instruments, routes. Published separately as `io.github.solcott:kmp-marine-api-nav`,
+  versioned from the same `gradle.properties`. Its package root is
+  `io.github.solcott.marineapi.nav`, deliberately distinct — two separately versioned artifacts
+  sharing a package root is a split package, which breaks OSGi and JPMS.
 - `:examples` — the demos, in `io.github.solcott.marineapi.example`. Multiplatform: the demo bodies are `commonMain` suspend functions taking a `() -> Source`, and `jvmMain`, `jsMain` (Node **and** browser, one compilation) and `macosArm64Main` each supply an entry point. Never published.
 - `:examples-android` — an Android app, the only non-KMP module in the build. `com.android.application` with **no** `kotlin-android` plugin: AGP 9 has built-in Kotlin support and rejects it. The UI is Compose, and `org.jetbrains.kotlin.plugin.compose` attaches to AGP's built-in Kotlin perfectly well without `kotlin-android` — the Compose compiler is versioned with Kotlin, not with the Compose BOM, so the two move independently. Consumes `:marine-api`'s `android` target through module metadata, as an external consumer would. Never published.
 
@@ -88,10 +93,11 @@ A new sentence type is not usable until it is registered in `SentenceRegistry.De
 
 ## Publishing
 
-`./gradlew :marine-api:publishAllPublicationsToMavenCentralRepository`, driven by the Release workflow on macOS (so the Apple publications are included). Credentials come from `ORG_GRADLE_PROJECT_mavenCentralUsername/Password` and `ORG_GRADLE_PROJECT_signingInMemoryKey/KeyId/KeyPassword`. See the `/release` skill — note that this fork has never released, and the inherited `0.12.0` describes a different library.
+`./gradlew :marine-api:publishAllPublicationsToMavenCentralRepository :marine-api-nav:publishAllPublicationsToMavenCentralRepository`, driven by the Release workflow on macOS (so the Apple publications are included). Credentials come from `ORG_GRADLE_PROJECT_mavenCentralUsername/Password` and `ORG_GRADLE_PROJECT_signingInMemoryKey/KeyId/KeyPassword`. See the `/release` skill — note that this fork has never released, and the inherited `0.12.0` describes a different library.
 
 - **Version lives only in `gradle.properties`.** `changelog.txt` keeps its own historical record.
-- **KMP splits the coordinates.** Gradle consumers resolve `io.github.solcott:kmp-marine-api` via module metadata; plain Maven consumers must depend on `kmp-marine-api-jvm`.
+- **KMP splits the coordinates.** Gradle consumers resolve `io.github.solcott:kmp-marine-api` via module metadata; plain Maven consumers must depend on `kmp-marine-api-jvm`. The same applies to `kmp-marine-api-nav`.
+- **Both published modules must be named in the release workflow.** `publishAllPublicationsToMavenCentralRepository` is task-per-project, so a module missing from that command line is silently not released.
 - `nrjavaserial` is an `implementation` dependency of `:examples` only (it was `compileOnly` on the library, and Maven `provided` before that). Used by `SerialPortExample` alone, and `:examples` is not published, so it appears in no POM.
 - Published javadoc jars carry real content: the Dokka plugin is applied and the publish plugin picks it up on its own. There is no `configure(KotlinMultiplatform(...))` call, so nothing here drifts out of step with Dokka's task names.
 - OSGi headers on `jvmJar` are hand-written. `Export-Package` is derived from the source tree; `Import-Package` is deliberately absent, which is what the old empty `<Import-Package/>` achieved.
@@ -104,7 +110,7 @@ The old signal was the test count, which spanned two suites and is meaningless n
 - `GpsdCorpusTest` — per-file counts of legitimately failing lines across 103 device logs; a count moving in **either** direction fails.
 - `CorpusFixTest` — 2089 fixes, 2201 satellite views, 36 headings across the corpus. It pins more than those three (fixes with altitude, fixes with a date, satellites counted, silent logs); the assertions themselves are the record, so read them rather than this line.
 - `SampleDataTest.everyPortedTypeWithCorpusDataIsExercised` — names the types resting only on reference tables rather than real device data.
-- Common tests per target: **408**. One suite, so this number is comparable over time. JVM runs 433 — the same 408 plus the 25 corpus tests, which need classpath resources and so live in `jvmTest`. Adding a target does not move this number; it only changes how many targets execute it, and most of the native ones execute it nowhere (see the build constraints).
+- Common tests per target: **416** for `:marine-api`, **21** for `:marine-api-nav`. One suite each, so these numbers are comparable over time. `:marine-api`'s JVM run is 441 — the same 416 plus the 25 corpus tests, which need classpath resources and so live in `jvmTest`. Adding a target does not move this number; it only changes how many targets execute it, and most of the native ones execute it nowhere (see the build constraints).
 
 When one of these numbers moves, `/repin-regressions` covers deciding whether to re-pin it and where each pin lives. A number is never nudged to make the build green.
 

@@ -54,10 +54,10 @@ KMP artifacts. `ANDROID_HOME` must be set even for JVM-only tasks: the
 
 ```
 ./gradlew build
-./gradlew :marine-api:allTests
+./gradlew :marine-api:allTests :marine-api-nav:allTests
 ./gradlew ktfmtCheck checkSortDependencies
-./gradlew :marine-api:dokkaGeneratePublicationHtml
-./gradlew :marine-api:publishToMavenLocal
+./gradlew :marine-api:dokkaGeneratePublicationHtml :marine-api-nav:dokkaGeneratePublicationHtml
+./gradlew :marine-api:publishToMavenLocal :marine-api-nav:publishToMavenLocal
 ```
 
 Check the test **count**, not the exit code — see the `useJUnit()` hazard: expect 428 on `jvmTest`
@@ -80,7 +80,10 @@ Then inspect what `publishToMavenLocal` produced in `~/.m2/repository/io/github/
 - **`Bundle-Version` matches the release version** and is OSGi-legal (step 0).
 - **The javadoc jars carry real content.** Dokka is applied and the publish plugin picks it up on its
   own; an empty javadoc jar is a Central validation failure.
-- **The publication set is complete** -- sixteen of them: `kmp-marine-api` (root, module metadata),
+- **The publication set is complete** -- sixteen per published module, and there are now **two**
+  modules, so thirty-two in total. `kmp-marine-api-nav` carries the identical suffix set; a release
+  that publishes only the parser is the failure this list exists to catch. For `kmp-marine-api`:
+  `kmp-marine-api` (root, module metadata),
   `-jvm`, `-android`, `-js`, `-wasm-js`, `-wasm-wasi`, `-iosarm64`, `-iossimulatorarm64`,
   `-macosarm64`, `-linuxx64`, `-linuxarm64`, `-mingwx64`, `-androidnativearm32`,
   `-androidnativearm64`, `-androidnativex86`, `-androidnativex64`. A missing Apple artifact means
@@ -101,8 +104,10 @@ local copy:
 
 Publish a GitHub release for the tag, which triggers `.github/workflows/release.yml` (`on: release:
 published`, plus a `workflow_dispatch` for a re-run). It runs
-`./gradlew :marine-api:publishAllPublicationsToMavenCentralRepository` on `macos-latest` in the
-`release` environment.
+`./gradlew :marine-api:publishAllPublicationsToMavenCentralRepository
+:marine-api-nav:publishAllPublicationsToMavenCentralRepository` on `macos-latest` in the `release`
+environment. Both modules are named explicitly: the task is per-project, so a module left off that
+command line is silently not released.
 
 **Do not attempt an authenticated publish locally**, and do not add credentials to a file.
 `publishToMavenLocal` is the only local publish.
@@ -115,6 +120,9 @@ Worth stating in the release notes every time, because it is the most common int
   variant through module metadata.
 - **Plain Maven** consumers cannot read module metadata and must depend on
   `io.github.solcott:kmp-marine-api-jvm:<version>`.
+- The same split applies to the second artifact: `io.github.solcott:kmp-marine-api-nav` for Gradle,
+  `kmp-marine-api-nav-jvm` for Maven. It brings the parser with it as an `api` dependency, so a
+  consumer wanting both names only the nav one.
 
 ## Notes
 

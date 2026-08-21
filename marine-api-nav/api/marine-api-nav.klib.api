@@ -1,0 +1,26 @@
+// Klib ABI Dump
+// Targets: [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86, iosArm64, iosSimulatorArm64, js, linuxArm64, linuxX64, macosArm64, mingwX64, wasmJs, wasmWasi]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <io.github.solcott:marine-api-nav>
+final enum class io.github.solcott.marineapi.nav.fix/FixState : kotlin/Enum<io.github.solcott.marineapi.nav.fix/FixState> { // io.github.solcott.marineapi.nav.fix/FixState|null[0]
+    enum entry ACQUIRING // io.github.solcott.marineapi.nav.fix/FixState.ACQUIRING|null[0]
+    enum entry AUTONOMOUS // io.github.solcott.marineapi.nav.fix/FixState.AUTONOMOUS|null[0]
+    enum entry DEAD_RECKONING // io.github.solcott.marineapi.nav.fix/FixState.DEAD_RECKONING|null[0]
+    enum entry DIFFERENTIAL // io.github.solcott.marineapi.nav.fix/FixState.DIFFERENTIAL|null[0]
+    enum entry RTK // io.github.solcott.marineapi.nav.fix/FixState.RTK|null[0]
+
+    final val entries // io.github.solcott.marineapi.nav.fix/FixState.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.solcott.marineapi.nav.fix/FixState> // io.github.solcott.marineapi.nav.fix/FixState.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.solcott.marineapi.nav.fix/FixState // io.github.solcott.marineapi.nav.fix/FixState.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.solcott.marineapi.nav.fix/FixState> // io.github.solcott.marineapi.nav.fix/FixState.values|values#static(){}[0]
+}
+
+final fun (kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea.io/PositionFix>).io.github.solcott.marineapi.nav.fix/filterAccurate(kotlin/Double, kotlin/Boolean = ...): kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea.io/PositionFix> // io.github.solcott.marineapi.nav.fix/filterAccurate|filterAccurate@kotlinx.coroutines.flow.Flow<io.github.solcott.marineapi.nmea.io.PositionFix>(kotlin.Double;kotlin.Boolean){}[0]
+final fun (kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea.io/PositionFix>).io.github.solcott.marineapi.nav.fix/fixStates(kotlin/Int = ...): kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nav.fix/FixState> // io.github.solcott.marineapi.nav.fix/fixStates|fixStates@kotlinx.coroutines.flow.Flow<io.github.solcott.marineapi.nmea.io.PositionFix>(kotlin.Int){}[0]
+final fun (kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea.io/PositionFix>).io.github.solcott.marineapi.nav.fix/minFixQuality(io.github.solcott.marineapi.nmea/GpsFixQuality): kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea.io/PositionFix> // io.github.solcott.marineapi.nav.fix/minFixQuality|minFixQuality@kotlinx.coroutines.flow.Flow<io.github.solcott.marineapi.nmea.io.PositionFix>(io.github.solcott.marineapi.nmea.GpsFixQuality){}[0]
+final fun (kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea.io/PositionFix>).io.github.solcott.marineapi.nav.fix/rejectTeleports(kotlin/Double, kotlin.time/Duration = ...): kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea.io/PositionFix> // io.github.solcott.marineapi.nav.fix/rejectTeleports|rejectTeleports@kotlinx.coroutines.flow.Flow<io.github.solcott.marineapi.nmea.io.PositionFix>(kotlin.Double;kotlin.time.Duration){}[0]

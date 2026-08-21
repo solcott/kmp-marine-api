@@ -6,8 +6,11 @@ import io.github.solcott.marineapi.nmea.GpsFixQuality
 import io.github.solcott.marineapi.nmea.Position
 import io.github.solcott.marineapi.nmea.Sentence
 import io.github.solcott.marineapi.nmea.Units
+import io.github.solcott.marineapi.nmea.sentence.Gbs
 import io.github.solcott.marineapi.nmea.sentence.Gga
 import io.github.solcott.marineapi.nmea.sentence.Gll
+import io.github.solcott.marineapi.nmea.sentence.Gsa
+import io.github.solcott.marineapi.nmea.sentence.Gst
 import io.github.solcott.marineapi.nmea.sentence.Rmc
 import io.github.solcott.marineapi.nmea.sentence.Vtg
 import io.github.solcott.marineapi.nmea.sentence.Zda
@@ -42,6 +45,9 @@ private const val KNOTS_TO_KMH = 1.852
  *   which is what a stationary vessel looks like -- course is undefined at rest.
  * @property faaMode how the fix was obtained, absent from receivers older than NMEA 2.3
  * @property fixQuality quality of the fix, reported by GGA alone
+ * @property accuracy how well the receiver believes it knows this position, gathered from `GST`,
+ *   `GBS`, `GSA` and `GGA`. Never `null`, but [FixAccuracy.isEmpty] when the cycle carried none of
+ *   them -- which is the common case, since most consumer receivers send no `GST`.
  */
 public data class PositionFix(
   val position: Position,
@@ -51,6 +57,7 @@ public data class PositionFix(
   val courseTrue: Double? = null,
   val faaMode: FaaMode? = null,
   val fixQuality: GpsFixQuality? = null,
+  val accuracy: FixAccuracy = FixAccuracy(),
 ) {
 
   /** [date] and [time] together, or `null` unless the cycle carried both. */
@@ -131,6 +138,17 @@ private class PositionCycle {
   private var zda: Zda? = null
 
   /**
+   * Accuracy accumulated as the cycle runs, rather than held sentence by sentence.
+   *
+   * GST, GBS and GSA are gathered but are deliberately NOT part of [alreadyHeld]: that set is what
+   * ends a cycle, so adding to it would move every cycle boundary in the feed. They are carried
+   * alongside, exactly as GSA is in SatelliteCycle. Merging on arrival also keeps this O(1) -- a
+   * list would grow without bound through a warm-up where a device repeats one sentence forever,
+   * which is the same reason the sentences above are held singly rather than accumulated.
+   */
+  private var accuracy = FixAccuracy.EMPTY
+
+  /**
    * Adds a sentence, returning the fix from the cycle before it if this sentence ended that cycle.
    *
    * A sentence type the cycle already holds is the boundary: the receiver has come round again.
@@ -165,8 +183,13 @@ private class PositionCycle {
       is Rmc -> rmc = sentence
       is Vtg -> vtg = sentence
       is Zda -> zda = sentence
-      // Everything else in the cycle -- GSA, GSV, depth, wind -- says nothing about the fix, and
-      // does not delimit one either: a receiver may send several GSVs per cycle by design.
+      // Accuracy only: these say how good the fix is, never where or when it is, so they add to
+      // the accumulator and never to the held set above.
+      is Gst -> accuracy = accuracy.filledFrom(sentence)
+      is Gbs -> accuracy = accuracy.filledFrom(sentence)
+      is Gsa -> accuracy = accuracy.filledFrom(sentence)
+      // Everything else in the cycle -- GSV, depth, wind -- says nothing about the fix, and does
+      // not delimit one either: a receiver may send several GSVs per cycle by design.
       else -> Unit
     }
   }
@@ -205,6 +228,9 @@ private class PositionCycle {
       // position, so the mode vanished from every cycle that included a GGA.
       faaMode = rmc?.faaMode ?: vtg?.faaMode ?: gll?.faaMode,
       fixQuality = gga?.fixQuality,
+      // GGA comes last so GSA's dilution wins over its own, which is the same value when both are
+      // sent and the better-specified one when they disagree.
+      accuracy = gga?.let { accuracy.filledFrom(it) } ?: accuracy,
     )
   }
 
@@ -229,5 +255,6 @@ private class PositionCycle {
     rmc = null
     vtg = null
     zda = null
+    accuracy = FixAccuracy.EMPTY
   }
 }

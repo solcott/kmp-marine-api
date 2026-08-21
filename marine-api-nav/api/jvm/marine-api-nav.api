@@ -1,0 +1,27 @@
+public final class io/github/solcott/marineapi/nav/fix/AccuracyKt {
+	public static final fun filterAccurate (Lkotlinx/coroutines/flow/Flow;DZ)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun filterAccurate$default (Lkotlinx/coroutines/flow/Flow;DZILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public static final fun minFixQuality (Lkotlinx/coroutines/flow/Flow;Lio/github/solcott/marineapi/nmea/GpsFixQuality;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class io/github/solcott/marineapi/nav/fix/FixState : java/lang/Enum {
+	public static final field ACQUIRING Lio/github/solcott/marineapi/nav/fix/FixState;
+	public static final field AUTONOMOUS Lio/github/solcott/marineapi/nav/fix/FixState;
+	public static final field DEAD_RECKONING Lio/github/solcott/marineapi/nav/fix/FixState;
+	public static final field DIFFERENTIAL Lio/github/solcott/marineapi/nav/fix/FixState;
+	public static final field RTK Lio/github/solcott/marineapi/nav/fix/FixState;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/solcott/marineapi/nav/fix/FixState;
+	public static fun values ()[Lio/github/solcott/marineapi/nav/fix/FixState;
+}
+
+public final class io/github/solcott/marineapi/nav/fix/FixStatesKt {
+	public static final fun fixStates (Lkotlinx/coroutines/flow/Flow;I)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun fixStates$default (Lkotlinx/coroutines/flow/Flow;IILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class io/github/solcott/marineapi/nav/fix/TeleportsKt {
+	public static final fun rejectTeleports-SxA4cEA (Lkotlinx/coroutines/flow/Flow;DJ)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun rejectTeleports-SxA4cEA$default (Lkotlinx/coroutines/flow/Flow;DJILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+}
+
