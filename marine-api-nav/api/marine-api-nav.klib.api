@@ -40,6 +40,30 @@ final enum class io.github.solcott.marineapi.nav.fix/FixState : kotlin/Enum<io.g
     final fun values(): kotlin/Array<io.github.solcott.marineapi.nav.fix/FixState> // io.github.solcott.marineapi.nav.fix/FixState.values|values#static(){}[0]
 }
 
+final enum class io.github.solcott.marineapi.nav.instrument/DepthReference : kotlin/Enum<io.github.solcott.marineapi.nav.instrument/DepthReference> { // io.github.solcott.marineapi.nav.instrument/DepthReference|null[0]
+    enum entry KEEL // io.github.solcott.marineapi.nav.instrument/DepthReference.KEEL|null[0]
+    enum entry SURFACE // io.github.solcott.marineapi.nav.instrument/DepthReference.SURFACE|null[0]
+    enum entry TRANSDUCER // io.github.solcott.marineapi.nav.instrument/DepthReference.TRANSDUCER|null[0]
+
+    final val entries // io.github.solcott.marineapi.nav.instrument/DepthReference.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.solcott.marineapi.nav.instrument/DepthReference> // io.github.solcott.marineapi.nav.instrument/DepthReference.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.solcott.marineapi.nav.instrument/DepthReference // io.github.solcott.marineapi.nav.instrument/DepthReference.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.solcott.marineapi.nav.instrument/DepthReference> // io.github.solcott.marineapi.nav.instrument/DepthReference.values|values#static(){}[0]
+}
+
+final enum class io.github.solcott.marineapi.nav.instrument/WindReference : kotlin/Enum<io.github.solcott.marineapi.nav.instrument/WindReference> { // io.github.solcott.marineapi.nav.instrument/WindReference|null[0]
+    enum entry APPARENT // io.github.solcott.marineapi.nav.instrument/WindReference.APPARENT|null[0]
+    enum entry GROUND // io.github.solcott.marineapi.nav.instrument/WindReference.GROUND|null[0]
+    enum entry TRUE_OVER_WATER // io.github.solcott.marineapi.nav.instrument/WindReference.TRUE_OVER_WATER|null[0]
+
+    final val entries // io.github.solcott.marineapi.nav.instrument/WindReference.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.solcott.marineapi.nav.instrument/WindReference> // io.github.solcott.marineapi.nav.instrument/WindReference.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.solcott.marineapi.nav.instrument/WindReference // io.github.solcott.marineapi.nav.instrument/WindReference.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.solcott.marineapi.nav.instrument/WindReference> // io.github.solcott.marineapi.nav.instrument/WindReference.values|values#static(){}[0]
+}
+
 final class io.github.solcott.marineapi.nav.ais/ClosestApproach { // io.github.solcott.marineapi.nav.ais/ClosestApproach|null[0]
     constructor <init>(kotlin/Double, kotlin.time/Duration, kotlin/Double, kotlin/Double) // io.github.solcott.marineapi.nav.ais/ClosestApproach.<init>|<init>(kotlin.Double;kotlin.time.Duration;kotlin.Double;kotlin.Double){}[0]
 
@@ -191,6 +215,64 @@ final class io.github.solcott.marineapi.nav.ais/Vessel { // io.github.solcott.ma
     final fun toString(): kotlin/String // io.github.solcott.marineapi.nav.ais/Vessel.toString|toString(){}[0]
 }
 
+final class io.github.solcott.marineapi.nav.instrument/Depth { // io.github.solcott.marineapi.nav.instrument/Depth|null[0]
+    constructor <init>(kotlin/Double, io.github.solcott.marineapi.nav.instrument/DepthReference) // io.github.solcott.marineapi.nav.instrument/Depth.<init>|<init>(kotlin.Double;io.github.solcott.marineapi.nav.instrument.DepthReference){}[0]
+
+    final val fathoms // io.github.solcott.marineapi.nav.instrument/Depth.fathoms|{}fathoms[0]
+        final fun <get-fathoms>(): kotlin/Double // io.github.solcott.marineapi.nav.instrument/Depth.fathoms.<get-fathoms>|<get-fathoms>(){}[0]
+    final val feet // io.github.solcott.marineapi.nav.instrument/Depth.feet|{}feet[0]
+        final fun <get-feet>(): kotlin/Double // io.github.solcott.marineapi.nav.instrument/Depth.feet.<get-feet>|<get-feet>(){}[0]
+    final val metres // io.github.solcott.marineapi.nav.instrument/Depth.metres|{}metres[0]
+        final fun <get-metres>(): kotlin/Double // io.github.solcott.marineapi.nav.instrument/Depth.metres.<get-metres>|<get-metres>(){}[0]
+    final val reference // io.github.solcott.marineapi.nav.instrument/Depth.reference|{}reference[0]
+        final fun <get-reference>(): io.github.solcott.marineapi.nav.instrument/DepthReference // io.github.solcott.marineapi.nav.instrument/Depth.reference.<get-reference>|<get-reference>(){}[0]
+
+    final fun component1(): kotlin/Double // io.github.solcott.marineapi.nav.instrument/Depth.component1|component1(){}[0]
+    final fun component2(): io.github.solcott.marineapi.nav.instrument/DepthReference // io.github.solcott.marineapi.nav.instrument/Depth.component2|component2(){}[0]
+    final fun copy(kotlin/Double = ..., io.github.solcott.marineapi.nav.instrument/DepthReference = ...): io.github.solcott.marineapi.nav.instrument/Depth // io.github.solcott.marineapi.nav.instrument/Depth.copy|copy(kotlin.Double;io.github.solcott.marineapi.nav.instrument.DepthReference){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.solcott.marineapi.nav.instrument/Depth.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.solcott.marineapi.nav.instrument/Depth.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.solcott.marineapi.nav.instrument/Depth.toString|toString(){}[0]
+}
+
+final class io.github.solcott.marineapi.nav.instrument/DepthAlarm { // io.github.solcott.marineapi.nav.instrument/DepthAlarm|null[0]
+    constructor <init>(kotlin/Boolean, io.github.solcott.marineapi.nav.instrument/Depth) // io.github.solcott.marineapi.nav.instrument/DepthAlarm.<init>|<init>(kotlin.Boolean;io.github.solcott.marineapi.nav.instrument.Depth){}[0]
+
+    final val depth // io.github.solcott.marineapi.nav.instrument/DepthAlarm.depth|{}depth[0]
+        final fun <get-depth>(): io.github.solcott.marineapi.nav.instrument/Depth // io.github.solcott.marineapi.nav.instrument/DepthAlarm.depth.<get-depth>|<get-depth>(){}[0]
+    final val isShallow // io.github.solcott.marineapi.nav.instrument/DepthAlarm.isShallow|{}isShallow[0]
+        final fun <get-isShallow>(): kotlin/Boolean // io.github.solcott.marineapi.nav.instrument/DepthAlarm.isShallow.<get-isShallow>|<get-isShallow>(){}[0]
+
+    final fun component1(): kotlin/Boolean // io.github.solcott.marineapi.nav.instrument/DepthAlarm.component1|component1(){}[0]
+    final fun component2(): io.github.solcott.marineapi.nav.instrument/Depth // io.github.solcott.marineapi.nav.instrument/DepthAlarm.component2|component2(){}[0]
+    final fun copy(kotlin/Boolean = ..., io.github.solcott.marineapi.nav.instrument/Depth = ...): io.github.solcott.marineapi.nav.instrument/DepthAlarm // io.github.solcott.marineapi.nav.instrument/DepthAlarm.copy|copy(kotlin.Boolean;io.github.solcott.marineapi.nav.instrument.Depth){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.solcott.marineapi.nav.instrument/DepthAlarm.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.solcott.marineapi.nav.instrument/DepthAlarm.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.solcott.marineapi.nav.instrument/DepthAlarm.toString|toString(){}[0]
+}
+
+final class io.github.solcott.marineapi.nav.instrument/Wind { // io.github.solcott.marineapi.nav.instrument/Wind|null[0]
+    constructor <init>(kotlin/Double, io.github.solcott.marineapi.nav.instrument/WindReference, kotlin/Double? = ..., kotlin/Double? = ...) // io.github.solcott.marineapi.nav.instrument/Wind.<init>|<init>(kotlin.Double;io.github.solcott.marineapi.nav.instrument.WindReference;kotlin.Double?;kotlin.Double?){}[0]
+
+    final val angleFromBow // io.github.solcott.marineapi.nav.instrument/Wind.angleFromBow|{}angleFromBow[0]
+        final fun <get-angleFromBow>(): kotlin/Double? // io.github.solcott.marineapi.nav.instrument/Wind.angleFromBow.<get-angleFromBow>|<get-angleFromBow>(){}[0]
+    final val directionTrue // io.github.solcott.marineapi.nav.instrument/Wind.directionTrue|{}directionTrue[0]
+        final fun <get-directionTrue>(): kotlin/Double? // io.github.solcott.marineapi.nav.instrument/Wind.directionTrue.<get-directionTrue>|<get-directionTrue>(){}[0]
+    final val reference // io.github.solcott.marineapi.nav.instrument/Wind.reference|{}reference[0]
+        final fun <get-reference>(): io.github.solcott.marineapi.nav.instrument/WindReference // io.github.solcott.marineapi.nav.instrument/Wind.reference.<get-reference>|<get-reference>(){}[0]
+    final val speedKnots // io.github.solcott.marineapi.nav.instrument/Wind.speedKnots|{}speedKnots[0]
+        final fun <get-speedKnots>(): kotlin/Double // io.github.solcott.marineapi.nav.instrument/Wind.speedKnots.<get-speedKnots>|<get-speedKnots>(){}[0]
+
+    final fun component1(): kotlin/Double // io.github.solcott.marineapi.nav.instrument/Wind.component1|component1(){}[0]
+    final fun component2(): io.github.solcott.marineapi.nav.instrument/WindReference // io.github.solcott.marineapi.nav.instrument/Wind.component2|component2(){}[0]
+    final fun component3(): kotlin/Double? // io.github.solcott.marineapi.nav.instrument/Wind.component3|component3(){}[0]
+    final fun component4(): kotlin/Double? // io.github.solcott.marineapi.nav.instrument/Wind.component4|component4(){}[0]
+    final fun copy(kotlin/Double = ..., io.github.solcott.marineapi.nav.instrument/WindReference = ..., kotlin/Double? = ..., kotlin/Double? = ...): io.github.solcott.marineapi.nav.instrument/Wind // io.github.solcott.marineapi.nav.instrument/Wind.copy|copy(kotlin.Double;io.github.solcott.marineapi.nav.instrument.WindReference;kotlin.Double?;kotlin.Double?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.solcott.marineapi.nav.instrument/Wind.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.solcott.marineapi.nav.instrument/Wind.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.solcott.marineapi.nav.instrument/Wind.toString|toString(){}[0]
+}
+
 final value class io.github.solcott.marineapi.nav.ais/Mmsi { // io.github.solcott.marineapi.nav.ais/Mmsi|null[0]
     constructor <init>(kotlin/Int) // io.github.solcott.marineapi.nav.ais/Mmsi.<init>|<init>(kotlin.Int){}[0]
 
@@ -209,10 +291,17 @@ final value class io.github.solcott.marineapi.nav.ais/Mmsi { // io.github.solcot
 }
 
 final fun (io.github.solcott.marineapi.nav.ais/Vessel).io.github.solcott.marineapi.nav.ais/closestApproachTo(io.github.solcott.marineapi.nav.ais/OwnShip): io.github.solcott.marineapi.nav.ais/ClosestApproach? // io.github.solcott.marineapi.nav.ais/closestApproachTo|closestApproachTo@io.github.solcott.marineapi.nav.ais.Vessel(io.github.solcott.marineapi.nav.ais.OwnShip){}[0]
+final fun (io.github.solcott.marineapi.nmea/Sentence).io.github.solcott.marineapi.nav.instrument/depthOrNull(io.github.solcott.marineapi.nav.instrument/DepthReference): io.github.solcott.marineapi.nav.instrument/Depth? // io.github.solcott.marineapi.nav.instrument/depthOrNull|depthOrNull@io.github.solcott.marineapi.nmea.Sentence(io.github.solcott.marineapi.nav.instrument.DepthReference){}[0]
+final fun (io.github.solcott.marineapi.nmea/Sentence).io.github.solcott.marineapi.nav.instrument/windOrNull(): io.github.solcott.marineapi.nav.instrument/Wind? // io.github.solcott.marineapi.nav.instrument/windOrNull|windOrNull@io.github.solcott.marineapi.nmea.Sentence(){}[0]
 final fun (kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.ais/AisMessage>).io.github.solcott.marineapi.nav.ais/aisTargets(io.github.solcott.marineapi.nav.ais/TargetRegistry): kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nav.ais/Vessel> // io.github.solcott.marineapi.nav.ais/aisTargets|aisTargets@kotlinx.coroutines.flow.Flow<io.github.solcott.marineapi.ais.AisMessage>(io.github.solcott.marineapi.nav.ais.TargetRegistry){}[0]
 final fun (kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.ais/AisMessage>).io.github.solcott.marineapi.nav.ais/aisTargets(kotlin.time/Duration = ..., kotlin.time/TimeSource = ...): kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nav.ais/Vessel> // io.github.solcott.marineapi.nav.ais/aisTargets|aisTargets@kotlinx.coroutines.flow.Flow<io.github.solcott.marineapi.ais.AisMessage>(kotlin.time.Duration;kotlin.time.TimeSource){}[0]
 final fun (kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.ais/AisMessage>).io.github.solcott.marineapi.nav.ais/offPositionAids(): kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.ais/AisAidToNavigationReport> // io.github.solcott.marineapi.nav.ais/offPositionAids|offPositionAids@kotlinx.coroutines.flow.Flow<io.github.solcott.marineapi.ais.AisMessage>(){}[0]
+final fun (kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nav.instrument/Depth>).io.github.solcott.marineapi.nav.instrument/shallowerThan(kotlin/Double, kotlin/Double = ...): kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nav.instrument/DepthAlarm> // io.github.solcott.marineapi.nav.instrument/shallowerThan|shallowerThan@kotlinx.coroutines.flow.Flow<io.github.solcott.marineapi.nav.instrument.Depth>(kotlin.Double;kotlin.Double){}[0]
 final fun (kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea.io/PositionFix>).io.github.solcott.marineapi.nav.fix/filterAccurate(kotlin/Double, kotlin/Boolean = ...): kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea.io/PositionFix> // io.github.solcott.marineapi.nav.fix/filterAccurate|filterAccurate@kotlinx.coroutines.flow.Flow<io.github.solcott.marineapi.nmea.io.PositionFix>(kotlin.Double;kotlin.Boolean){}[0]
 final fun (kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea.io/PositionFix>).io.github.solcott.marineapi.nav.fix/fixStates(kotlin/Int = ...): kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nav.fix/FixState> // io.github.solcott.marineapi.nav.fix/fixStates|fixStates@kotlinx.coroutines.flow.Flow<io.github.solcott.marineapi.nmea.io.PositionFix>(kotlin.Int){}[0]
 final fun (kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea.io/PositionFix>).io.github.solcott.marineapi.nav.fix/minFixQuality(io.github.solcott.marineapi.nmea/GpsFixQuality): kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea.io/PositionFix> // io.github.solcott.marineapi.nav.fix/minFixQuality|minFixQuality@kotlinx.coroutines.flow.Flow<io.github.solcott.marineapi.nmea.io.PositionFix>(io.github.solcott.marineapi.nmea.GpsFixQuality){}[0]
 final fun (kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea.io/PositionFix>).io.github.solcott.marineapi.nav.fix/rejectTeleports(kotlin/Double, kotlin.time/Duration = ...): kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea.io/PositionFix> // io.github.solcott.marineapi.nav.fix/rejectTeleports|rejectTeleports@kotlinx.coroutines.flow.Flow<io.github.solcott.marineapi.nmea.io.PositionFix>(kotlin.Double;kotlin.time.Duration){}[0]
+final fun (kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea/Sentence>).io.github.solcott.marineapi.nav.instrument/depths(io.github.solcott.marineapi.nav.instrument/DepthReference): kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nav.instrument/Depth> // io.github.solcott.marineapi.nav.instrument/depths|depths@kotlinx.coroutines.flow.Flow<io.github.solcott.marineapi.nmea.Sentence>(io.github.solcott.marineapi.nav.instrument.DepthReference){}[0]
+final fun (kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea/Sentence>).io.github.solcott.marineapi.nav.instrument/groundWind(): kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nav.instrument/Wind> // io.github.solcott.marineapi.nav.instrument/groundWind|groundWind@kotlinx.coroutines.flow.Flow<io.github.solcott.marineapi.nmea.Sentence>(){}[0]
+final fun (kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea/Sentence>).io.github.solcott.marineapi.nav.instrument/trueWind(): kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nav.instrument/Wind> // io.github.solcott.marineapi.nav.instrument/trueWind|trueWind@kotlinx.coroutines.flow.Flow<io.github.solcott.marineapi.nmea.Sentence>(){}[0]
+final fun (kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nmea/Sentence>).io.github.solcott.marineapi.nav.instrument/winds(): kotlinx.coroutines.flow/Flow<io.github.solcott.marineapi.nav.instrument/Wind> // io.github.solcott.marineapi.nav.instrument/winds|winds@kotlinx.coroutines.flow.Flow<io.github.solcott.marineapi.nmea.Sentence>(){}[0]

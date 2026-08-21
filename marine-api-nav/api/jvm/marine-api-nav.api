@@ -187,3 +187,84 @@ public final class io/github/solcott/marineapi/nav/fix/TeleportsKt {
 	public static synthetic fun rejectTeleports-SxA4cEA$default (Lkotlinx/coroutines/flow/Flow;DJILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 }
 
+public final class io/github/solcott/marineapi/nav/instrument/Depth {
+	public fun <init> (DLio/github/solcott/marineapi/nav/instrument/DepthReference;)V
+	public final fun component1 ()D
+	public final fun component2 ()Lio/github/solcott/marineapi/nav/instrument/DepthReference;
+	public final fun copy (DLio/github/solcott/marineapi/nav/instrument/DepthReference;)Lio/github/solcott/marineapi/nav/instrument/Depth;
+	public static synthetic fun copy$default (Lio/github/solcott/marineapi/nav/instrument/Depth;DLio/github/solcott/marineapi/nav/instrument/DepthReference;ILjava/lang/Object;)Lio/github/solcott/marineapi/nav/instrument/Depth;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFathoms ()D
+	public final fun getFeet ()D
+	public final fun getMetres ()D
+	public final fun getReference ()Lio/github/solcott/marineapi/nav/instrument/DepthReference;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/solcott/marineapi/nav/instrument/DepthAlarm {
+	public fun <init> (ZLio/github/solcott/marineapi/nav/instrument/Depth;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Lio/github/solcott/marineapi/nav/instrument/Depth;
+	public final fun copy (ZLio/github/solcott/marineapi/nav/instrument/Depth;)Lio/github/solcott/marineapi/nav/instrument/DepthAlarm;
+	public static synthetic fun copy$default (Lio/github/solcott/marineapi/nav/instrument/DepthAlarm;ZLio/github/solcott/marineapi/nav/instrument/Depth;ILjava/lang/Object;)Lio/github/solcott/marineapi/nav/instrument/DepthAlarm;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDepth ()Lio/github/solcott/marineapi/nav/instrument/Depth;
+	public fun hashCode ()I
+	public final fun isShallow ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/solcott/marineapi/nav/instrument/DepthReference : java/lang/Enum {
+	public static final field KEEL Lio/github/solcott/marineapi/nav/instrument/DepthReference;
+	public static final field SURFACE Lio/github/solcott/marineapi/nav/instrument/DepthReference;
+	public static final field TRANSDUCER Lio/github/solcott/marineapi/nav/instrument/DepthReference;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/solcott/marineapi/nav/instrument/DepthReference;
+	public static fun values ()[Lio/github/solcott/marineapi/nav/instrument/DepthReference;
+}
+
+public final class io/github/solcott/marineapi/nav/instrument/DepthsKt {
+	public static final fun depthOrNull (Lio/github/solcott/marineapi/nmea/Sentence;Lio/github/solcott/marineapi/nav/instrument/DepthReference;)Lio/github/solcott/marineapi/nav/instrument/Depth;
+	public static final fun depths (Lkotlinx/coroutines/flow/Flow;Lio/github/solcott/marineapi/nav/instrument/DepthReference;)Lkotlinx/coroutines/flow/Flow;
+	public static final fun shallowerThan (Lkotlinx/coroutines/flow/Flow;DD)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun shallowerThan$default (Lkotlinx/coroutines/flow/Flow;DDILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class io/github/solcott/marineapi/nav/instrument/TrueWindKt {
+	public static final fun groundWind (Lkotlinx/coroutines/flow/Flow;)Lkotlinx/coroutines/flow/Flow;
+	public static final fun trueWind (Lkotlinx/coroutines/flow/Flow;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class io/github/solcott/marineapi/nav/instrument/Wind {
+	public fun <init> (DLio/github/solcott/marineapi/nav/instrument/WindReference;Ljava/lang/Double;Ljava/lang/Double;)V
+	public synthetic fun <init> (DLio/github/solcott/marineapi/nav/instrument/WindReference;Ljava/lang/Double;Ljava/lang/Double;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()D
+	public final fun component2 ()Lio/github/solcott/marineapi/nav/instrument/WindReference;
+	public final fun component3 ()Ljava/lang/Double;
+	public final fun component4 ()Ljava/lang/Double;
+	public final fun copy (DLio/github/solcott/marineapi/nav/instrument/WindReference;Ljava/lang/Double;Ljava/lang/Double;)Lio/github/solcott/marineapi/nav/instrument/Wind;
+	public static synthetic fun copy$default (Lio/github/solcott/marineapi/nav/instrument/Wind;DLio/github/solcott/marineapi/nav/instrument/WindReference;Ljava/lang/Double;Ljava/lang/Double;ILjava/lang/Object;)Lio/github/solcott/marineapi/nav/instrument/Wind;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAngleFromBow ()Ljava/lang/Double;
+	public final fun getDirectionTrue ()Ljava/lang/Double;
+	public final fun getReference ()Lio/github/solcott/marineapi/nav/instrument/WindReference;
+	public final fun getSpeedKnots ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/solcott/marineapi/nav/instrument/WindReference : java/lang/Enum {
+	public static final field APPARENT Lio/github/solcott/marineapi/nav/instrument/WindReference;
+	public static final field GROUND Lio/github/solcott/marineapi/nav/instrument/WindReference;
+	public static final field TRUE_OVER_WATER Lio/github/solcott/marineapi/nav/instrument/WindReference;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/solcott/marineapi/nav/instrument/WindReference;
+	public static fun values ()[Lio/github/solcott/marineapi/nav/instrument/WindReference;
+}
+
+public final class io/github/solcott/marineapi/nav/instrument/WindsKt {
+	public static final fun windOrNull (Lio/github/solcott/marineapi/nmea/Sentence;)Lio/github/solcott/marineapi/nav/instrument/Wind;
+	public static final fun winds (Lkotlinx/coroutines/flow/Flow;)Lkotlinx/coroutines/flow/Flow;
+}
+
