@@ -133,6 +133,11 @@ a port, so the driver is yours to choose. On the JVM,
 Android, a USB-serial library or `UsbDeviceConnection` gives you an `InputStream`, which is all
 `asSource()` needs.
 
+A Bluetooth receiver needs no driver at all. Those speak the Serial Port Profile, and SPP is
+already a byte stream by the time it reaches you: `BluetoothSocket.inputStream` on Android — see
+`:examples-android` — an RFCOMM device node (`rfcomm bind /dev/rfcomm0 <MAC> 1`) on Linux, or a
+virtual COM port on Windows, each of which `:examples`' serial demo will read if you name it.
+
 ### Usage
 
 Read a log, and act on one sentence type:
