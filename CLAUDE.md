@@ -88,9 +88,9 @@ A new sentence type is not usable until it is registered in `SentenceRegistry.De
 
 ## Publishing
 
-`./gradlew :marine-api:publishAllPublicationsToMavenCentralRepository`, driven by the Release workflow on macOS (so the Apple publications are included). Credentials come from `ORG_GRADLE_PROJECT_mavenCentralUsername/Password` and `ORG_GRADLE_PROJECT_signingInMemoryKey/KeyId/KeyPassword`. See the `/release` skill — note that this fork has never released, and the inherited `0.12.0` describes a different library.
+`./gradlew :marine-api:publishAllPublicationsToMavenCentralRepository`, driven by the Release workflow on macOS (so the Apple publications are included). Credentials come from `ORG_GRADLE_PROJECT_mavenCentralUsername/Password` and `ORG_GRADLE_PROJECT_signingInMemoryKey/KeyId/KeyPassword`. See the `/release` skill — note that this fork has never released. The version is `0.5.0`: the fork restarted its numbering rather than continuing upstream's `0.12.0`, which described a different library under different coordinates.
 
-- **Version lives only in `gradle.properties`.** `changelog.txt` keeps its own historical record.
+- **Version lives only in `gradle.properties`.** `changelog.txt` keeps its own historical record; its entries at `0.12.0` and below are upstream's Java library, and the fork's own record starts at `0.5.0`.
 - **KMP splits the coordinates.** Gradle consumers resolve `io.github.solcott:kmp-marine-api` via module metadata; plain Maven consumers must depend on `kmp-marine-api-jvm`.
 - `nrjavaserial` is an `implementation` dependency of `:examples` only (it was `compileOnly` on the library, and Maven `provided` before that). Used by `SerialPortExample` alone, and `:examples` is not published, so it appears in no POM.
 - Published javadoc jars carry real content: the Dokka plugin is applied and the publish plugin picks it up on its own. There is no `configure(KotlinMultiplatform(...))` call, so nothing here drifts out of step with Dokka's task names.
