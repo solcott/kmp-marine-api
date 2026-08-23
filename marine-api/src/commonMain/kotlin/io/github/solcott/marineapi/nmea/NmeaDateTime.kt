@@ -93,7 +93,7 @@ public object NmeaDateTime {
    * @throws IllegalArgumentException if [year] is neither a two- nor a four-digit value.
    */
   public fun expandYear(year: Int): Int {
-    require(year >= 0 && year <= 9999 && !(year in 100..999)) {
+    require(year in 0..9999 && year !in 100..999) {
       "Year must be a two or four digit value: $year"
     }
     return when {
