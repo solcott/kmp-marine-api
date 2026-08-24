@@ -36,6 +36,28 @@ Version 0.5.0 (unreleased)
     targets possible and reduces the Android Proguard configuration to two
     -keep rules.
   - Added a VPW parser, which the Java implementation did not have.
+  - PositionFix carries the receiver's own error estimate. GST, GBS and
+    PGRME were parsed but reached no caller; positions() now correlates them
+    into a FixAccuracy giving the horizontal and vertical error in metres,
+    the GST error ellipse, and which sentence the figures came from. The
+    horizontal figure is DRMS -- the two deviations combined -- so it is
+    roughly a 65% confidence radius, not 95%. Only 15 of the 103 receivers
+    in the conformance corpus report any of this, which is why PositionFix
+    also carries GGA's horizontalDilution: 1697 of the 2089 corpus fixes
+    have that where 288 have a measured error.
+    Dilution is left unitless on purpose. Turning it into metres means
+    multiplying by an assumed error per unit of geometry -- gpsd uses 4.75
+    for a differential fix and 19.0 otherwise -- and no field in an NMEA
+    feed says 19, so the library reports what the receiver said and leaves
+    that multiplication to the caller. The Android example does it, and
+    labels the result as an estimate rather than a measurement.
+    GST's RMS residual is deliberately not exposed: it is a residual on the
+    ranges rather than an error in the position, and it is where every
+    absurd value in the corpus lives.
+    This adds two parameters to PositionFix, so its constructor, copy() and
+    componentN() change shape. Source-compatible for anyone using named or
+    defaulted arguments; binary-incompatible for anyone destructuring it,
+    which at 0.5.0 is nobody -- this fork has never released.
   - GSA now reads its system id field and GSV its signal id field, both added
     in NMEA 4.11 and neither read by the Java implementation.
   - MDA writes N for the correct wind speed unit, where the Java

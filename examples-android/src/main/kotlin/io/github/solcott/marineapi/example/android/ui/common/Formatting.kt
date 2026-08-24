@@ -9,7 +9,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import io.github.solcott.marineapi.nmea.FaaMode
+import io.github.solcott.marineapi.nmea.GpsFixQuality
 import io.github.solcott.marineapi.nmea.Position
+import io.github.solcott.marineapi.nmea.io.FixAccuracy
 import io.github.solcott.marineapi.nmea.io.PositionFix
 import kotlin.math.roundToInt
 
@@ -40,6 +43,60 @@ fun PositionFix.describe(): String {
   val speed = speedKnots?.let { " ${(it * 10).roundToInt() / 10.0} kn" }.orEmpty()
   return "${dateTime ?: time ?: ""}  $position$speed".trim()
 }
+
+/**
+ * Metres of position error per unit of HDOP, for a receiver that reports no error of its own.
+ *
+ * These are gpsd's `P_UERE_WITH_DGPS` and `P_UERE_NO_DGPS` (`gpsd.h`), both at 95% confidence. The
+ * library deliberately does not do this multiplication -- nothing in an NMEA feed says 19, and the
+ * true figure varies with chipset, antenna and sky -- so the policy lives here, in an app that is
+ * never published, rather than in the parser's output where every consumer would inherit it.
+ *
+ * A differential fix is the accurate case: the correction removes most of the ionospheric and
+ * ephemeris error the larger constant is there to cover.
+ */
+private const val UERE_DGPS = 4.75
+
+private const val UERE_AUTONOMOUS = 19.0
+
+/**
+ * How good this fix is, in metres, or `null` if the receiver has given no basis for saying.
+ *
+ * Two quite different numbers come out of here, which is why [AccuracyEstimate] carries the
+ * distinction rather than returning a bare `Double`. [FixAccuracy] is the receiver's own
+ * measurement -- only about one receiver in five reports one at all. Everything else falls back to
+ * dilution of precision times an assumed error, which describes the satellite geometry and an
+ * assumption about everything else; it cannot see multipath, a bad antenna or a bad day in the
+ * ionosphere. Presenting the two as the same number would be the misleading part, so the UI labels
+ * them apart.
+ */
+data class AccuracyEstimate(val metres: Double, val measured: Boolean)
+
+fun PositionFix.accuracyEstimate(): AccuracyEstimate? {
+  accuracy?.let {
+    return AccuracyEstimate(it.horizontal, measured = true)
+  }
+  val hdop = horizontalDilution ?: return null
+  return AccuracyEstimate(
+    hdop * if (isCorrected()) UERE_DGPS else UERE_AUTONOMOUS,
+    measured = false,
+  )
+}
+
+/**
+ * Whether this fix was corrected against a reference station.
+ *
+ * gpsd's model only distinguishes differential from autonomous, but RTK is differential too and
+ * more accurate still, so it belongs on this side: the worst that does is overstate an RTK
+ * receiver's error, which is the safe direction to be wrong in. Either field may answer, since a
+ * cycle can carry a GGA without an RMC or the reverse.
+ */
+private fun PositionFix.isCorrected(): Boolean =
+  fixQuality in setOf(GpsFixQuality.DGPS, GpsFixQuality.RTK, GpsFixQuality.FRTK) ||
+    faaMode in setOf(FaaMode.DGPS, FaaMode.RTK_FIXED, FaaMode.RTK_FLOAT)
+
+/** Metres to one decimal, rounded by hand for the same locale reason as the speed in [describe]. */
+fun AccuracyEstimate.metresToOneDecimal(): String = "${(metres * 10).roundToInt() / 10.0}"
 
 /** An exception as one line, falling back to the type when the message is null or blank. */
 fun Throwable.describe(): String =

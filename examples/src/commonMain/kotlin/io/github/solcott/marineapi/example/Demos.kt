@@ -12,6 +12,7 @@ import io.github.solcott.marineapi.nmea.Position
 import io.github.solcott.marineapi.nmea.SentenceRegistry
 import io.github.solcott.marineapi.nmea.TalkerId
 import io.github.solcott.marineapi.nmea.Units
+import io.github.solcott.marineapi.nmea.io.PositionFix
 import io.github.solcott.marineapi.nmea.io.headings
 import io.github.solcott.marineapi.nmea.io.nmeaResults
 import io.github.solcott.marineapi.nmea.io.nmeaSentences
@@ -25,6 +26,7 @@ import io.github.solcott.marineapi.ublox.UbloxPositionVelocityTime
 import io.github.solcott.marineapi.ublox.UbloxSatelliteStatus
 import io.github.solcott.marineapi.ublox.UbloxSatelliteStatusReport
 import io.github.solcott.marineapi.ublox.ubloxMessages
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.LocalTime
@@ -74,7 +76,10 @@ suspend fun demoFile(open: () -> Source) {
 suspend fun demoPositions(open: () -> Source) {
   println("-- fixes --")
   open().nmeaSentences().positions().collect { fix ->
-    println("${fix.dateTime ?: fix.time}  ${fix.position}  ${fix.speedKnots ?: 0.0} kn")
+    println(
+      "${fix.dateTime ?: fix.time}  ${fix.position}  ${fix.speedKnots ?: 0.0} kn" +
+        fix.describeQuality()
+    )
   }
 
   println("-- headings --")
@@ -88,6 +93,24 @@ suspend fun demoPositions(open: () -> Source) {
     )
   }
 }
+
+/**
+ * How good a fix is, as far as the receiver was willing to say.
+ *
+ * Three outcomes, and which one you get is a property of the hardware rather than of this code. A
+ * receiver sending `GST`, `GBS` or `PGRME` reports an error in **metres**; only 15 of the 103
+ * receivers in the project's conformance corpus do. Most send nothing but `GGA`'s dilution of
+ * precision, which describes the satellite geometry and is unitless -- turning it into metres means
+ * multiplying by an assumed error per unit of geometry, and since no field in the feed carries that
+ * assumption the library leaves it to the caller rather than inventing one. A few report neither,
+ * and then there is nothing honest to print.
+ */
+private fun PositionFix.describeQuality(): String =
+  accuracy?.let { "  ±${it.horizontal.toOneDecimal()} m (${it.source})" }
+    ?: horizontalDilution?.let { "  HDOP $it" }
+    ?: ""
+
+private fun Double.toOneDecimal(): Double = (this * 10).roundToInt() / 10.0
 
 /**
  * Decodes the AIS traffic in the feed: who is out there, and where.
@@ -144,9 +167,10 @@ suspend fun demoAis(open: () -> Source) {
 /**
  * Decodes the `$PUBX` sentences a u-blox receiver adds to its NMEA output.
  *
- * Worth reading when standard NMEA is already on the wire because it carries what the standard
- * sentences have no field for: an accuracy estimate in **metres** rather than a
- * dilution-of-precision factor, and per-satellite carrier lock times.
+ * Worth reading when standard NMEA is already on the wire because it carries more than the standard
+ * sentences do, and carries it unconditionally. `GST` and `GBS` also report an accuracy in metres,
+ * but few receivers send either -- `PUBX,00` puts one on every u-blox fix, beside per-satellite
+ * carrier lock times that no standard sentence reports at all.
  */
 suspend fun demoUblox(open: () -> Source) {
   open().nmeaSentences().ubloxMessages().collect { message ->

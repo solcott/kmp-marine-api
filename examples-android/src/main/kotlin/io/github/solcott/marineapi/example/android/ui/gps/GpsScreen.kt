@@ -37,9 +37,13 @@ import io.github.solcott.marineapi.example.android.R
 import io.github.solcott.marineapi.example.android.data.BluetoothAvailability
 import io.github.solcott.marineapi.example.android.data.PairedDevice
 import io.github.solcott.marineapi.example.android.ui.common.Message
+import io.github.solcott.marineapi.example.android.ui.common.accuracyEstimate
 import io.github.solcott.marineapi.example.android.ui.common.describe
+import io.github.solcott.marineapi.example.android.ui.common.metresToOneDecimal
 import io.github.solcott.marineapi.example.android.ui.theme.ExampleTheme
 import io.github.solcott.marineapi.nmea.Position
+import io.github.solcott.marineapi.nmea.io.AccuracySource
+import io.github.solcott.marineapi.nmea.io.FixAccuracy
 import io.github.solcott.marineapi.nmea.io.PositionFix
 import kotlinx.datetime.LocalTime
 
@@ -167,6 +171,7 @@ private fun FixFeed(connection: Connection?) {
         fontFamily = FontFamily.Monospace,
         modifier = Modifier.padding(horizontal = 16.dp),
       )
+      Accuracy(connection.latest)
       Text(
         text = pluralStringResource(R.plurals.fix_count, connection.count, connection.count),
         style = MaterialTheme.typography.bodySmall,
@@ -182,13 +187,39 @@ private fun FixFeed(connection: Connection?) {
         items(connection.recent) { fix ->
           Text(
             text = fix.describe(),
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
             fontFamily = FontFamily.Monospace,
           )
         }
       }
     }
   }
+}
+
+/**
+ * How good the fix is, when the receiver has given any basis for saying so.
+ *
+ * Nothing at all is shown otherwise, rather than a dash or a zero: those read as a measurement of
+ * something, and a receiver sending neither GST nor an HDOP has measured nothing. The measured and
+ * estimated cases get different wording because they are different claims -- one is the receiver's
+ * own figure, the other is geometry times an assumption this app supplies. Only about one receiver
+ * in five reports the former, so the estimate is what most feeds will show.
+ */
+@Composable
+private fun Accuracy(fix: PositionFix) {
+  val estimate = fix.accuracyEstimate() ?: return
+  val metres = estimate.metresToOneDecimal()
+  Text(
+    text =
+      if (estimate.measured) {
+        stringResource(R.string.accuracy_measured, metres, fix.accuracy?.source?.name.orEmpty())
+      } else {
+        stringResource(R.string.accuracy_estimated, metres)
+      },
+    style = MaterialTheme.typography.bodySmall,
+    color = MaterialTheme.colorScheme.onSurfaceVariant,
+    modifier = Modifier.padding(horizontal = 16.dp),
+  )
 }
 
 /**
@@ -215,6 +246,15 @@ private fun Context.hasBluetoothPermission(): Boolean =
 @Preview(showBackground = true)
 @Composable
 private fun FixFeedPreview() {
-  val fix = PositionFix(Position(60.0, 25.0, 12.5), time = LocalTime(10, 39, 0), speedKnots = 4.2)
+  // A receiver that reports its own error, so the preview shows the measured wording. Drop the
+  // accuracy and keep horizontalDilution to see the estimated one instead.
+  val fix =
+    PositionFix(
+      Position(60.0, 25.0, 12.5),
+      time = LocalTime(10, 39, 0),
+      speedKnots = 4.2,
+      accuracy = FixAccuracy(horizontal = 0.9, vertical = 1.1, source = AccuracySource.GST),
+      horizontalDilution = 0.95,
+    )
   ExampleTheme { Column { FixFeed(Connection.Streaming(fix, 2, listOf(fix, fix))) } }
 }

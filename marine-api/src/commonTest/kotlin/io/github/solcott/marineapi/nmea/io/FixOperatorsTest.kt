@@ -9,9 +9,11 @@ import io.github.solcott.marineapi.nmea.ParseResult
 import io.github.solcott.marineapi.nmea.Sentence
 import io.github.solcott.marineapi.nmea.SentenceRegistry
 import io.github.solcott.marineapi.nmea.TalkerId
+import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.Flow
@@ -34,6 +36,18 @@ private object Examples {
   const val GSA = "\$GPGSA,A,3,02,,,07,,09,24,26,,,,,1.6,1.6,1.0*3D"
   const val ZDA = "\$GPZDA,032915,07,08,2004,00,00*4D"
 
+  /**
+   * Accuracy fixtures, all taken verbatim from the conformance corpus rather than invented, so the
+   * shapes exercised here are ones real receivers actually send.
+   */
+  const val GST = "\$GPGST,131519.00,11,,,,0.70,0.49,1.1*53" // isync: no ellipse, sigmas only
+
+  const val GST_WITH_ELLIPSE =
+    "\$GPGST,182139.000,15.9,15.1,6.6,19.9,0.9,0.4,0.9*5A" // skytraq-fixB
+  const val GST_EMPTY = "\$GPGST,232712.000,,,,,,,*4E" // skytraq: every field blank
+  const val GBS = "\$GPGBS,131519.00,0.7,0.5,1.1,02,,30.9,12.6*40" // isync, same cycle as GST
+  const val PGRME = "\$PGRME,7.6,M,41.7,M,42.4,M*2F" // garmin15x
+
   /** A whole GSV group: eleven satellites reported in three sentences, of twelve in view. */
   val GSV_GROUP =
     listOf(
@@ -55,6 +69,14 @@ private fun sentencesOf(lines: List<String>): Flow<Sentence> = flow {
     emit(assertIs<ParseResult.Ok>(result, "fixture did not parse: $result").sentence)
   }
 }
+
+/**
+ * The single fix a one-cycle feed produces, failing rather than returning null if there is not
+ * exactly one. Most of the accuracy tests care about the contents of one fix, not how many there
+ * were, and asserting the count in each of them would bury the assertion that matters.
+ */
+private suspend fun onlyFixOf(vararg lines: String): PositionFix =
+  sentencesOf(*lines).positions().toList().single()
 
 class PositionsTest {
 
@@ -253,6 +275,133 @@ class PositionsTest {
   fun ignoresSentencesThatSayNothingAboutTheFix() = runTest {
     val noise = Checksum.append("\$IIMTW,17.5,C")
     assertEquals(1, sentencesOf(Examples.GGA, noise, Examples.RMC).positions().toList().size)
+  }
+
+  @Test
+  fun readsTheErrorEllipseGstReports() = runTest {
+    val fix = onlyFixOf(Examples.GGA, Examples.GST_WITH_ELLIPSE, Examples.RMC)
+
+    val accuracy = assertNotNull(fix.accuracy)
+    assertEquals(AccuracySource.GST, accuracy.source)
+    // 15.9 is the RMS residual and is deliberately unreachable; the ellipse starts one field later.
+    assertEquals(15.1, accuracy.semiMajorError)
+    assertEquals(6.6, accuracy.semiMinorError)
+    assertEquals(19.9, accuracy.errorEllipseOrientation)
+    assertEquals(0.9, accuracy.vertical)
+    // Latitude 0.9 and longitude 0.4 combined as DRMS, not the 15.1 semi-major axis beside them.
+    assertEquals(sqrt(0.9 * 0.9 + 0.4 * 0.4), accuracy.horizontal)
+  }
+
+  @Test
+  fun combinesTheTwoDeviationsRatherThanReportingEitherAlone() = runTest {
+    val fix = onlyFixOf(Examples.GGA, Examples.GST, Examples.RMC)
+
+    val horizontal = assertNotNull(fix.accuracy).horizontal
+    assertEquals(sqrt(0.70 * 0.70 + 0.49 * 0.49), horizontal)
+    assertTrue(horizontal > 0.70, "DRMS is larger than either component, not the larger of them")
+  }
+
+  @Test
+  fun prefersGstToGbsWhenACycleCarriesBoth() = runTest {
+    // isync sends both every cycle, reporting the same figures to different precision.
+    val fix = onlyFixOf(Examples.GGA, Examples.GST, Examples.GBS, Examples.RMC)
+
+    val accuracy = assertNotNull(fix.accuracy)
+    assertEquals(AccuracySource.GST, accuracy.source)
+    assertEquals(sqrt(0.70 * 0.70 + 0.49 * 0.49), accuracy.horizontal)
+  }
+
+  @Test
+  fun readsGbsWhenItIsTheOnlyErrorEstimateInTheCycle() = runTest {
+    val accuracy = assertNotNull(onlyFixOf(Examples.GGA, Examples.GBS, Examples.RMC).accuracy)
+
+    assertEquals(AccuracySource.GBS, accuracy.source)
+    assertEquals(sqrt(0.7 * 0.7 + 0.5 * 0.5), accuracy.horizontal)
+    assertEquals(1.1, accuracy.vertical)
+    assertNull(accuracy.semiMajorError, "GBS carries no ellipse")
+  }
+
+  @Test
+  fun fallsBackToGarminsOwnEstimate() = runTest {
+    val accuracy = assertNotNull(onlyFixOf(Examples.GGA, Examples.PGRME, Examples.RMC).accuracy)
+
+    assertEquals(AccuracySource.GARMIN_EPE, accuracy.source)
+    assertEquals(7.6, accuracy.horizontal, "used as-is: Garmin already reports a radial figure")
+    assertEquals(41.7, accuracy.vertical)
+  }
+
+  @Test
+  fun reportsNoAccuracyForAGstWithNoErrorsInIt() = runTest {
+    // What skytraq.log sends before it has a fix. An empty sentence is not an error estimate.
+    assertNull(onlyFixOf(Examples.GGA, Examples.GST_EMPTY, Examples.RMC).accuracy)
+  }
+
+  @Test
+  fun answersAnEmptyGstWithWhateverElseTheCycleReported() = runTest {
+    // The sources are ranked by how much they carry, not by how far they are trusted, so an empty
+    // GST is nothing to prefer rather than a refusal to be overridden. No corpus receiver sends an
+    // empty GST beside a populated GBS, so this is a decision the data does not settle.
+    val accuracy =
+      assertNotNull(
+        onlyFixOf(Examples.GGA, Examples.GST_EMPTY, Examples.GBS, Examples.RMC).accuracy
+      )
+
+    assertEquals(AccuracySource.GBS, accuracy.source)
+  }
+
+  @Test
+  fun reportsNoAccuracyWhenTheCycleCarriesNone() = runTest {
+    assertNull(onlyFixOf(Examples.GGA, Examples.RMC).accuracy)
+  }
+
+  @Test
+  fun neverTreatsTheRmsResidualAsAPositionError() = runTest {
+    // A neo-m9n swings its RMS residual into the hundreds of thousands while its deviations stay
+    // sane. It is a residual on the ranges, so it must not reach the fix by any route.
+    val absurd = Checksum.append("\$GNGST,223745.00,228650,2.5,2.4,126,0.98,1.0,3.1")
+    val accuracy = assertNotNull(onlyFixOf(Examples.GGA, absurd, Examples.RMC).accuracy)
+
+    assertEquals(sqrt(0.98 * 0.98 + 1.0 * 1.0), accuracy.horizontal)
+    assertTrue(accuracy.horizontal < 2.0, "the 228650 residual reached nothing")
+  }
+
+  @Test
+  fun readsTheHorizontalDilutionFromGga() = runTest {
+    assertEquals(2.0, onlyFixOf(Examples.GGA, Examples.RMC).horizontalDilution)
+  }
+
+  @Test
+  fun leavesTheDilutionUnsetWhenNoGgaReportsOne() = runTest {
+    // GSA carries DOP too, and is deliberately not read: this cycle has one and still reports none.
+    assertNull(onlyFixOf(Examples.RMC, Examples.GSA).horizontalDilution)
+  }
+
+  @Test
+  fun aGstDoesNotEndACycle() = runTest {
+    // If GST ever reached alreadyHeld() this would report two fixes, and every pinned corpus count
+    // would move with it. The accuracy sources record; they do not delimit.
+    val fixes =
+      sentencesOf(Examples.GGA, Examples.GST, Examples.GST_WITH_ELLIPSE, Examples.RMC)
+        .positions()
+        .toList()
+
+    assertEquals(1, fixes.size)
+    // The later one wins, the way a repeated GGA's does.
+    assertEquals(15.1, assertNotNull(fixes.single().accuracy).semiMajorError)
+  }
+
+  @Test
+  fun doesNotCarryOneCyclesAccuracyIntoTheNext() = runTest {
+    // The one silent failure mode here: a missed reset() would report the first cycle's error
+    // estimate on every later fix, and nothing about the fix count would look wrong.
+    val fixes =
+      sentencesOf(Examples.GGA, Examples.GST, Examples.RMC, Examples.GGA, Examples.RMC)
+        .positions()
+        .toList()
+
+    assertEquals(2, fixes.size)
+    assertNotNull(fixes.first().accuracy)
+    assertNull(fixes.last().accuracy, "the second cycle carried no GST of its own")
   }
 }
 
