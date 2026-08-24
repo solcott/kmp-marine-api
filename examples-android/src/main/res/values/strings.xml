@@ -1,10 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="pick_log">Pick an NMEA log</string>
-    <string name="instructions">Pick a log file to see the position fixes in it.\n\nThe reading is the same common code the JVM, Node, macOS and browser demos run — only opening the file differs, and here that is contentResolver.openInputStream(uri).asSource().buffered().</string>
-    <string name="no_fixes">No fixes in that file.\n\nA fix needs a position and a velocity in the same update cycle, so a log of, say, depth and wind sentences alone will show nothing here.</string>
+    <string name="instructions">Pick a log file to see the position fixes in it.\n\nThe reading is the same common code the JVM, Node, macOS and browser demos run — only opening the file differs, and here that is contentResolver.openInputStream(uri).asSource().buffered(). The Bluetooth tab runs the very same code over socket.inputStream.</string>
+    <string name="no_fixes">No fixes in that file.\n\nA fix needs a position — a GGA, RMC or GLL — in the same update cycle, and one whose status field does not say the data is bad. A log of, say, depth and wind sentences alone will show nothing here, and so will a receiver that spent the whole capture searching for satellites.</string>
     <string name="read_failed">Could not read that file: %1$s</string>
     <string name="more_fixes">… and %1$d more</string>
+
+    <string name="mode_log">Read a log</string>
+    <string name="mode_gps">Bluetooth GPS</string>
+
+    <string name="pick_device">Pick a paired receiver.</string>
+    <string name="no_bluetooth">This device has no Bluetooth radio.</string>
+    <string name="bluetooth_off">Bluetooth is switched off. Turn it on in Settings and come back.</string>
+    <string name="needs_permission">Reading a Bluetooth GPS needs permission to connect to paired devices. It does not scan, so it asks for nothing else.</string>
+    <string name="grant_permission">Grant Bluetooth permission</string>
+    <string name="no_paired_devices">No paired devices.\n\nPair the receiver in the system Bluetooth settings first — this app never scans, so it can only offer what is already paired.</string>
+    <string name="connecting">Connecting…</string>
+    <string name="disconnect">Disconnect %1$s</string>
+    <string name="feed_ended">The receiver stopped sending. It may be switched off or out of range.</string>
+    <string name="gps_failed">Bluetooth read failed: %1$s</string>
+
+    <string name="accuracy_measured">± %1$s m, as reported by %2$s</string>
+    <string name="accuracy_estimated">± %1$s m, estimated from HDOP</string>
+
     <plurals name="fix_count">
         <item quantity="one">%1$d fix</item>
         <item quantity="other">%1$d fixes</item>

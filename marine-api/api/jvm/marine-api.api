@@ -1257,6 +1257,37 @@ public final class io/github/solcott/marineapi/nmea/Waypoint {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class io/github/solcott/marineapi/nmea/io/AccuracySource : java/lang/Enum {
+	public static final field GARMIN_EPE Lio/github/solcott/marineapi/nmea/io/AccuracySource;
+	public static final field GBS Lio/github/solcott/marineapi/nmea/io/AccuracySource;
+	public static final field GST Lio/github/solcott/marineapi/nmea/io/AccuracySource;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/solcott/marineapi/nmea/io/AccuracySource;
+	public static fun values ()[Lio/github/solcott/marineapi/nmea/io/AccuracySource;
+}
+
+public final class io/github/solcott/marineapi/nmea/io/FixAccuracy {
+	public fun <init> (DLjava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Lio/github/solcott/marineapi/nmea/io/AccuracySource;)V
+	public synthetic fun <init> (DLjava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Lio/github/solcott/marineapi/nmea/io/AccuracySource;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()D
+	public final fun component2 ()Ljava/lang/Double;
+	public final fun component3 ()Ljava/lang/Double;
+	public final fun component4 ()Ljava/lang/Double;
+	public final fun component5 ()Ljava/lang/Double;
+	public final fun component6 ()Lio/github/solcott/marineapi/nmea/io/AccuracySource;
+	public final fun copy (DLjava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Lio/github/solcott/marineapi/nmea/io/AccuracySource;)Lio/github/solcott/marineapi/nmea/io/FixAccuracy;
+	public static synthetic fun copy$default (Lio/github/solcott/marineapi/nmea/io/FixAccuracy;DLjava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Lio/github/solcott/marineapi/nmea/io/AccuracySource;ILjava/lang/Object;)Lio/github/solcott/marineapi/nmea/io/FixAccuracy;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getErrorEllipseOrientation ()Ljava/lang/Double;
+	public final fun getHorizontal ()D
+	public final fun getSemiMajorError ()Ljava/lang/Double;
+	public final fun getSemiMinorError ()Ljava/lang/Double;
+	public final fun getSource ()Lio/github/solcott/marineapi/nmea/io/AccuracySource;
+	public final fun getVertical ()Ljava/lang/Double;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class io/github/solcott/marineapi/nmea/io/Heading {
 	public fun <init> (DLio/github/solcott/marineapi/nmea/BearingReference;)V
 	public final fun component1 ()D
@@ -1285,8 +1316,8 @@ public final class io/github/solcott/marineapi/nmea/io/NmeaFlowKt {
 }
 
 public final class io/github/solcott/marineapi/nmea/io/PositionFix {
-	public fun <init> (Lio/github/solcott/marineapi/nmea/Position;Lkotlinx/datetime/LocalTime;Lkotlinx/datetime/LocalDate;Ljava/lang/Double;Ljava/lang/Double;Lio/github/solcott/marineapi/nmea/FaaMode;Lio/github/solcott/marineapi/nmea/GpsFixQuality;)V
-	public synthetic fun <init> (Lio/github/solcott/marineapi/nmea/Position;Lkotlinx/datetime/LocalTime;Lkotlinx/datetime/LocalDate;Ljava/lang/Double;Ljava/lang/Double;Lio/github/solcott/marineapi/nmea/FaaMode;Lio/github/solcott/marineapi/nmea/GpsFixQuality;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lio/github/solcott/marineapi/nmea/Position;Lkotlinx/datetime/LocalTime;Lkotlinx/datetime/LocalDate;Ljava/lang/Double;Ljava/lang/Double;Lio/github/solcott/marineapi/nmea/FaaMode;Lio/github/solcott/marineapi/nmea/GpsFixQuality;Lio/github/solcott/marineapi/nmea/io/FixAccuracy;Ljava/lang/Double;)V
+	public synthetic fun <init> (Lio/github/solcott/marineapi/nmea/Position;Lkotlinx/datetime/LocalTime;Lkotlinx/datetime/LocalDate;Ljava/lang/Double;Ljava/lang/Double;Lio/github/solcott/marineapi/nmea/FaaMode;Lio/github/solcott/marineapi/nmea/GpsFixQuality;Lio/github/solcott/marineapi/nmea/io/FixAccuracy;Ljava/lang/Double;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lio/github/solcott/marineapi/nmea/Position;
 	public final fun component2 ()Lkotlinx/datetime/LocalTime;
 	public final fun component3 ()Lkotlinx/datetime/LocalDate;
@@ -1294,14 +1325,18 @@ public final class io/github/solcott/marineapi/nmea/io/PositionFix {
 	public final fun component5 ()Ljava/lang/Double;
 	public final fun component6 ()Lio/github/solcott/marineapi/nmea/FaaMode;
 	public final fun component7 ()Lio/github/solcott/marineapi/nmea/GpsFixQuality;
-	public final fun copy (Lio/github/solcott/marineapi/nmea/Position;Lkotlinx/datetime/LocalTime;Lkotlinx/datetime/LocalDate;Ljava/lang/Double;Ljava/lang/Double;Lio/github/solcott/marineapi/nmea/FaaMode;Lio/github/solcott/marineapi/nmea/GpsFixQuality;)Lio/github/solcott/marineapi/nmea/io/PositionFix;
-	public static synthetic fun copy$default (Lio/github/solcott/marineapi/nmea/io/PositionFix;Lio/github/solcott/marineapi/nmea/Position;Lkotlinx/datetime/LocalTime;Lkotlinx/datetime/LocalDate;Ljava/lang/Double;Ljava/lang/Double;Lio/github/solcott/marineapi/nmea/FaaMode;Lio/github/solcott/marineapi/nmea/GpsFixQuality;ILjava/lang/Object;)Lio/github/solcott/marineapi/nmea/io/PositionFix;
+	public final fun component8 ()Lio/github/solcott/marineapi/nmea/io/FixAccuracy;
+	public final fun component9 ()Ljava/lang/Double;
+	public final fun copy (Lio/github/solcott/marineapi/nmea/Position;Lkotlinx/datetime/LocalTime;Lkotlinx/datetime/LocalDate;Ljava/lang/Double;Ljava/lang/Double;Lio/github/solcott/marineapi/nmea/FaaMode;Lio/github/solcott/marineapi/nmea/GpsFixQuality;Lio/github/solcott/marineapi/nmea/io/FixAccuracy;Ljava/lang/Double;)Lio/github/solcott/marineapi/nmea/io/PositionFix;
+	public static synthetic fun copy$default (Lio/github/solcott/marineapi/nmea/io/PositionFix;Lio/github/solcott/marineapi/nmea/Position;Lkotlinx/datetime/LocalTime;Lkotlinx/datetime/LocalDate;Ljava/lang/Double;Ljava/lang/Double;Lio/github/solcott/marineapi/nmea/FaaMode;Lio/github/solcott/marineapi/nmea/GpsFixQuality;Lio/github/solcott/marineapi/nmea/io/FixAccuracy;Ljava/lang/Double;ILjava/lang/Object;)Lio/github/solcott/marineapi/nmea/io/PositionFix;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAccuracy ()Lio/github/solcott/marineapi/nmea/io/FixAccuracy;
 	public final fun getCourseTrue ()Ljava/lang/Double;
 	public final fun getDate ()Lkotlinx/datetime/LocalDate;
 	public final fun getDateTime ()Lkotlinx/datetime/LocalDateTime;
 	public final fun getFaaMode ()Lio/github/solcott/marineapi/nmea/FaaMode;
 	public final fun getFixQuality ()Lio/github/solcott/marineapi/nmea/GpsFixQuality;
+	public final fun getHorizontalDilution ()Ljava/lang/Double;
 	public final fun getPosition ()Lio/github/solcott/marineapi/nmea/Position;
 	public final fun getSpeedKmh ()Ljava/lang/Double;
 	public final fun getSpeedKnots ()Ljava/lang/Double;

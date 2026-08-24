@@ -1,10 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- No permissions. The Storage Access Framework hands back a readable Uri without any, which
-         is why the demo picks a file rather than scanning a directory. -->
+    <!-- Reading a log needs no permission at all: the Storage Access Framework hands back a
+         readable Uri without one, which is why the demo picks a file rather than scanning a
+         directory.
+
+         Talking to a paired Bluetooth GPS needs exactly one, and these two spellings are the same
+         permission either side of API 31. Neither BLUETOOTH_SCAN nor a location permission appears
+         here, and that is the point of connecting only to already-bonded devices: pairing happens
+         in the system's Bluetooth settings, so this app never discovers anything. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
 
     <application
+        android:name=".ExampleApplication"
         android:label="Marine API example"
         android:allowBackup="false"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">

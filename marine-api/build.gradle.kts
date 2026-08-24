@@ -40,7 +40,10 @@ kotlin {
   // prevents accidental API surface later.
   explicitApi()
 
-  android { namespace = "io.github.solcott.marineapi" }
+  android {
+    namespace = "io.github.solcott.marineapi"
+    withHostTest {}
+  }
 
   jvm {
     // Do not call withJava(), and do not apply the java/java-library plugins: KGP rejects

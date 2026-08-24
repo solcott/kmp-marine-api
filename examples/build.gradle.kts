@@ -128,7 +128,11 @@ tasks.withType<org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsExec>().confi
 
 tasks.register<JavaExec>("runSerialPortExample") {
   group = "examples"
-  description = "Scans the serial ports for NMEA and reads the first one carrying it"
+  // --args is free here, unlike the per-demo tasks: this task passes no system property, so
+  // setArgsString() replacing the argument list costs nothing.
+  //   --args="COM3"          a named port, opened through the driver
+  //   --args="/dev/rfcomm0"  a device node, read directly -- see the KDoc on the example
+  description = "Reads NMEA from the named port or device, or scans every port when given none"
   mainClass = "io.github.solcott.marineapi.example.SerialPortExampleKt"
   workingDir = repositoryRoot
   classpath(jvmMain.output.allOutputs, jvmMain.runtimeDependencyFiles)

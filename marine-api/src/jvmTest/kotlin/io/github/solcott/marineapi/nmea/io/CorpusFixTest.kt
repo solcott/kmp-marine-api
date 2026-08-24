@@ -50,6 +50,65 @@ class CorpusFixTest {
   }
 
   @Test
+  fun pinsHowMuchOfTheCorpusReportsAnAccuracyAtAll() = runTest {
+    var withAccuracy = 0
+    var withDilution = 0
+    val sources = mutableMapOf<AccuracySource, Int>()
+    val devices = mutableSetOf<String>()
+    for (file in GpsdCorpusTest.corpusFiles()) {
+      val found = sentencesOf(file).positions().toList()
+      withAccuracy += found.count { it.accuracy != null }
+      withDilution += found.count { it.horizontalDilution != null }
+      found.mapNotNull { it.accuracy }.forEach { sources.merge(it.source, 1, Int::plus) }
+      if (found.any { it.accuracy != null }) devices += file.name
+    }
+    // The point of this pin is the ratio, not the totals: a measured error in metres is rare, and a
+    // caller writing a UI on the strength of it will show nothing to most of the receivers here.
+    // Both counts move with any change to which sentences the cycle records.
+    assertEquals(288, withAccuracy, "of 2089 fixes -- 14% of them, from 15 of the 103 receivers")
+    // The same total as the fixes carrying an altitude, which is not a coincidence: both come from
+    // GGA, and a receiver sending GGA at all generally fills in both fields.
+    assertEquals(1697, withDilution, "GGA's HDOP, which six times as many fixes carry")
+    assertEquals(
+      mapOf(AccuracySource.GST to 226, AccuracySource.GBS to 33, AccuracySource.GARMIN_EPE to 29),
+      sources,
+    )
+    assertEquals(
+      setOf(
+        "ait250.log",
+        "garmin15x.log",
+        "garmin17n.log",
+        "garmin38.log",
+        "garmin48.log",
+        "gr8013-w.log",
+        "isync.log",
+        "quectel-L70.log",
+        "skytraq-dgps.log",
+        "skytraq-fix.log",
+        "skytraq-fixB.log",
+        "tn204.log",
+        "tomtom-mkII.log",
+        "ublox-neo-m9n-nmea.log",
+        "ublox-zed-f9p-nmea.log",
+      ),
+      devices,
+      "every capture that both reports a fix and says how good it is",
+    )
+  }
+
+  @Test
+  fun reportsNoAccuracyFromACaptureThatIsNotAFix() = runTest {
+    // ublox-lea-5q reports latitude and longitude errors of 304,885 metres, which is why there is
+    // no threshold anywhere in this code: every one of its cycles is already discarded on its GGA
+    // quality, RMC status and GLL status alike, so the absurd numbers reach nothing. skytraq sends
+    // a GST per cycle with every field blank and likewise never gets a fix.
+    for (name in listOf("ublox-lea-5q.log", "skytraq.log")) {
+      val file = GpsdCorpusTest.corpusFiles().single { it.name == name }
+      assertEquals(emptyList(), sentencesOf(file).positions().toList(), name)
+    }
+  }
+
+  @Test
   fun readsTheFourReceiversThatSendRmcAndNoOtherPositionSentence() = runTest {
     // The predecessor required a GGA or GLL in every cycle and so reported nothing at all for
     // these four. They are the reason the readiness rule changed.

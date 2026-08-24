@@ -25,6 +25,20 @@ dependencyAnalysis {
       // script here, so "unused, should be removed" points at nothing that can be removed.
       onUnusedDependencies { exclude("org.jetbrains.kotlin:kotlin-dom-api-compat") }
     }
+    project(":examples-android") {
+      // Referenced only by the Java that Hilt and KSP generate into this module --
+      // Hilt_MainActivity
+      // names androidx.annotation, and the generated Dagger component declares a fragment component
+      // and a SavedStateHandle. There is no import here to add or remove, so "declare it directly"
+      // points at code nobody in this repository writes.
+      onUsedTransitiveDependencies {
+        exclude(
+          "androidx.annotation:annotation",
+          "androidx.fragment:fragment",
+          "androidx.lifecycle:lifecycle-viewmodel-savedstate",
+        )
+      }
+    }
     project(":marine-api") {
       // jvmTest imports kotlin.test only -- never org.junit. kotlin-test-junit is on the classpath
       // because `useJUnit()` makes kotlin-test resolve to it, and kotlin.test.Test is then a

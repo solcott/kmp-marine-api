@@ -111,6 +111,18 @@ final enum class io.github.solcott.marineapi.ais/NavigationalStatus : io.github.
     final fun values(): kotlin/Array<io.github.solcott.marineapi.ais/NavigationalStatus> // io.github.solcott.marineapi.ais/NavigationalStatus.values|values#static(){}[0]
 }
 
+final enum class io.github.solcott.marineapi.nmea.io/AccuracySource : kotlin/Enum<io.github.solcott.marineapi.nmea.io/AccuracySource> { // io.github.solcott.marineapi.nmea.io/AccuracySource|null[0]
+    enum entry GARMIN_EPE // io.github.solcott.marineapi.nmea.io/AccuracySource.GARMIN_EPE|null[0]
+    enum entry GBS // io.github.solcott.marineapi.nmea.io/AccuracySource.GBS|null[0]
+    enum entry GST // io.github.solcott.marineapi.nmea.io/AccuracySource.GST|null[0]
+
+    final val entries // io.github.solcott.marineapi.nmea.io/AccuracySource.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.solcott.marineapi.nmea.io/AccuracySource> // io.github.solcott.marineapi.nmea.io/AccuracySource.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.solcott.marineapi.nmea.io/AccuracySource // io.github.solcott.marineapi.nmea.io/AccuracySource.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.solcott.marineapi.nmea.io/AccuracySource> // io.github.solcott.marineapi.nmea.io/AccuracySource.values|values#static(){}[0]
+}
+
 final enum class io.github.solcott.marineapi.nmea.sentence/AutoManual : io.github.solcott.marineapi.nmea/CharCoded, kotlin/Enum<io.github.solcott.marineapi.nmea.sentence/AutoManual> { // io.github.solcott.marineapi.nmea.sentence/AutoManual|null[0]
     enum entry AUTOMATIC // io.github.solcott.marineapi.nmea.sentence/AutoManual.AUTOMATIC|null[0]
     enum entry MANUAL // io.github.solcott.marineapi.nmea.sentence/AutoManual.MANUAL|null[0]
@@ -1326,6 +1338,34 @@ final class io.github.solcott.marineapi.ais/Sixbit { // io.github.solcott.marine
     }
 }
 
+final class io.github.solcott.marineapi.nmea.io/FixAccuracy { // io.github.solcott.marineapi.nmea.io/FixAccuracy|null[0]
+    constructor <init>(kotlin/Double, kotlin/Double? = ..., kotlin/Double? = ..., kotlin/Double? = ..., kotlin/Double? = ..., io.github.solcott.marineapi.nmea.io/AccuracySource) // io.github.solcott.marineapi.nmea.io/FixAccuracy.<init>|<init>(kotlin.Double;kotlin.Double?;kotlin.Double?;kotlin.Double?;kotlin.Double?;io.github.solcott.marineapi.nmea.io.AccuracySource){}[0]
+
+    final val errorEllipseOrientation // io.github.solcott.marineapi.nmea.io/FixAccuracy.errorEllipseOrientation|{}errorEllipseOrientation[0]
+        final fun <get-errorEllipseOrientation>(): kotlin/Double? // io.github.solcott.marineapi.nmea.io/FixAccuracy.errorEllipseOrientation.<get-errorEllipseOrientation>|<get-errorEllipseOrientation>(){}[0]
+    final val horizontal // io.github.solcott.marineapi.nmea.io/FixAccuracy.horizontal|{}horizontal[0]
+        final fun <get-horizontal>(): kotlin/Double // io.github.solcott.marineapi.nmea.io/FixAccuracy.horizontal.<get-horizontal>|<get-horizontal>(){}[0]
+    final val semiMajorError // io.github.solcott.marineapi.nmea.io/FixAccuracy.semiMajorError|{}semiMajorError[0]
+        final fun <get-semiMajorError>(): kotlin/Double? // io.github.solcott.marineapi.nmea.io/FixAccuracy.semiMajorError.<get-semiMajorError>|<get-semiMajorError>(){}[0]
+    final val semiMinorError // io.github.solcott.marineapi.nmea.io/FixAccuracy.semiMinorError|{}semiMinorError[0]
+        final fun <get-semiMinorError>(): kotlin/Double? // io.github.solcott.marineapi.nmea.io/FixAccuracy.semiMinorError.<get-semiMinorError>|<get-semiMinorError>(){}[0]
+    final val source // io.github.solcott.marineapi.nmea.io/FixAccuracy.source|{}source[0]
+        final fun <get-source>(): io.github.solcott.marineapi.nmea.io/AccuracySource // io.github.solcott.marineapi.nmea.io/FixAccuracy.source.<get-source>|<get-source>(){}[0]
+    final val vertical // io.github.solcott.marineapi.nmea.io/FixAccuracy.vertical|{}vertical[0]
+        final fun <get-vertical>(): kotlin/Double? // io.github.solcott.marineapi.nmea.io/FixAccuracy.vertical.<get-vertical>|<get-vertical>(){}[0]
+
+    final fun component1(): kotlin/Double // io.github.solcott.marineapi.nmea.io/FixAccuracy.component1|component1(){}[0]
+    final fun component2(): kotlin/Double? // io.github.solcott.marineapi.nmea.io/FixAccuracy.component2|component2(){}[0]
+    final fun component3(): kotlin/Double? // io.github.solcott.marineapi.nmea.io/FixAccuracy.component3|component3(){}[0]
+    final fun component4(): kotlin/Double? // io.github.solcott.marineapi.nmea.io/FixAccuracy.component4|component4(){}[0]
+    final fun component5(): kotlin/Double? // io.github.solcott.marineapi.nmea.io/FixAccuracy.component5|component5(){}[0]
+    final fun component6(): io.github.solcott.marineapi.nmea.io/AccuracySource // io.github.solcott.marineapi.nmea.io/FixAccuracy.component6|component6(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Double? = ..., kotlin/Double? = ..., kotlin/Double? = ..., kotlin/Double? = ..., io.github.solcott.marineapi.nmea.io/AccuracySource = ...): io.github.solcott.marineapi.nmea.io/FixAccuracy // io.github.solcott.marineapi.nmea.io/FixAccuracy.copy|copy(kotlin.Double;kotlin.Double?;kotlin.Double?;kotlin.Double?;kotlin.Double?;io.github.solcott.marineapi.nmea.io.AccuracySource){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.solcott.marineapi.nmea.io/FixAccuracy.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.solcott.marineapi.nmea.io/FixAccuracy.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.solcott.marineapi.nmea.io/FixAccuracy.toString|toString(){}[0]
+}
+
 final class io.github.solcott.marineapi.nmea.io/Heading { // io.github.solcott.marineapi.nmea.io/Heading|null[0]
     constructor <init>(kotlin/Double, io.github.solcott.marineapi.nmea/BearingReference) // io.github.solcott.marineapi.nmea.io/Heading.<init>|<init>(kotlin.Double;io.github.solcott.marineapi.nmea.BearingReference){}[0]
 
@@ -1343,8 +1383,10 @@ final class io.github.solcott.marineapi.nmea.io/Heading { // io.github.solcott.m
 }
 
 final class io.github.solcott.marineapi.nmea.io/PositionFix { // io.github.solcott.marineapi.nmea.io/PositionFix|null[0]
-    constructor <init>(io.github.solcott.marineapi.nmea/Position, kotlinx.datetime/LocalTime? = ..., kotlinx.datetime/LocalDate? = ..., kotlin/Double? = ..., kotlin/Double? = ..., io.github.solcott.marineapi.nmea/FaaMode? = ..., io.github.solcott.marineapi.nmea/GpsFixQuality? = ...) // io.github.solcott.marineapi.nmea.io/PositionFix.<init>|<init>(io.github.solcott.marineapi.nmea.Position;kotlinx.datetime.LocalTime?;kotlinx.datetime.LocalDate?;kotlin.Double?;kotlin.Double?;io.github.solcott.marineapi.nmea.FaaMode?;io.github.solcott.marineapi.nmea.GpsFixQuality?){}[0]
+    constructor <init>(io.github.solcott.marineapi.nmea/Position, kotlinx.datetime/LocalTime? = ..., kotlinx.datetime/LocalDate? = ..., kotlin/Double? = ..., kotlin/Double? = ..., io.github.solcott.marineapi.nmea/FaaMode? = ..., io.github.solcott.marineapi.nmea/GpsFixQuality? = ..., io.github.solcott.marineapi.nmea.io/FixAccuracy? = ..., kotlin/Double? = ...) // io.github.solcott.marineapi.nmea.io/PositionFix.<init>|<init>(io.github.solcott.marineapi.nmea.Position;kotlinx.datetime.LocalTime?;kotlinx.datetime.LocalDate?;kotlin.Double?;kotlin.Double?;io.github.solcott.marineapi.nmea.FaaMode?;io.github.solcott.marineapi.nmea.GpsFixQuality?;io.github.solcott.marineapi.nmea.io.FixAccuracy?;kotlin.Double?){}[0]
 
+    final val accuracy // io.github.solcott.marineapi.nmea.io/PositionFix.accuracy|{}accuracy[0]
+        final fun <get-accuracy>(): io.github.solcott.marineapi.nmea.io/FixAccuracy? // io.github.solcott.marineapi.nmea.io/PositionFix.accuracy.<get-accuracy>|<get-accuracy>(){}[0]
     final val courseTrue // io.github.solcott.marineapi.nmea.io/PositionFix.courseTrue|{}courseTrue[0]
         final fun <get-courseTrue>(): kotlin/Double? // io.github.solcott.marineapi.nmea.io/PositionFix.courseTrue.<get-courseTrue>|<get-courseTrue>(){}[0]
     final val date // io.github.solcott.marineapi.nmea.io/PositionFix.date|{}date[0]
@@ -1355,6 +1397,8 @@ final class io.github.solcott.marineapi.nmea.io/PositionFix { // io.github.solco
         final fun <get-faaMode>(): io.github.solcott.marineapi.nmea/FaaMode? // io.github.solcott.marineapi.nmea.io/PositionFix.faaMode.<get-faaMode>|<get-faaMode>(){}[0]
     final val fixQuality // io.github.solcott.marineapi.nmea.io/PositionFix.fixQuality|{}fixQuality[0]
         final fun <get-fixQuality>(): io.github.solcott.marineapi.nmea/GpsFixQuality? // io.github.solcott.marineapi.nmea.io/PositionFix.fixQuality.<get-fixQuality>|<get-fixQuality>(){}[0]
+    final val horizontalDilution // io.github.solcott.marineapi.nmea.io/PositionFix.horizontalDilution|{}horizontalDilution[0]
+        final fun <get-horizontalDilution>(): kotlin/Double? // io.github.solcott.marineapi.nmea.io/PositionFix.horizontalDilution.<get-horizontalDilution>|<get-horizontalDilution>(){}[0]
     final val position // io.github.solcott.marineapi.nmea.io/PositionFix.position|{}position[0]
         final fun <get-position>(): io.github.solcott.marineapi.nmea/Position // io.github.solcott.marineapi.nmea.io/PositionFix.position.<get-position>|<get-position>(){}[0]
     final val speedKmh // io.github.solcott.marineapi.nmea.io/PositionFix.speedKmh|{}speedKmh[0]
@@ -1371,7 +1415,9 @@ final class io.github.solcott.marineapi.nmea.io/PositionFix { // io.github.solco
     final fun component5(): kotlin/Double? // io.github.solcott.marineapi.nmea.io/PositionFix.component5|component5(){}[0]
     final fun component6(): io.github.solcott.marineapi.nmea/FaaMode? // io.github.solcott.marineapi.nmea.io/PositionFix.component6|component6(){}[0]
     final fun component7(): io.github.solcott.marineapi.nmea/GpsFixQuality? // io.github.solcott.marineapi.nmea.io/PositionFix.component7|component7(){}[0]
-    final fun copy(io.github.solcott.marineapi.nmea/Position = ..., kotlinx.datetime/LocalTime? = ..., kotlinx.datetime/LocalDate? = ..., kotlin/Double? = ..., kotlin/Double? = ..., io.github.solcott.marineapi.nmea/FaaMode? = ..., io.github.solcott.marineapi.nmea/GpsFixQuality? = ...): io.github.solcott.marineapi.nmea.io/PositionFix // io.github.solcott.marineapi.nmea.io/PositionFix.copy|copy(io.github.solcott.marineapi.nmea.Position;kotlinx.datetime.LocalTime?;kotlinx.datetime.LocalDate?;kotlin.Double?;kotlin.Double?;io.github.solcott.marineapi.nmea.FaaMode?;io.github.solcott.marineapi.nmea.GpsFixQuality?){}[0]
+    final fun component8(): io.github.solcott.marineapi.nmea.io/FixAccuracy? // io.github.solcott.marineapi.nmea.io/PositionFix.component8|component8(){}[0]
+    final fun component9(): kotlin/Double? // io.github.solcott.marineapi.nmea.io/PositionFix.component9|component9(){}[0]
+    final fun copy(io.github.solcott.marineapi.nmea/Position = ..., kotlinx.datetime/LocalTime? = ..., kotlinx.datetime/LocalDate? = ..., kotlin/Double? = ..., kotlin/Double? = ..., io.github.solcott.marineapi.nmea/FaaMode? = ..., io.github.solcott.marineapi.nmea/GpsFixQuality? = ..., io.github.solcott.marineapi.nmea.io/FixAccuracy? = ..., kotlin/Double? = ...): io.github.solcott.marineapi.nmea.io/PositionFix // io.github.solcott.marineapi.nmea.io/PositionFix.copy|copy(io.github.solcott.marineapi.nmea.Position;kotlinx.datetime.LocalTime?;kotlinx.datetime.LocalDate?;kotlin.Double?;kotlin.Double?;io.github.solcott.marineapi.nmea.FaaMode?;io.github.solcott.marineapi.nmea.GpsFixQuality?;io.github.solcott.marineapi.nmea.io.FixAccuracy?;kotlin.Double?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // io.github.solcott.marineapi.nmea.io/PositionFix.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // io.github.solcott.marineapi.nmea.io/PositionFix.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // io.github.solcott.marineapi.nmea.io/PositionFix.toString|toString(){}[0]
