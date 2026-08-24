@@ -11,12 +11,14 @@ import io.github.solcott.marineapi.nmea.io.positions
 import java.io.IOException
 import java.util.UUID
 import kotlin.time.TimeSource
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.job
 import kotlinx.io.asSource
@@ -95,6 +97,12 @@ private fun BluetoothDevice.bondStateName(): String =
  * times a second on a GLO, which is fast enough that the screen should show the latest rather than
  * accumulate.
  *
+ * Failures are not caught here. They travel to [GpsRepository]'s caller, which turns them into
+ * something the screen can say; this file's job is only to make sure the log knows what happened
+ * first. A `try`/`catch` around the `emitAll` would also catch failures thrown by the *collector*,
+ * which arrive back up through `emit` -- `onCompletion` observes the ending without intercepting
+ * it.
+ *
  * It takes no [BluetoothAdapter], and the missing call is worth a paragraph. The obvious first line
  * here is `adapter.cancelDiscovery()`, because a scan in progress slows an RFCOMM connect right
  * down -- and on API 31 and up that call is guarded by `BLUETOOTH_SCAN`, so it throws
@@ -114,41 +122,62 @@ internal fun BluetoothDevice.nmeaFixes(dispatcher: CoroutineDispatcher): Flow<Po
   // blocked inside InputStream.read() does not unblock it -- the read returns when the device
   // sends something, or never, if it has gone out of range -- and the finally block cannot run
   // until it does. Closing the socket from the completion handler is what actually interrupts
-  // the read, so the finally has something to run.
-  currentCoroutineContext().job.invokeOnCompletion { cause ->
+  // the read, so the finally has something to run. This cannot become an `onCompletion`: that
+  // runs on the coroutine that is blocked, so it could not run until the read it needs to
+  // interrupt had already returned.
+  currentCoroutineContext().job.invokeOnCompletion {
     // Logged rather than swallowed: a close that fails is how a link that was already gone tends
     // to announce itself, and it is the last thing that happens before the flow disappears.
     runCatching { socket.close() }
       .onFailure { Log.w(TAG, "Closing the socket to $address failed", it) }
-    if (cause != null) Log.d(TAG, "Feed from $address ended: $cause")
   }
 
   var fixes = 0
   val connected = TimeSource.Monotonic.markNow()
-  try {
-    socket.use {
-      emitAll(it.inputStream.asSource().buffered().nmeaSentences().positions().onEach { fixes++ })
-    }
-    // Reaching here means the stream ended cleanly, which for a receiver means it stopped sending.
-    // Zero fixes is the interesting case and the reason this is logged at all: it is what a device
-    // that connected but is not a GPS looks like, and what a receiver with no sky view looks like,
-    // and nothing on screen tells those apart.
-    Log.i(
-      TAG,
-      "Feed from $address ended after $fixes fixes in ${connected.elapsedNow()}",
+  socket.use {
+    emitAll(
+      socket.inputStream
+        .asSource()
+        .buffered()
+        .nmeaSentences()
+        .positions()
+        .onEach { fixes++ }
+        // Attached to the read rather than to `nmeaFixes` itself so that the two counters above
+        // stay per-collection; hoisting them out of the builder to reach an outer operator would
+        // share them across every collection of what is a cold flow.
+        .onCompletion { cause -> report(fixes, connected, cause) }
     )
-  } catch (failure: IOException) {
-    // Not a catch-all: a CancellationException means the screen let go of the flow, which is the
-    // normal way this ends and not something to report as a fault.
-    Log.e(
-      TAG,
-      "Read from ${diagnostics()} failed after $fixes fixes in ${connected.elapsedNow()}",
-      failure,
-    )
-    throw failure
   }
 }
   .flowOn(dispatcher)
+
+/**
+ * The one place a feed's ending is reported, whichever way it ended.
+ *
+ * Zero fixes is the interesting case in all three branches and the reason this is logged at all: it
+ * is what a device that connected but is not a GPS looks like, and what a receiver with no sky view
+ * looks like, and nothing on screen tells those apart.
+ */
+@SuppressLint("MissingPermission")
+private fun BluetoothDevice.report(
+  fixes: Int,
+  connected: TimeSource.Monotonic.ValueTimeMark,
+  cause: Throwable?,
+) {
+  val ending = "after $fixes fixes in ${connected.elapsedNow()}"
+  when (cause) {
+    // The stream ended cleanly, which for a receiver means it stopped sending.
+    null -> Log.i(TAG, "Feed from $address ended $ending")
+    // The screen let go of the flow -- a disconnect, or a tab change. The ordinary ending, and not
+    // something to report as a fault; this is the case the old `catch (IOException)` reached only
+    // by not being a catch-all.
+    is CancellationException -> Log.i(TAG, "Feed from $address cancelled $ending")
+    // Everything else: out of range, switched off mid-read, or the permission revoked from
+    // Settings while connected. `diagnostics()` rather than the bare address, because the device's
+    // bond state and service list are what tell those apart.
+    else -> Log.e(TAG, "Read from ${diagnostics()} failed $ending", cause)
+  }
+}
 
 /**
  * Opens an RFCOMM socket to this device, insecurely if it will not take a secure one.
@@ -161,24 +190,59 @@ internal fun BluetoothDevice.nmeaFixes(dispatcher: CoroutineDispatcher): Flow<Po
 @SuppressLint("MissingPermission")
 private fun BluetoothDevice.connectSpp(): BluetoothSocket {
   Log.i(TAG, "Connecting to ${diagnostics()}")
-  val secure = createRfcommSocketToServiceRecord(SPP_UUID)
-  return try {
-    secure.also { it.connect() }.also { Log.i(TAG, "Connected to $address, secure socket") }
-  } catch (secureFailure: IOException) {
-    secure.close()
-    // Warn rather than debug: this is the single most useful line in the log when a device
-    // connects on one phone and not another, and it is invisible from the screen.
-    Log.w(TAG, "Secure socket to $address refused, retrying insecure", secureFailure)
-    val insecure = createInsecureRfcommSocketToServiceRecord(SPP_UUID)
-    try {
-      insecure.also { it.connect() }.also { Log.i(TAG, "Connected to $address, insecure socket") }
-    } catch (insecureFailure: IOException) {
-      insecure.close()
-      // The secure attempt is the one that says why the device refused, so it leads; without it
-      // the report would be whatever the second attempt happened to hit.
-      insecureFailure.addSuppressed(secureFailure)
-      Log.e(TAG, "Both sockets to ${diagnostics()} failed", insecureFailure)
-      throw insecureFailure
+  return attempt("secure") { createRfcommSocketToServiceRecord(SPP_UUID) }
+    .recoverCatching { secureFailure ->
+      // Warn rather than debug: this is the single most useful line in the log when a device
+      // connects on one phone and not another, and it is invisible from the screen.
+      Log.w(TAG, "Secure socket to $address refused, retrying insecure", secureFailure)
+      attempt("insecure") { createInsecureRfcommSocketToServiceRecord(SPP_UUID) }
+        .onFailure {
+          // The secure attempt is the one that says why the device refused, so it leads; without
+          // it the report would be whatever the second attempt happened to hit.
+          it.addSuppressed(secureFailure)
+          Log.e(TAG, "Both sockets to ${diagnostics()} failed", it)
+        }
+        .getOrThrow()
     }
-  }
+    .getOrThrow()
 }
+
+/**
+ * One connect attempt: connects the socket [open] hands back, or closes it again and says why.
+ *
+ * Closing on failure is the part worth keeping honest. A `BluetoothSocket` that failed to connect
+ * still holds a file descriptor, and the caller goes straight on to open a second one.
+ */
+@SuppressLint("MissingPermission")
+private fun BluetoothDevice.attempt(
+  kind: String,
+  open: () -> BluetoothSocket,
+): Result<BluetoothSocket> {
+  // Outside the catch, matching what a failure here means: the socket could not be created at all,
+  // which a second one of a different kind will not fix.
+  val socket = open()
+  return runCatchingIo { socket.also { it.connect() } }
+    .onSuccess { Log.i(TAG, "Connected to $address, $kind socket") }
+    .onFailure {
+      // Swallowed deliberately, unlike the close in `nmeaFixes`: a close that fails after a
+      // connect that failed adds nothing the connect failure has not already said, and it must not
+      // replace it as the reported cause.
+      runCatching { socket.close() }
+    }
+}
+
+/**
+ * `runCatching`, narrowed to the failure this file is about.
+ *
+ * Not the stdlib one, which catches `Throwable` -- and the throwable that matters most here is not
+ * an `IOException` at all. `BLUETOOTH_CONNECT` can be revoked from Settings between listing the
+ * paired devices and connecting to one, and it arrives as a `SecurityException`. That has to
+ * propagate, not be answered by retrying on a second socket that will be refused the same way and
+ * then logged as "both sockets failed", which blames the radio for a permission problem.
+ */
+private inline fun <T> runCatchingIo(block: () -> T): Result<T> =
+  try {
+    Result.success(block())
+  } catch (failure: IOException) {
+    Result.failure(failure)
+  }
