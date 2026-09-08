@@ -33,7 +33,7 @@ class GnsTest {
     assertNull(gns.dgpsAge)
     assertNull(gns.dgpsStationId)
     assertNotNull(gns.position)
-    assertTrue(abs(gns.position!!.latitude - 43.55317010) < 1e-6, "${gns.position}")
+    assertTrue(abs(gns.position.latitude - 43.55317010) < 1e-6, "${gns.position}")
   }
 
   @Test

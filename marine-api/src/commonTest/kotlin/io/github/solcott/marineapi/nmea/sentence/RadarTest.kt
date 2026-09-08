@@ -228,7 +228,7 @@ class TllTest {
 
     val position = tll.position
     assertTrue(position != null && abs(position.latitude - 37.52520083) < 1e-6, "$position")
-    assertTrue(position != null && abs(position.longitude - 24.6) < 1e-6, "$position")
+    assertTrue(abs(position.longitude - 24.6) < 1e-6, "$position")
   }
 
   @Test

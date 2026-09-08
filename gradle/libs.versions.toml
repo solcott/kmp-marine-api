@@ -1,18 +1,18 @@
 [versions]
-agp = "9.3.2"
+agp = "9.4.0"
 androidx-activity = "1.13.0"
 androidx-compose-bom = "2026.08.00"
 androidx-hilt = "1.4.0"
 androidx-lifecycle = "2.11.0"
-androidx-navigation3 = "1.1.6"
-binary-compatibility-validator = "0.18.1"
-dependency-analysis = "3.18.0"
+androidx-navigation3 = "1.1.7"
+binary-compatibility-validator = "0.18.2"
+dependency-analysis = "3.19.1"
 detekt = "2.0.0-alpha.6"
 dokka = "2.2.0"
 hilt = "2.60.1"
 javax-inject = "1"
 junit = "4.13.2"
-kotlin = "2.4.10"
+kotlin = "2.4.20"
 kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
 kotlinx-io = "0.9.1"
@@ -81,7 +81,6 @@ nrjavaserial = { module = "com.neuronrobotics:nrjavaserial", version.ref = "nrja
 [plugins]
 android-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
-detekt = { id = "dev.detekt", version.ref = "detekt" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

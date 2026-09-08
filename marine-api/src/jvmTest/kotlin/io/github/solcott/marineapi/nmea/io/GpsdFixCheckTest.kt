@@ -84,7 +84,7 @@ class GpsdFixCheckTest {
           .mapNotNull { SentenceRegistry.Default.parse(it).sentenceOrNull() }
           .positions()
           .toList()
-          .mapNotNull { fix -> fix.position?.let { it.latitude to it.longitude } }
+          .map { fix -> fix.position.let { it.latitude to it.longitude } }
       }
       Triple(file, gpsdPositionsOf(check), ours)
     }

@@ -47,7 +47,7 @@ class GgaTest {
     assertEquals(TalkerId.GP, gga.talker)
     assertEquals(LocalTime(12, 0, 44, 567_000_000), gga.time)
     assertEquals(60.0 + 11.552 / 60.0, gga.position!!.latitude, 1e-12)
-    assertEquals(25.0 + 1.941 / 60.0, gga.position!!.longitude, 1e-12)
+    assertEquals(25.0 + 1.941 / 60.0, gga.position.longitude, 1e-12)
     assertEquals(GpsFixQuality.NORMAL, gga.fixQuality)
     assertEquals(0, gga.satelliteCount)
     assertEquals(2.0, gga.horizontalDilution)
@@ -78,7 +78,7 @@ class GllTest {
   @Test
   fun readsEveryField() {
     assertEquals(60.0 + 11.552 / 60.0, gll.position!!.latitude, 1e-12)
-    assertEquals(25.0 + 1.941 / 60.0, gll.position!!.longitude, 1e-12)
+    assertEquals(25.0 + 1.941 / 60.0, gll.position.longitude, 1e-12)
     assertEquals(LocalTime(12, 0, 45), gll.time)
     assertEquals(DataStatus.ACTIVE, gll.status)
     assertNull(gll.faaMode, "the fixture predates NMEA 2.3")
@@ -150,8 +150,8 @@ class RmcTest {
     val southernHemisphere =
       parse<Rmc>("\$GPRMC,081836,A,3751.65,S,14507.36,E,000.0,360.0,130998,011.3,E*62")
     assertEquals(CompassPoint.SOUTH, southernHemisphere.position!!.latitudeHemisphere)
-    assertEquals(-(37.0 + 51.65 / 60.0), southernHemisphere.position!!.latitude, 1e-12)
-    assertEquals(145.0 + 7.36 / 60.0, southernHemisphere.position!!.longitude, 1e-12)
+    assertEquals(-(37.0 + 51.65 / 60.0), southernHemisphere.position.latitude, 1e-12)
+    assertEquals(145.0 + 7.36 / 60.0, southernHemisphere.position.longitude, 1e-12)
     assertEquals(LocalDate(1998, 9, 13), southernHemisphere.date)
     assertEquals(11.3, southernHemisphere.magneticVariation)
 
@@ -161,7 +161,7 @@ class RmcTest {
       parse<Rmc>("\$GPRMC,225446,A,4916.45,N,12311.12,W,000.5,054.7,191194,020.3,E*68")
     assertEquals(LocalTime(22, 54, 46), documented.time)
     assertEquals(49.0 + 16.45 / 60.0, documented.position!!.latitude, 1e-12)
-    assertEquals(-(123.0 + 11.12 / 60.0), documented.position!!.longitude, 1e-12)
+    assertEquals(-(123.0 + 11.12 / 60.0), documented.position.longitude, 1e-12)
     assertEquals(LocalDate(1994, 11, 19), documented.date)
     assertEquals(0.5, documented.speedKnots)
     assertEquals(54.7, documented.courseTrue)
@@ -182,11 +182,11 @@ class RmcTest {
     val easterly = parse<Rmc>("\$GPRMC,225446,A,4916.45,N,12311.12,W,000.5,054.7,191194,020.3,E*68")
     val magnetic = easterly.courseTrue!! - easterly.variationEastPositive!!
     assertEquals(54.7 - 20.3, magnetic, 1e-9)
-    assertTrue(magnetic < easterly.courseTrue!!, "easterly variation must subtract")
+    assertTrue(magnetic < easterly.courseTrue, "easterly variation must subtract")
 
     val westerly = parse<Rmc>("\$GPRMC,220516,A,5133.82,N,00042.24,W,173.8,231.8,130694,004.2,W*70")
     assertTrue(
-      westerly.courseTrue!! - westerly.variationEastPositive!! > westerly.courseTrue!!,
+      westerly.courseTrue!! - westerly.variationEastPositive!! > westerly.courseTrue,
       "westerly variation must add",
     )
   }

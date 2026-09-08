@@ -69,7 +69,7 @@ class WplTest {
     assertEquals("RUSKI", wpl.waypointId)
     val position = wpl.position
     assertTrue(position != null && abs(position.latitude - 55.60333333) < 1e-6, "$position")
-    assertTrue(position != null && abs(position.longitude - 14.60833333) < 1e-6, "$position")
+    assertTrue(abs(position.longitude - 14.60833333) < 1e-6, "$position")
   }
 
   @Test
@@ -278,7 +278,7 @@ class RmbTest {
     assertEquals("RUSKI", destination?.id)
     val position = destination?.position
     assertTrue(position != null && abs(position.latitude - 55.60333333) < 1e-6, "$position")
-    assertTrue(position != null && abs(position.longitude - 14.60833333) < 1e-6, "$position")
+    assertTrue(abs(position.longitude - 14.60833333) < 1e-6, "$position")
   }
 
   @Test
