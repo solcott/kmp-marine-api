@@ -24,7 +24,10 @@ kotlin {
     nodejs()
   }
   // wasmWasi supports nodejs() only -- there is no browser() for it.
-  wasmWasi { nodejs() }
+  wasmWasi {
+    wasmtime()
+    nodejs()
+  }
 
   // arm64 only; the x64 Apple variants are deprecated.
   iosArm64()
