@@ -1,20 +1,17 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended",
-    "schedule:weekly"
+    "config:recommended"
   ],
   "labels": [
     "dependencies"
   ],
+  "schedule": [
+    "at any time"
+  ],
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 0,
   "packageRules": [
-    {
-      "description": "One PR a cycle for the workflows. The five actions here move independently but are reviewed the same way -- a glance at the diff -- so separate PRs would be five times the ceremony for the same decision.",
-      "matchManagers": [
-        "github-actions"
-      ],
-      "groupName": "GitHub Actions"
-    },
     {
       "description": "Every Kotlin artifact and plugin marker shares the `kotlin` version ref, so they can only move as one. The [.:] guard is load-bearing: it admits `org.jetbrains.kotlin:` and `org.jetbrains.kotlin.<plugin>:` while rejecting `org.jetbrains.kotlinx`, whose next character is `x`. Without it coroutines, datetime, io, serialization and binary-compatibility-validator are dragged into this group despite releasing on their own schedules.",
       "matchPackageNames": [
