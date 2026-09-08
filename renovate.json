@@ -3,12 +3,33 @@
   "extends": [
     "config:recommended"
   ],
+  "labels": [
+    "dependencies"
+  ],
+  "schedule": [
+    "at any time"
+  ],
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 0,
   "packageRules": [
     {
-      "description": "Group Kotlin-related updates together",
-      "groupName": "Kotlin",
+      "description": "Every Kotlin artifact and plugin marker shares the `kotlin` version ref, so they can only move as one. The [.:] guard is load-bearing: it admits `org.jetbrains.kotlin:` and `org.jetbrains.kotlin.<plugin>:` while rejecting `org.jetbrains.kotlinx`, whose next character is `x`. Without it coroutines, datetime, io, serialization and binary-compatibility-validator are dragged into this group despite releasing on their own schedules.",
       "matchPackageNames": [
-        "/^org.jetbrains.kotlin/"
+        "/^org\\.jetbrains\\.kotlin[.:]/"
+      ],
+      "groupName": "Kotlin",
+      "prBodyNotes": [
+        "A compiler bump can move the pinned klib ABI. `apiCheck` runs under `check`, so if CI fails on it, run `./gradlew :marine-api:apiDump` and commit the diff -- that diff is the review artifact."
+      ]
+    },
+    {
+      "description": "AGP drives the `agp` ref through its library entry, and a bump moves the Android target's toolchain under both :marine-api and :examples-android.",
+      "matchPackageNames": [
+        "com.android.tools.build:gradle"
+      ],
+      "groupName": "Android Gradle Plugin",
+      "prBodyNotes": [
+        "AGP owns the built-in Kotlin support this build depends on: :examples-android deliberately has no `kotlin-android` plugin, and KSP/Hilt attach to AGP's own compilation. Check `:examples-android:assembleDebug` and `:examples-android:testDebugUnitTest`, not just the library."
       ]
     },
     {
@@ -17,6 +38,41 @@
         "com.android.kotlin.multiplatform.library:com.android.kotlin.multiplatform.library.gradle.plugin"
       ],
       "enabled": false
+    },
+    {
+      "description": "dagger, hilt-android, hilt-compiler, hilt-core and the Hilt Gradle plugin all sit on the `hilt` ref; Hilt's own plugin needs 2.59 or newer to work with AGP 9, so this group is where that floor is felt.",
+      "matchPackageNames": [
+        "/^com\\.google\\.dagger/"
+      ],
+      "groupName": "Dagger and Hilt"
+    },
+    {
+      "description": "Five artifacts on the `androidx-lifecycle` ref. Renovate can only raise a bump once every one of them has published the new version, so this group going quiet means one member is lagging rather than that lifecycle is current -- the Dependency Dashboard is where that shows.",
+      "matchPackageNames": [
+        "/^androidx\\.lifecycle:/"
+      ],
+      "groupName": "AndroidX Lifecycle"
+    },
+    {
+      "description": "activity and activity-compose share the `androidx-activity` ref.",
+      "matchPackageNames": [
+        "/^androidx\\.activity:/"
+      ],
+      "groupName": "AndroidX Activity"
+    },
+    {
+      "description": "navigation3-runtime and navigation3-ui share the `androidx-navigation3` ref.",
+      "matchPackageNames": [
+        "/^androidx\\.navigation3:/"
+      ],
+      "groupName": "AndroidX Navigation 3"
+    },
+    {
+      "description": "coroutines-core and coroutines-test share the `kotlinx-coroutines` ref. Kept out of the Kotlin group above: coroutines ships on its own cadence, and the IO layer's flow behaviour is the part of this library most sensitive to it.",
+      "matchPackageNames": [
+        "/^org\\.jetbrains\\.kotlinx:kotlinx-coroutines-/"
+      ],
+      "groupName": "kotlinx.coroutines"
     }
   ]
 }
