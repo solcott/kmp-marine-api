@@ -1,5 +1,10 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": [
+    "This repo is a fork of ktuukkan/marine-api, and that is the whole reason for `forkProcessing` below. When the Mend app is installed across all repositories it sets that option to disabled for a fork, so the repo is skipped outright rather than run and found current -- no Dependency Dashboard, no branches, no PRs, and nothing anywhere saying why. Under a Selected-repositories install it is already enabled and this line is a harmless no-op, so it is worth keeping either way.",
+    "Only the plain root `renovate.json` is read for this setting. Renovate checks that one filename through the GitHub API before it clones the repo, so moving this config to .github/renovate.json or renaming it would silently restore the skip."
+  ],
+  "forkProcessing": "enabled",
   "extends": [
     "config:recommended"
   ],
