@@ -78,6 +78,13 @@
         "/^org\\.jetbrains\\.kotlinx:kotlinx-coroutines-/"
       ],
       "groupName": "kotlinx.coroutines"
+    },
+    {
+      "description": "kotlinx-datetime publishes a `<version>-0.6.x-compat` twin of each release for consumers still on the 0.6 API. Maven versioning ranks that numeric qualifier above the bare release, so without this Renovate offers 0.8.0 -> 0.8.0-0.6.x-compat as an upgrade, and `compat` is not a word it treats as unstable. The pattern matches any `-compat` suffix rather than `-0.6.x-compat` so that a later compat line is kept out too.",
+      "matchPackageNames": [
+        "org.jetbrains.kotlinx:kotlinx-datetime"
+      ],
+      "allowedVersions": "!/-compat$/"
     }
   ]
 }
