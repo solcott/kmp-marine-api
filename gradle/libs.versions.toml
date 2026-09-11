@@ -20,7 +20,7 @@ kotlinx-serialization = "1.11.0"
 # KSP is versioned independently of Kotlin since 2.3.0, so this does not track the `kotlin`
 # entry above. AGP 9 requires 2.3.6 or newer, and 2.3.10 is where KSP started resolving the
 # R class correctly under AGP's built-in Kotlin.
-ksp = "2.3.11"
+ksp = "2.3.12"
 nrjavaserial = "5.2.1"
 #noinspection UnusedVersionCatalogEntry
 androidCompileSdk = "37"
