@@ -29,10 +29,10 @@ Kotlin Multiplatform, Gradle, run via `./gradlew` from the repository root. Comm
 
 ## Traps that will make you report the wrong thing
 
-**Never run a bare `./gradlew test`.** The library has no `test` task — but the command does not
-fail. It resolves to `:examples-android:test`, the one non-KMP module in the build, which has no
-tests, is SKIPPED, and reports **BUILD SUCCESSFUL** having run nothing at all. That is a green
-result proving nothing. If asked to "run the tests", the JVM task is `:marine-api:jvmTest`; every
+**Never run a bare `./gradlew test`** (a project hook refuses it). The library has no `test` task
+— but the command does not fail. It resolves to `:examples-android:test`, the one non-KMP module in
+the build, runs the app's handful of ViewModel tests and none of the library's, and reports
+**BUILD SUCCESSFUL**. That is a green result proving nothing about the library. If asked to "run the tests", the JVM task is `:marine-api:jvmTest`; every
 target's is `:marine-api:allTests`. If a caller explicitly asks for `test`, run `:marine-api:jvmTest`
 instead and tell them why.
 
@@ -46,8 +46,10 @@ grep -ho 'tests="[0-9]*"' marine-api/build/test-results/jvmTest/*.xml \
   | grep -o '[0-9]*' | awk '{s+=$1} END {print s}'
 ```
 
-The JVM figure is currently **428**. If you report a pass without a count, you have failed the task.
-If the count is 0, or far from 428, report that as the headline finding however green the build was.
+A project hook also appends the per-task counts to the Bash result after each test run. The expected
+figures are in `CLAUDE.md` under "The regression signal" (JVM and per-target). If you report a pass
+without a count, you have failed the task. If the count is 0, or far from the expected figure,
+report that as the headline finding however green the build was.
 
 **`ANDROID_HOME` must be set even for JVM-only tasks.** The
 `com.android.kotlin.multiplatform.library` plugin fails configuration without it. If the build dies

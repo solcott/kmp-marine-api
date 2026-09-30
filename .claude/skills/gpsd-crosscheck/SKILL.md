@@ -29,16 +29,8 @@ nothing.
 
 **This library intentionally differs from the pre-cutover Java implementation in a number of
 places**, each with the reason on the declaration, and almost always because the old behaviour was
-wrong. Restoring one of these to match an old release is a regression, not a fix. The known set:
-
-- the position-accuracy bit in AIS types 4, 18 and 27 — the old code read it one place early
-- type 27's navigational-status range, which was reversed
-- type 9's flags, off by one, and its speed, scaled by ten
-- `isDteReady`, which returned the bit uninverted (0 means ready)
-- `NavStatus`, which read `V` as valid when it means the opposite
-- `PositionProvider`, which required a GGA or GLL in every cycle
-
-That list drifts. Get the live one:
+wrong. Restoring one of these to match an old release is a regression, not a fix. The known set is
+in `.claude/rules/library-source.md`; the live one is:
 
 ```
 grep -rn "implementation this replaces\|Java implementation" marine-api/src/commonMain/kotlin/
@@ -102,16 +94,10 @@ coordinate cap.
 ## The fix is usually the load-bearing/advisory judgement
 
 When a real device's line fails to parse and gpsd reads it fine, the cause is most often a field held
-strictly that should not be:
-
-- A **load-bearing** field changes the meaning or magnitude of another field — a units character, a
-  hemisphere, a reference direction. It stays strict: reading it wrong corrupts a value.
-- An **advisory** field reports status, provenance or identity, and nothing else depends on it. Use
-  the `advisory*` accessors on `SentenceFields` so one unrecognised character does not discard an
-  otherwise good sentence.
-
-The rule is documented on `SentenceFields.advisoryCodedAt`. Real receivers emit characters no
-standard lists, and that is the case this split exists for.
+strictly that should be advisory. The distinction is set out in `.claude/rules/nmea-sentences.md`
+and on `SentenceFields.advisoryCodedAt`: a field that changes the meaning or magnitude of another
+stays strict; one that only reports status, provenance or identity moves to the `advisory*`
+accessors.
 
 ## After a fix
 

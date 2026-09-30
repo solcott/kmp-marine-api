@@ -24,8 +24,10 @@ Decoding "type 8" means picking which DAC/FID subtypes to support and saying so 
 start with 6 or 8. Types 7, 17, 20 and 23 are single fixed layouts and are the right first ones.
 
 Everything is Kotlin in `marine-api/src/commonMain/kotlin/io/github/solcott/marineapi/ais`,
-formatted by ktfmt. `explicitApi()` is on: every public declaration needs an explicit visibility and
-return type.
+formatted by ktfmt. **The decoding conventions — half-open bit ranges, sentinels to `null`, the
+narrowest interface, the `Sixbit` helpers to reuse, and the deliberate fixes to the Java original
+that must not be undone — are in `.claude/rules/ais.md`.** Read it before step 3 if it is not
+already loaded; this skill is the procedure.
 
 ## Steps
 
@@ -41,11 +43,8 @@ return type.
    name the fields and its values tell you what the bits must come out as — which is enough to
    derive and then confirm each range.
 
-   **`WebFetch` is not an acceptable source for bit ranges.** It runs a small model over the page,
-   and its rendering of gpsd's AIVDM tables for types 21, 24 and 27 was internally inconsistent and
-   contradicted payloads that decode correctly. Bit ranges come from the `.chk` files or from raw
-   source. If a type has no corpus coverage at all, say so in the KDoc rather than implying a
-   conformance that was not checked.
+   Not from `WebFetch` (see the rule). If a type has no corpus coverage at all, say so in the KDoc
+   rather than implying a conformance that was not checked.
 
 2. **Read the closest analogue before writing anything.**
 
@@ -84,25 +83,9 @@ return type.
    }
    ```
 
-   - The header is always the same three fields at bits 0–6, 6–8 and 8–38. `AisRegistry` will not
-     even dispatch a payload shorter than 38 bits.
-   - Implement the narrowest interface that fits: `AisMessage`, or `AisPositionMessage` (adds
-     `position`, `isAccurate`), or `AisVesselPositionMessage` (adds `speedOverGround`,
-     `courseOverGround`, `utcSecond`). All in `AisMessage.kt`. Do not add position properties to a
-     message that carries no position.
-   - Accessors on `Sixbit`: `uintAt(from, to)`, `intAt(from, to)` (two's complement),
-     `booleanAt(index)`, `booleanAtOrNull(index)`, `stringAt(from, to)`. Internal extensions in
-     `AisMessage.kt` cover the recurring composites: `positionAt`, `speedOverGroundAt`,
-     `courseOverGroundAt`, `headingAt`, `utcSecondAt`, `rateOfTurnAt`, `rateOfTurnCodeAt`, and
-     `codedAt(from, to, Enum.entries)` for an enum-coded field. Reuse these rather than
-     re-deriving a scale factor.
-   - **Ranges are half-open**: `uintAt(0, 6)` is six bits. Off-by-one here is the single most common
-     mistake, and it usually still decodes to a plausible-looking number.
-   - **A sentinel meaning "not available" becomes `null`, and the sentinel value goes in a
-     comment.** That is the library's convention and it is why `rateOfTurnCode` keeps a raw
-     counterpart — see step 5 on how the cross-check handles it.
-   - Reject impossible values with `require`. `AisRegistry.decode` catches
-     `IllegalArgumentException` and returns `AisResult.Malformed`, so it never escapes to a caller.
+   Accessors on `Sixbit`: `uintAt(from, to)`, `intAt(from, to)` (two's complement),
+   `booleanAt(index)`, `booleanAtOrNull(index)`, `stringAt(from, to)`. Check every range against a
+   `.chk` value before moving on — an off-by-one usually still decodes to a plausible number.
 
 4. **Register it** in `AisRegistry.Default`, in `AisRegistry.kt` (around line 110):
 
@@ -159,12 +142,8 @@ return type.
 - Moving a type out of `unsupported` changes the pinned `compared` count (1308) and can change the
   corpus counts in `GpsdCorpusTest` and `CorpusFixTest`. Re-pin those deliberately — see the
   `repin-regressions` skill. Do not nudge a number to make the build green.
-- **This library deliberately disagrees with the Java original in several AIS decoders**, with the
-  reason on each declaration: the position-accuracy bit in types 4, 18 and 27 was read one place
-  early, type 27's navigational-status range was reversed, type 9's flags were off by one and its
-  speed scaled by ten, and `isDteReady` returned the bit uninverted. Run
-  `grep -rn "implementation this replaces\|Java implementation" marine-api/src/commonMain/kotlin/`
-  to see them all. Do not "restore" any of these.
+- The `check-registration.sh` hook warns after each write while step 4 or any part of step 5 is
+  outstanding. It is advisory; `GpsdAisCheckTest` is the gate.
 - The sentence layer is a separate concern: `AisSentence` (VDM/VDO) already carries the payload and
   fill bits, and `joinFragments` reassembles multi-sentence messages. Nothing at this layer needs
   touching to add a message type.

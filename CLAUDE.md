@@ -10,17 +10,21 @@ Gradle Kotlin Multiplatform build, published as `io.github.solcott:kmp-marine-ap
 
 **The Kotlin port is complete.** All source lives in `marine-api/src/commonMain/kotlin` under `io.github.solcott.marineapi` — there is no `src/jvmMain` at all, so every published artifact is built from the same code. The original Java tree under `net.sf.marineapi` was deleted in the phase 6 cutover.
 
-The port was a redesign, not a transliteration: values are immutable, optional NMEA fields are nullable instead of throwing, and line-level failures are returned as `ParseResult` rather than thrown. No reflection — it does not work on Native or JS. See `.claude/plans/` for the phase plan that produced it.
+The port was a redesign, not a transliteration: values are immutable, optional NMEA fields are nullable instead of throwing, and line-level failures are returned as `ParseResult` rather than thrown. No reflection — it does not work on Native or JS.
 
 Three modules:
 
 - `:marine-api` — the library. The only published module.
-- `:examples` — the demos, in `io.github.solcott.marineapi.example`. Multiplatform: the demo bodies are `commonMain` suspend functions taking a `() -> Source`, and `jvmMain`, `jsMain` (Node **and** browser, one compilation) and `macosArm64Main` each supply an entry point. Never published.
-- `:examples-android` — an Android app, the only non-KMP module in the build. `com.android.application` with **no** `kotlin-android` plugin: AGP 9 has built-in Kotlin support and rejects it. The UI is Compose, and `org.jetbrains.kotlin.plugin.compose` attaches to AGP's built-in Kotlin perfectly well without `kotlin-android` — the Compose compiler is versioned with Kotlin, not with the Compose BOM, so the two move independently. The same goes for `kotlin.plugin.serialization`, which is there for the Navigation 3 route keys. Consumes `:marine-api`'s `android` target through module metadata, as an external consumer would. Never published.
-
-  It is laid out as an app rather than as a sample: `data/` holds the two repositories (a picked file and a paired Bluetooth receiver, which are the same code after `asSource()`), `di/` the Hilt modules, `ui/log` and `ui/gps` a ViewModel and a screen each, reached through Navigation 3 from `ui/ExampleApp.kt`. `MainActivity` does nothing but `setContent`. **The repository interfaces take a `String` uri and a `String` MAC address rather than a `Uri` and a `BluetoothDevice`**, and that is what keeps `src/test` free of Robolectric — those framework types throw "not mocked" in a JVM unit test, so a ViewModel holding one could not be tested without it. 14 unit tests cover the two ViewModels against fakes.
+- `:examples` — the demos. Multiplatform: one `commonMain` implementation per demo, run on the JVM, Node, the browser and macOS native. Never published.
+- `:examples-android` — an Android app (Compose, Hilt, Navigation 3), the only non-KMP module in the build. Consumes `:marine-api`'s `android` target as an external consumer would. Never published.
 
 This fork is **not** intended to send PRs upstream — divergence is fine.
+
+## Where the rest of the guidance lives
+
+- **`.claude/rules/`** — path-scoped rules, loaded when working on matching files: build scripts, `:examples`, `:examples-android`, library source, NMEA sentences, AIS, the `nmea/io` layer, the corpus tests, and versioning/CI. Constraints that only matter in one part of the tree belong there, not here.
+- **`.claude/skills/`** — procedures: `/add-sentence`, `/add-ais-message`, `/add-demo`, `/gpsd-crosscheck`, `/repin-regressions`, `/release`.
+- **`.claude/hooks/`** — enforcement, wired in `.claude/settings.json`. They refuse a bare `./gradlew test`, refuse hand edits to `marine-api/api/`, ask before touching the vendored gpsd corpus, block a `git commit` that would fail `ktfmtCheck`/`checkSortDependencies`, report the test count after a Gradle test run, and warn on write about missed registration steps and forbidden constructs (java plugins, `withJava()`, kapt, `Dispatchers.IO`/`flowOn` in `commonMain`, ...).
 
 ## Build & test
 
@@ -46,77 +50,37 @@ This fork is **not** intended to send PRs upstream — divergence is fine.
 ./gradlew :marine-api:publishToMavenLocal
 ```
 
-There is **no `test` task** — the JVM test task is `jvmTest`.
-
+- There is **no library `test` task** — the JVM test task is `jvmTest`. A bare `./gradlew test` resolves to `:examples-android:test` and runs none of the library's tests while reporting success.
+- **Check the test count, not the exit code.** A kotlin-test/JUnit runner mismatch makes zero tests run while the build stays green.
 - Toolchain JDK 25 (pinned in `gradle/gradle-daemon-jvm.properties`), bytecode target 17 via `options.release`.
 - **The Android SDK must be present even for JVM-only tasks.** The `com.android.kotlin.multiplatform.library` plugin fails the entire build configuration without it, so `ANDROID_HOME` is required.
-- The full build needs macOS — the Apple targets cannot be linked on Linux, though every other target cross-compiles anywhere. CI splits this into an ubuntu `jvm` job (which also runs `linuxX64Test`, the one native suite a Linux host can execute) and a macOS `all-targets` job.
+- The full build needs macOS — the Apple targets cannot be linked on Linux, though every other target cross-compiles anywhere.
 
-## Build constraints
+## Working rules that apply everywhere
 
-These are non-obvious and easy to break:
-
-- **`jvmTest` must use `useJUnit()`.** `kotlin-test` resolves to `kotlin-test-junit` under it, and that is what runs the common tests on the jvm target. Switching to `useJUnitPlatform()` means switching `kotlin-test` to its JUnit 5 variant too; get only half of that right and **zero tests run while the build reports success**. Check the count, not the exit code.
-- **Never apply the `java`, `java-library`, or `jvm-toolchains` plugins.** KGP rejects them as incompatible with KMP. This is also why the OSGi metadata is written by hand instead of using `biz.aQute.bnd.builder` (which applies `java`), and why `:examples` resolves `JavaToolchainService` via `serviceOf` to give its `JavaExec` tasks a launcher.
-- **Do not call `withJava()` on the `jvm` target**, and do not add Java sources back. There are none left in either module.
-- **The OSGi `Export-Package` header is derived by walking `src/commonMain/kotlin`.** Pointed at a directory that does not exist, a `fileTree` is simply empty and the bundle ships an **empty** `Export-Package` without failing anything. If that header ever comes out blank, the derivation is looking in the wrong place. `Bundle-SymbolicName` and `Automatic-Module-Name` are `io.github.solcott.marineapi` and track the package root.
-- **Test resources are loaded from the classpath**, e.g. `GpsdCorpusTest::class.java.getResource("/data/gpsd")`. Do not reintroduce filesystem-relative paths — Gradle splits classes from processed resources, so there is no directory containing both. This is also why the corpus tests are in `jvmTest` rather than `commonTest`.
-- **`jvmTest/resources/data/gpsd/` is a vendored conformance corpus** — 103 NMEA logs from ~90 receivers, taken from gpsd and **BSD-2-Clause, not LGPL**. The notice in that directory's `README.md` must stay with the files. `GpsdCorpusTest` parses and re-encodes every line, and holds a per-file count of the lines that legitimately fail; a count changing in either direction fails the build. This is the corpus that answers "does this cope with real hardware" — it found an `IllegalArgumentException` escaping `parse`, the load-bearing/advisory field split, VTG's format detection and the 8-decimal coordinate cap. `CorpusFixTest` runs the `nmea/io` correlating operators over the same logs and pins their totals (2089 fixes, 2201 satellite views, 36 headings, and the 288 fixes carrying a measured accuracy) — those numbers move with any change to what delimits an update cycle or to which sentences a cycle records, so a change to `positions()` or `satellites()` must update them deliberately. It is test-only and appears in no published jar.
-- **Each log has a `.log.chk` beside it: gpsd's OWN decoder output for that input.** With `"scaled":false` the numbers are raw bit fields, so they compare directly with no unit conversion in between. This makes **gpsd the reference implementation** for anything they cover, and a disagreement with them is a bug here until shown otherwise. `GpsdAisCheckTest` compares 1,308 AIS messages field by field; `GpsdFixCheckTest` asserts that every capture gpsd can get a fix out of, `positions()` can too. Between them they found four defects the port had carried: the type 21 name extension appended when the name field was not full, AIS text losing its leading whitespace, `positions()` requiring a velocity, and RMC's date being load-bearing when it is not. See the `/gpsd-crosscheck` skill for adjudicating a disagreement, and `/add-ais-message` for the six types gpsd decodes and this library does not.
-- **Do not trust a summarised web fetch for bit-level data.** `WebFetch` runs a small model over the page, and its rendering of gpsd's AIS bit tables for types 21, 24 and 27 was internally inconsistent and contradicted payloads that decode correctly. Bit ranges come from the `.chk` files or from raw source, never from a summary.
-- **This library deliberately disagrees with the Java original in places.** Where behaviour differs from the pre-cutover implementation the reason is on the declaration, usually because the old one was wrong: AIS types 4, 18 and 27 read the position-accuracy bit one place early, type 27's navigational status range was reversed, type 9's flags were off by one and its speed scaled by ten, `isDteReady` returned the bit uninverted, `NavStatus` read `V` as valid, and `PositionProvider` required a GGA or GLL in every cycle. Do not "restore" any of these to match an old release.
-- **Five of the seven non-Apple native targets have no test task, and that is KGP's doing.** `linuxX64()` and `mingwX64()` return `KotlinNativeTargetWithHostTests`, so they get a test run — but only on their own OS, so `linuxX64Test` runs on the ubuntu CI job and `mingwX64Test` runs nowhere (no Windows runner). `linuxArm64()` and all four `androidNative*()` return a plain `KotlinNativeTarget`, which has no test run on any host. Do not go looking for a missing `linuxArm64Test`. All seven are still compiled and linked everywhere, so a break is a build failure rather than a silent gap.
-- **The android target runs the common suite, and one line in `marine-api/build.gradle.kts` is why.** `withHostTest {}` inside the `android { }` block is what registers `testAndroidHostTest` (421 tests, and it is wired into `allTests`). Without it the android compilation is built and published but never executed, leaving the one target anyone can actually depend on from an app with no test run of its own. It needs no `useJUnit()` hook: this is a KGP compilation, so KGP's variant-aware resolution turns plain `kotlin-test` into `kotlin-test-junit` by itself. The silent zero-tests-and-green trap still applies here, so check the count.
-- **Everything except the Apple targets cross-compiles from any host.** That is what lets the release workflow publish all sixteen publications from one macOS runner, and it is why the macOS `all-targets` job is the slow one. Only Apple is host-locked.
-- **`commonMain` must never go back to being empty.** With no common Kotlin source the Kotlin/Native compilations are `NO-SOURCE`, produce no `.klib`, and the three Apple publications fail. It now holds the whole library, so this is only a hazard if something drastic happens.
-- `explicitApi()` is on for `:marine-api`: every public declaration needs an explicit visibility and return type.
-- **The public ABI is pinned in `marine-api/api/` and `apiCheck` runs under `check`.** Changing the public API fails the build until `./gradlew :marine-api:apiDump` is run and the diff committed; that diff is the review artifact, so read it rather than regenerating past it. Two files: `api/jvm/marine-api.api` is the JVM bytecode ABI, `api/marine-api.klib.api` is one merged dump across all 13 klib targets. **The `android` target is not dumped** — binary-compatibility-validator does not recognise AGP's `com.android.kotlin.multiplatform.library` target, so there is no `androidApiBuild` task. Nothing is lost in practice: there is no `androidMain` source set, so android compiles exactly the `commonMain` the jvm dump already covers — and since `withHostTest {}` it runs that `commonMain`'s tests too. `klib.strictValidation` is off so the ubuntu job, where the Apple targets are disabled, infers them instead of failing.
-- **detekt analyses `src/` once per project, not once per compilation.** The extension sets `source` to the whole tree, because the per-compilation tasks the plugin also registers (`detektJvmMain`, `detektMetadataCommonMain`, ...) would report every finding in `commonMain` once per target. Only the plain `detekt` task is wired into `check`. `config/detekt/detekt.yml` holds **only the deviations** from detekt's defaults (`buildUponDefaultConfig = true`), each with the reason it deviates; `MagicNumber` is off because the numbers here are AIS bit ranges and NMEA field indices, which is the whole of what the code is.
-- **The IO layer must not choose a dispatcher.** `Source.nmeaResults()`/`nmeaSentences()` read blocking sources on the collecting coroutine. There is no one dispatcher to pick: `Dispatchers.IO` is public API on **JVM and Android only** — on Native it exists but is `internal` (`nativeMain/Dispatchers.kt` in coroutines), and JS/Wasm have no threads at all. Callers add `.flowOn(...)` with whatever their platform has. Do not import it into `commonMain`.
-- **The examples' run tasks each work differently, and none of them by accident.** Gradle's `--args` calls `setArgsString()` and **replaces** the argument list, so the JVM tasks pass the demo name as a system property to leave `--args` free for the file path. The Kotlin/Native run task is a plain `Exec` and `jsNodeRun` is a `NodeJsExec`; neither takes `--args`, so both read `-PdemoArgs`. A `CommandLineArgumentProvider` lambda cannot be used to supply them — a SAM conversion in a `.gradle.kts` captures the script object, which the configuration cache refuses to serialize.
-- **Hilt on AGP 9 runs under KSP, and the combination works despite what the internet says.** KSP's own error text ("KSP is not compatible with Android Gradle Plugin's built-in Kotlin") belongs to versions before 2.3.1; 2.3.11 attaches to `:examples-android` with no `kotlin-android` plugin and no `android.builtInKotlin=false`. Hilt's Gradle plugin needs 2.59 or newer for AGP 9. Do not reach for `kotlin-kapt` — built-in Kotlin has no such plugin, and Hilt does not work with the `com.android.legacy-kapt` replacement.
-- **`:examples-android` names `kotlin-test-junit` explicitly, and must.** There is no `useJUnit()` hook in an AGP unit test to make `kotlin-test` resolve to a framework variant, so plain `kotlin-test` resolves to the frameworkless one and `kotlin.test.Test` does not exist. The failure is at least a compile error rather than :marine-api's silent zero-tests-and-green. This is the difference from `:marine-api`'s android target, where plain `kotlin-test` resolves fine: that one is a KGP compilation and this is a plain AGP module with no KMP plugin, so nothing here applies KGP's resolution rule.
-- **`testOptions { unitTests { isReturnDefaultValues = true } }` is what keeps Robolectric out.** `GpsViewModel` logs to `android.util.Log`, which throws "not mocked" in a JVM unit test otherwise.
-- **A ViewModel under `MainDispatcherRule` must be built inside the test, not in a field initializer.** A JUnit rule runs *after* the test instance is constructed, so a ViewModel created as a field starts collecting before `Dispatchers.setMain`, and its `stateIn` never leaves the initial value — every assertion then reads the initial state and says nothing about why. Both suites use `by lazy` for this.
-- **Some of `:examples-android`'s dependency-analysis advice points at generated code.** `androidx.annotation`, `androidx.fragment` and `lifecycle-viewmodel-savedstate` are referenced only by the Java that Hilt and KSP generate into the module, so they are excluded in the root `dependencyAnalysis` block rather than declared. Everything the hand-written source names is declared, which is the policy the Compose artifacts already follow.
-- **Kotlin/Native needs an explicit `entryPoint`.** `binaries.executable()` looks for `main` in the **root** package and fails at the LINK step, not the compile, with "Could not find '/main' function".
-- **Do not replace `NmeaLineReader` with `kotlinx.io.readLine`.** That splits on `LF` alone; NMEA uses `CRLF`, and captures in the corpus use a lone `CR` throughout or mix both in one file. An `LF`-only split turns a `CR`-terminated feed into one unbounded line.
+- **Do not trust a summarised web fetch for bit-level data.** `WebFetch` runs a small model over the page, and its rendering of gpsd's AIS bit tables for types 21, 24 and 27 was internally inconsistent. Bit ranges and field layouts come from the corpus `.log.chk` files or from raw source.
+- **gpsd is the reference implementation.** Each corpus log in `marine-api/src/jvmTest/resources/data/gpsd/` has gpsd's own decode beside it; a disagreement is a bug here until shown otherwise (`/gpsd-crosscheck`).
+- **This library deliberately disagrees with the Java original in places**, with the reason on each declaration. Do not "restore" old behaviour to match an old release.
+- **A pinned number is never nudged to make the build green.** See the regression signal below.
 
 ## Code style
 
 Everything is Kotlin, formatted by ktfmt (Google style) — run `./gradlew ktfmtFormat` before committing or CI fails.
 
-- One `data class` per sentence type, in `nmea/sentence/`, grouped several to a file by theme. Optional fields are nullable with a `null` default.
-- Each carries `const val ID` and a `from(fields: SentenceFields)` in its companion, plus private zero-based field-index constants.
-- KDoc on every public declaration, with an `Example:` NMEA string on the type. **Say why, not what** — the field layout is visible in the code; what is not visible is which reading the standard supports, what real receivers actually send, and where this disagrees with the Java original.
-- Tests are `kotlin.test` in `commonTest`, named after the sentence (`GgaTest`). Test *names are sentences*: `readsEveryField`, `rejectsATimestampItCannotRead`.
-- Prefer asserting a value round-trips over asserting an exact re-encoded string: `Double?.field()` trims trailing zeros, so `29.9870` comes back as `29.987`.
-
-## Adding a new NMEA sentence
-
-A new sentence type is not usable until it is registered in `SentenceRegistry.Default`, and `FieldExposureTest.theExamplesCoverEveryRegisteredType` fails until a fully populated example is added there too. Those two steps are the ones that get missed. See the `/add-sentence` skill; `.claude/hooks/check-registration.sh` also warns on a write when either is still outstanding.
-
-## Publishing
-
-`./gradlew :marine-api:publishAllPublicationsToMavenCentralRepository`, driven by the Release workflow on macOS (so the Apple publications are included). Credentials come from `ORG_GRADLE_PROJECT_mavenCentralUsername/Password` and `ORG_GRADLE_PROJECT_signingInMemoryKey/KeyId/KeyPassword`. See the `/release` skill — note that this fork has never released. The version is `0.5.0`: the fork restarted its numbering rather than continuing upstream's `0.12.0`, which described a different library under different coordinates.
-
-- **Version lives only in `gradle.properties`.** `changelog.txt` keeps its own historical record; its entries at `0.12.0` and below are upstream's Java library, and the fork's own record starts at `0.5.0`.
-- **KMP splits the coordinates.** Gradle consumers resolve `io.github.solcott:kmp-marine-api` via module metadata; plain Maven consumers must depend on `kmp-marine-api-jvm`.
-- `nrjavaserial` is an `implementation` dependency of `:examples` only (it was `compileOnly` on the library, and Maven `provided` before that). Used by `SerialPortExample` alone, and `:examples` is not published, so it appears in no POM.
-- Published javadoc jars carry real content: the Dokka plugin is applied and the publish plugin picks it up on its own. There is no `configure(KotlinMultiplatform(...))` call, so nothing here drifts out of step with Dokka's task names.
-- OSGi headers on `jvmJar` are hand-written. `Export-Package` is derived from the source tree; `Import-Package` is deliberately absent, which is what the old empty `<Import-Package/>` achieved.
+- `explicitApi()` is on for `:marine-api`. KDoc on every public declaration; **say why, not what**.
+- Tests are `kotlin.test`. Test *names are sentences*: `readsEveryField`, `rejectsATimestampItCannotRead`.
 
 ## The regression signal
 
-The old signal was the test count, which spanned two suites and is meaningless now that one is gone. What is load-bearing instead, all of it already failing the build when it moves:
+What is load-bearing, all of it already failing the build when it moves:
 
 - `FieldExposureTest.theExamplesCoverEveryRegisteredType` — every registered type has a fully populated example, round-tripped and checked for silently dropped fields.
 - `GpsdCorpusTest` — per-file counts of legitimately failing lines across 103 device logs; a count moving in **either** direction fails.
-- `CorpusFixTest` — 2089 fixes, 2201 satellite views, 36 headings across the corpus, and the 288 fixes (from 15 of the 103 receivers) that carry a measured accuracy. It pins more than those (fixes with altitude, fixes with a date, satellites counted, silent logs, the accuracy source breakdown and which captures report one); the assertions themselves are the record, so read them rather than this line.
+- `CorpusFixTest` — 2089 fixes, 2201 satellite views, 36 headings across the corpus, and the 288 fixes (from 15 of the 103 receivers) that carry a measured accuracy. It pins more than those; the assertions themselves are the record, so read them rather than this line.
 - `SampleDataTest.everyPortedTypeWithCorpusDataIsExercised` — names the types resting only on reference tables rather than real device data.
-- Common tests per target: **421**. One suite, so this number is comparable over time. JVM runs 448 — the same 421 plus the 27 corpus tests, which need classpath resources and so live in `jvmTest`. Android runs the plain 421 through `testAndroidHostTest`. Adding a target does not move this number; it only changes how many targets execute it, and most of the native ones execute it nowhere (see the build constraints).
+- Common tests per target: **421**. One suite, so this number is comparable over time. JVM runs 448 — the same 421 plus the 27 corpus tests, which need classpath resources and so live in `jvmTest`. Android runs the plain 421 through `testAndroidHostTest`. Adding a target does not move this number; it only changes how many targets execute it, and most of the native ones execute it nowhere.
 
-When one of these numbers moves, `/repin-regressions` covers deciding whether to re-pin it and where each pin lives. A number is never nudged to make the build green.
+This section is the **only** place the per-target test counts are written down; skills, agents and hooks point here rather than repeating them. When one of these numbers moves, `/repin-regressions` covers deciding whether to re-pin it and where each pin lives, and this section is updated in the same commit.
 
 ## Repo etiquette
 
