@@ -26,7 +26,7 @@ call worth confirming rather than assuming, but it is no longer a question about
 follow.
 
 **OSGi constrains the format.** `Bundle-Version` is set to `project.version` verbatim
-(`marine-api/build.gradle.kts:116`), and OSGi versions are `major.minor.micro[.qualifier]` with a
+(in `marine-api/build.gradle.kts`, the `jvmJar` manifest), and OSGi versions are `major.minor.micro[.qualifier]` with a
 **dot** before the qualifier and no hyphens. `0.13.0-alpha01` or `1.0.0-SNAPSHOT` produce a malformed
 `Bundle-Version` that only an OSGi resolver will complain about — long after publication. If a
 pre-release qualifier is wanted, that header needs converting rather than passing through.
@@ -60,8 +60,9 @@ KMP artifacts. `ANDROID_HOME` must be set even for JVM-only tasks: the
 ./gradlew :marine-api:publishToMavenLocal
 ```
 
-Check the test **count**, not the exit code — see the `useJUnit()` hazard: expect 433 on `jvmTest`
-and 408 common tests per target. `regression-checker` will confirm no pinned number moved.
+Check the test **count**, not the exit code — see the `useJUnit()` hazard. The `report-test-count.sh`
+hook prints it after each run; compare with `CLAUDE.md`'s "The regression signal".
+`regression-checker` will confirm no pinned number moved.
 
 Then inspect what `publishToMavenLocal` produced in `~/.m2/repository/io/github/solcott/`:
 

@@ -7,7 +7,7 @@ description: Add support for a new NMEA 0183 sentence type to this library — a
 
 Takes a three-letter sentence id (e.g. `XYZ`) and an example sentence string. **If the user did not supply an example NMEA string, ask for one** — the KDoc, the test and the field-exposure fixture all need a real one, and inventing a plausible-looking sentence is how wrong field layouts get baked in.
 
-Everything is Kotlin in `marine-api/src/commonMain/kotlin/io/github/solcott/marineapi`, formatted by ktfmt. No file headers; no `@author` tags.
+Everything is Kotlin in `marine-api/src/commonMain/kotlin/io/github/solcott/marineapi`, formatted by ktfmt. **The conventions a sentence type must follow — nullable fields, the `SentenceFields` accessors, load-bearing vs advisory, `require`, test style, trusted sources for a layout — are in `.claude/rules/nmea-sentences.md` and `.claude/rules/library-source.md`.** Read them before step 2 if they are not already loaded; this skill is the procedure, not the conventions.
 
 ## Steps
 
@@ -43,10 +43,7 @@ Everything is Kotlin in `marine-api/src/commonMain/kotlin/io/github/solcott/mari
    }
    ```
 
-   - Optional fields are **nullable with a `null` default**. An empty NMEA field is how the format says "no data"; it is not an error.
-   - Use the accessors on `SentenceFields` — `stringAt`, `doubleAt`, `intAt`, `charAt`, `timeAt`, `dateAt`, `codedAt`/`intCodedAt` (and their `advisory*` counterparts), plus the `positionAt` extension in `PositionFields.kt`. Do not split the raw sentence yourself.
-   - **Choose `codedAt` vs `advisoryCodedAt` deliberately.** A *load-bearing* field changes the meaning or magnitude of another field (a units character, a hemisphere, a reference direction) and stays strict. An *advisory* field reports status, provenance or identity and nothing else depends on it — use the `advisory*` accessors so one unrecognised character does not discard a whole sentence. The doc on `SentenceFields.advisoryCodedAt` states the rule.
-   - Reject impossible values in an `init` block with `require`. `SentenceRegistry.parse` catches `IllegalArgumentException` and reports `ParseResult.Malformed`, so this never escapes to a caller.
+   For every field, decide load-bearing vs advisory (`codedAt` vs `advisoryCodedAt`) per the rule — that is the judgement most worth getting right here. Reject impossible values in an `init` block with `require`.
 
 3. **Register it** — add `Xyz.ID to SentenceFactory(Xyz::from)` to `SentenceRegistry.Default` in `nmea/SentenceRegistry.kt`, and the import, both **in alphabetical order**. Without this the sentence parses as `UnknownSentence`.
 
@@ -56,19 +53,18 @@ Everything is Kotlin in `marine-api/src/commonMain/kotlin/io/github/solcott/mari
 
 5. **Test** — `commonTest/.../sentence/XyzTest.kt`, or a class added to the themed test file. `kotlin.test` only. Use the `parse<Xyz>(line)` helper from `ParseHelper.kt`, and `Checksum.append("$GPXYZ,...")` when writing a fixture by hand rather than copying a real one.
 
-   - Name tests as sentences describing the behaviour: `readsEveryField`, `rejectsAUnitItCannotRead`, `keepsANegativeElevation`.
-   - Prefer asserting a **value** round-trip (`parse(x.toNmeaString()) == x`) over an exact string match. `Double?.field()` trims trailing zeros, so `29.9870` re-encodes as `29.987` and a string assertion fails for no good reason.
-   - Cover the empty-field case, not just the populated one.
+   Assert a **value** round-trip (`parse(x.toNmeaString()) == x`), not an exact string, and cover the empty-field case as well as the populated one.
 
 6. **Verify**:
    ```
    ./gradlew ktfmtFormat
    ./gradlew :marine-api:jvmTest --tests '*XyzTest'
-   ./gradlew :marine-api:allTests     # the common suite runs on all seven targets
+   ./gradlew :marine-api:allTests     # the common suite on every target with a test run
    ```
+
+   The common test count goes up by the number of tests added; the baseline is in `CLAUDE.md`'s "The regression signal", which is updated in the same commit.
 
 ## Notes
 
-- Sources for field layouts, in order of trust: the gpsd [NMEA reference](https://gpsd.gitlab.io/gpsd/NMEA.html), then <https://aprs.gids.nl/nmea/>. **The official NMEA 0183 standard is a paid document and is not available here** — say so in the KDoc rather than implying a conformance that was not checked.
 - If `jvmTest/resources/data/gpsd/` contains the new type, `GpsdCorpusTest` and `SampleDataTest` will start counting it; their expected sets need updating in the same commit.
-- Write KDoc that says **why**, not what. The field order is in the code. What is not in the code: which reading of an ambiguous field the sentence uses and on what evidence, what real receivers actually send, and where this deliberately differs from the Java implementation that preceded it.
+- The `check-registration.sh` hook warns after each write while step 3 or 4 is still outstanding. It is advisory; `theExamplesCoverEveryRegisteredType` is the gate.

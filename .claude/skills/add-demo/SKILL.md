@@ -33,15 +33,9 @@ All in `examples/`.
    }
    ```
 
-   - Take `open: () -> Source`, not a path, not a file. A demo that needs no feed takes no parameter
-     (`demoOutput`); a demo that can supply its own falls back to a built-in sample (`demoUblox` uses
-     `UBLOX_SAMPLE` via `sourceOf`).
-   - `println` is the whole output layer. Do not add a logging dependency.
-   - **Do not call `flowOn` in the demo.** The IO layer deliberately does not choose a dispatcher, and
-     the *entry points* are where that decision lands: the JVM uses `runBlocking(Dispatchers.IO)`,
-     macOS uses `Dispatchers.Default` because `Dispatchers.IO` is `internal` on Kotlin/Native, and JS
-     has no threads at all. A `flowOn` in `commonMain` would not compile everywhere and would take
-     the decision away from the caller, which is the thing this library is careful not to do.
+   A demo that needs no feed takes no parameter (`demoOutput`); a demo that can supply its own falls
+   back to a built-in sample (`demoUblox` uses `UBLOX_SAMPLE` via `sourceOf`). What demo code must
+   not do — `flowOn`, `SystemFileSystem`, a logging dependency — is in `.claude/rules/examples.md`.
 
 2. **`Cli.kt`** — three places in one small file:
    - a branch in the `when (demo)` inside `runDemo`, using `withFeed(demo, open, ::demoXyz)` if the
@@ -54,32 +48,11 @@ All in `examples/`.
    with no branch in `runDemo` prints the usage text rather than failing, which is the right way round
    for a demo — but it also means **a missing `Cli.kt` branch is silent**. Do both edits together.
 
-## The argument conventions, all three different on purpose
+## Why the run tasks all take arguments differently
 
-Do not try to unify these. Each is the way it is for a reason recorded in the source:
-
-| Platform | How the demo name arrives | Why |
-| --- | --- | --- |
-| JVM | `systemProperty("marineapi.demo", demo)` | Gradle's `--args` calls `setArgsString()`, which **replaces** the argument list. A demo name passed as an argument would vanish the moment a user passed a file path. The system property leaves `--args` free for the path. |
-| macOS native | `-PdemoArgs="xyz nmea.log"` | The run task is a plain `Exec` and does not accept `--args`. |
-| Node | `-PdemoArgs="xyz nmea.log"` | `jsNodeRun` is a `NodeJsExec` and does not accept `--args` either. Defaults to `ublox`, the one demo that carries its own feed. |
-| Browser | the URL fragment, e.g. `#xyz` | No argv. Defaults to `positions`, and fetches `sample.log` over the network. |
-
-Two further traps in `build.gradle.kts`, both already commented there:
-
-- **`-PdemoArgs` is read with `providers.gradleProperty(...)` at configuration time, not through a
-  `CommandLineArgumentProvider`.** A SAM-converted lambda in a `.gradle.kts` captures the enclosing
-  script object, which the configuration cache refuses to serialize. A `gradleProperty` read is
-  tracked as a configuration input, so it stays correct.
-- **The run tasks set `workingDir = repositoryRoot`**, so a file path is written relative to the
-  repository root rather than to `examples/`. A demo with a built-in sample path must respect that.
-
-## If the demo reads a file
-
-The JS compilation serves Node **and** the browser from one `main`. That is only safe because
-`kotlinx-io` binds `node:fs` lazily — a browser bundle that never touches `SystemFileSystem` never
-calls `require`. A demo that reaches for `SystemFileSystem` in `commonMain` breaks the browser build.
-Take the `Source` from the caller; that is what the parameter is for.
+They are deliberate, and `.claude/rules/examples.md` records why for each platform (the JVM system
+property, `-PdemoArgs` for Node and macOS, the URL fragment in the browser) along with the
+configuration-cache and `workingDir` traps. Do not try to unify them.
 
 ## Verify on all four
 

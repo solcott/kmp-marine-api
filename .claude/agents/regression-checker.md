@@ -54,7 +54,8 @@ grep -ho 'tests="[0-9]*"' marine-api/build/test-results/jvmTest/*.xml \
   | grep -o '[0-9]*' | awk '{s+=$1} END {print s}'
 ```
 
-Currently **428** on JVM. Read failure detail from the XML in that directory, or from
+The expected JVM and per-target totals are in `CLAUDE.md` under "The regression signal" -- the one
+figure there that no assertion pins, so the one to take from it. Read failure detail from the XML in that directory, or from
 `marine-api/build/reports/tests/jvmTest/`, rather than from the console log.
 
 ## Output

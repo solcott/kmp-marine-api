@@ -63,10 +63,10 @@ All paths under `marine-api/src/`. Line numbers drift; the names do not.
 | `FIELDS_PER_TYPE` | same file (~line 317) | per-type field count feeding the `fields > 9_000` coverage tripwire |
 | `expectedCoverage` | `jvmTest/.../nmea/SampleDataTest.kt` (~line 91) | which ported types have real device data behind them |
 | `fullyPopulated` | `commonTest/.../nmea/sentence/FieldExposureTest.kt` (~line 27) | one fully populated example per registered type |
-| common test count | — | 403 per target; JVM runs 428 (the same 403 plus 25 corpus tests) |
+| common test count | `CLAUDE.md`, "The regression signal" | the only place it is written down; no assertion pins it |
 
 **The assertions are the record — read them rather than any summary of them, including this table and
-including `CLAUDE.md`.** Several carry comments explaining exactly which device or which rule the
+including `CLAUDE.md` and `.claude/rules/`.** Several carry comments explaining exactly which device or which rule the
 number came from; a re-pin that invalidates the comment has to update the comment too.
 
 ## Step 4 — update CLAUDE.md in the same commit
@@ -88,5 +88,6 @@ wrong for an unrelated reason, fix that too and say so.
 
 **Check the reported test count, not the exit code.** `jvmTest` must use `useJUnit()`: `kotlin-test`
 resolves to `kotlin-test-junit` under it, and that is what runs the common tests on the JVM target.
-Get half of a JUnit 5 migration right and zero tests run while the build reports success. Expect 428
-on `jvmTest` and 403 common tests per target unless you deliberately added some.
+Get half of a JUnit 5 migration right and zero tests run while the build reports success. The
+`report-test-count.sh` hook prints the count after the run; it should match `CLAUDE.md`'s figures
+unless you deliberately added tests, in which case update them there in the same commit.

@@ -1,13 +1,14 @@
 #!/bin/bash
 # PostToolUse hook: warns when a sentence or AIS message type has been written but not fully
-# registered. CLAUDE.md names these as "the steps that get missed", and each of them fails a test
+# registered. The rules for sentences and AIS name these as "the steps that get missed", and each of them fails a test
 # rather than a compile, so the feedback would otherwise arrive a whole build later.
 #
 # Advisory only. FieldExposureTest.theExamplesCoverEveryRegisteredType and GpsdAisCheckTest remain
 # the actual gates; this just shortens the loop. It must stay pure grep/awk -- a hook cannot run
 # Gradle inside its 10s timeout.
 #
-# Reads the PostToolUse payload on stdin, emits {"systemMessage": ...} or nothing at all.
+# Reads the PostToolUse payload on stdin, emits nothing, or the warning both as a systemMessage (for
+# the user) and as additionalContext (for Claude, which does not see a systemMessage).
 
 file=$(jq -r '.tool_input.file_path // .tool_response.filePath // empty')
 [ -n "$file" ] || exit 0
@@ -82,6 +83,7 @@ esac
 
 if [ -n "$problems" ]; then
   jq -Rn --arg body "$problems" \
-    '{systemMessage: ("Registration steps still outstanding:\n" + $body)}'
+    '("Registration steps still outstanding:\n" + $body) as $m
+     | {systemMessage: $m, hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $m}}'
 fi
 exit 0
