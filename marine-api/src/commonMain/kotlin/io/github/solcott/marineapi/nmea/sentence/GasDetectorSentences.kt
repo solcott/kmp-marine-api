@@ -96,7 +96,7 @@ public data class Dtb(
           dateTime,
           serialNumber,
           statusCode,
-        )
+        ),
       ),
     )
 
@@ -172,7 +172,7 @@ private fun SentenceFields.instrumentDateTimeAt(index: Int): LocalDateTime? {
     }
   if (numbers == null || numbers.any { it == null }) {
     throw NmeaFieldException(
-      "$talker$id field $index is not a yyyy/MM/dd HH:mm:ss timestamp: \"$raw\""
+      "$talker$id field $index is not a yyyy/MM/dd HH:mm:ss timestamp: \"$raw\"",
     )
   }
   val parsed = numbers.map { it!! }

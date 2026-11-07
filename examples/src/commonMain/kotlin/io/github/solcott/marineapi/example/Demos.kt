@@ -78,7 +78,7 @@ suspend fun demoPositions(open: () -> Source) {
   open().nmeaSentences().positions().collect { fix ->
     println(
       "${fix.dateTime ?: fix.time}  ${fix.position}  ${fix.speedKnots ?: 0.0} kn" +
-        fix.describeQuality()
+        fix.describeQuality(),
     )
   }
 
@@ -89,7 +89,7 @@ suspend fun demoPositions(open: () -> Source) {
   open().nmeaSentences().satellites().collect { view ->
     println(
       "${view.talker}: ${view.satellites.size} of ${view.satellitesInView} in view, " +
-        "${view.satellitesUsed.size} used, HDOP ${view.horizontalDop}"
+        "${view.satellitesUsed.size} used, HDOP ${view.horizontalDop}",
     )
   }
 }
@@ -143,13 +143,13 @@ suspend fun demoAis(open: () -> Source) {
               names[message.mmsi] = message.name
               println(
                 "${message.mmsi}  ${message.name} (${describeShipType(message.shipType)})" +
-                  " -> ${message.destination}"
+                  " -> ${message.destination}",
               )
             }
             is AisPositionReport ->
               println(
                 "${message.mmsi}  ${names[message.mmsi] ?: "unknown"}" +
-                  "  ${message.position}  ${message.speedOverGround ?: 0.0} kn"
+                  "  ${message.position}  ${message.speedOverGround ?: 0.0} kn",
               )
             else -> println("${message.mmsi}  type ${message.messageType}")
           }
@@ -179,7 +179,7 @@ suspend fun demoUblox(open: () -> Source) {
         println(
           "${message.utcTime}  ${message.position}  ${message.navigationStatus}\n" +
             "  accurate to ${message.horizontalAccuracy} m horizontally," +
-            " ${message.verticalAccuracy} m vertically, from ${message.satellitesUsed} satellites"
+            " ${message.verticalAccuracy} m vertically, from ${message.satellitesUsed} satellites",
         )
       is UbloxSatelliteStatusReport -> {
         val used = message.satellites.count { it.status == UbloxSatelliteStatus.USED_IN_SOLUTION }
@@ -187,7 +187,7 @@ suspend fun demoUblox(open: () -> Source) {
         for (satellite in message.satellites) {
           println(
             "  ${satellite.id}\tel ${satellite.elevation}\taz ${satellite.azimuth}" +
-              "\tsignal ${satellite.signalStrength ?: "-"}\t${satellite.status}"
+              "\tsignal ${satellite.signalStrength ?: "-"}\t${satellite.status}",
           )
         }
       }
@@ -238,6 +238,6 @@ fun demoOutput() {
 
   // Round trip: parsing what was just written gives back an equal value.
   println(
-    "round trips: ${SentenceRegistry.Default.parse(fix.toNmeaString()).sentenceOrNull() == fix}"
+    "round trips: ${SentenceRegistry.Default.parse(fix.toNmeaString()).sentenceOrNull() == fix}",
   )
 }

@@ -129,13 +129,13 @@ class AisFlowTest {
     // For a caller holding one sentence rather than a flow.
     val sentence =
       assertIs<Vdm>(
-        assertIs<ParseResult.Ok>(SentenceRegistry.Default.parse(Sentences.POSITION)).sentence
+        assertIs<ParseResult.Ok>(SentenceRegistry.Default.parse(Sentences.POSITION)).sentence,
       )
     assertIs<AisPositionReport>(assertIs<AisResult.Ok>(sentence.aisMessageOrNull()).message)
 
     val fragment =
       assertIs<Vdm>(
-        assertIs<ParseResult.Ok>(SentenceRegistry.Default.parse(Sentences.STATIC_1)).sentence
+        assertIs<ParseResult.Ok>(SentenceRegistry.Default.parse(Sentences.STATIC_1)).sentence,
       )
     assertNull(fragment.aisMessageOrNull(), "one fragment of a message is not a message")
   }

@@ -126,11 +126,11 @@ class HtcHtdTest {
   fun bothAreDistinctTypes() {
     assertIs<Htc>(
       SentenceRegistry.Default.parse(Checksum.append("\$AGHTC,V,0.1,R,M,,15.0,15.0,,,,,,T"))
-        .sentenceOrNull()
+        .sentenceOrNull(),
     )
     assertIs<Htd>(
       SentenceRegistry.Default.parse("\$AGHTD,V,0.1,R,M,,15.0,15.0,,,,,,T,A,A,A,90.3,*39")
-        .sentenceOrNull()
+        .sentenceOrNull(),
     )
   }
 }
@@ -193,11 +193,11 @@ class DtaDtbTest {
   fun theTwoAreDistinctTypes() {
     assertIs<Dta>(
       SentenceRegistry.Default.parse("\$GFDTA,1,1.5,99,600,11067,2002/03/01 00:30:28,HF-1xxx,1*3C")
-        .sentenceOrNull()
+        .sentenceOrNull(),
     )
     assertIs<Dtb>(
       SentenceRegistry.Default.parse("\$GFDTB,1,1.5,99,600,11067,2002/03/01 00:30:28,HF-1xxx,1*3F")
-        .sentenceOrNull()
+        .sentenceOrNull(),
     )
   }
 }

@@ -89,7 +89,7 @@ class GpsdCorpusTest {
             appendLine("  new failures in $name:")
             samples[name]?.take(5)?.forEach { appendLine("    $it") }
           }
-        }
+        },
       )
     }
   }
@@ -106,7 +106,7 @@ class GpsdCorpusTest {
         if (sentence != reparsed) {
           fail(
             "round trip changed the value\n  file: ${file.name}\n  from: $line\n" +
-              "  via:  $rendered\n  was:  $reparsed"
+              "  via:  $rendered\n  was:  $reparsed",
           )
         }
         checked++

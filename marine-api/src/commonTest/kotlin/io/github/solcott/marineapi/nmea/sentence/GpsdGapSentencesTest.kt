@@ -68,8 +68,8 @@ class GapSentenceTest {
     val alm =
       parse<Alm>(
         Checksum.append(
-          "\$GPALM,32,1,01,1122,00,441d,4e,16be,fd5e,a10c9f,4a2da4,686e81,58cbe1,0a4,001"
-        )
+          "\$GPALM,32,1,01,1122,00,441d,4e,16be,fd5e,a10c9f,4a2da4,686e81,58cbe1,0a4,001",
+        ),
       )
     assertEquals(32, alm.sentenceCount)
     assertEquals("01", alm.satelliteId, "text, so the leading zero survives a round trip")
@@ -205,7 +205,7 @@ class GapSentenceTest {
   fun readsRollAndPitchThatNoStandardSentenceCarries() {
     val pashr =
       parse<Pashr>(
-        Checksum.append("\$PASHR,123816.80,312.95,T,-0.83,-0.42,-0.01,0.234,0.224,0.298,1,0")
+        Checksum.append("\$PASHR,123816.80,312.95,T,-0.83,-0.42,-0.01,0.234,0.224,0.298,1,0"),
       )
     assertEquals(LocalTime(12, 38, 16, 800_000_000), pashr.time)
     assertEquals(312.95, pashr.heading)

@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.mapNotNull
  * @param registry which message types to decode; the rest arrive as [AisResult.Unsupported]
  */
 public fun Flow<Sentence>.aisMessages(
-  registry: AisRegistry = AisRegistry.Default
+  registry: AisRegistry = AisRegistry.Default,
 ): Flow<AisResult> = flow {
   val pending = mutableListOf<AisSentence>()
   collect { sentence ->

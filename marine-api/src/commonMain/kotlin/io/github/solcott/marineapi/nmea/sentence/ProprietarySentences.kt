@@ -65,7 +65,7 @@ public data class Ubx(
         messageId =
           fields.intAt(MESSAGE_ID)
             ?: throw NmeaFieldException(
-              "UBX sentence has no message id, so its fields have no meaning"
+              "UBX sentence has no message id, so its fields have no meaning",
             ),
         fields = List(fields.size) { fields.stringAt(it) },
       )

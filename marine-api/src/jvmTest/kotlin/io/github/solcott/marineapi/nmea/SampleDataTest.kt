@@ -72,7 +72,8 @@ class SampleDataTest {
     assertTrue(total > 1000, "expected a substantial corpus, read $total lines")
     if (failures.isNotEmpty()) {
       fail(
-        "${failures.size} of $total lines failed to parse:\n" + failures.take(20).joinToString("\n")
+        "${failures.size} of $total lines failed to parse:\n" +
+          failures.take(20).joinToString("\n"),
       )
     }
   }

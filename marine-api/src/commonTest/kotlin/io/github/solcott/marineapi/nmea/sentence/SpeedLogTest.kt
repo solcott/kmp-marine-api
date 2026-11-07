@@ -188,10 +188,10 @@ class VwrVwtTest {
   fun theTwoAreDistinctTypes() {
     // Same eight fields, but apparent and true wind are not interchangeable.
     assertIs<Vwr>(
-      SentenceRegistry.Default.parse("\$IIVWR,088,L,24.5,N,12.6,M,,*2A").sentenceOrNull()
+      SentenceRegistry.Default.parse("\$IIVWR,088,L,24.5,N,12.6,M,,*2A").sentenceOrNull(),
     )
     assertIs<Vwt>(
-      SentenceRegistry.Default.parse("\$IIVWT,088,L,24.7,N,12.6,M,,*2E").sentenceOrNull()
+      SentenceRegistry.Default.parse("\$IIVWT,088,L,24.7,N,12.6,M,,*2E").sentenceOrNull(),
     )
   }
 

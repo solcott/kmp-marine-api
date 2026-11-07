@@ -42,7 +42,7 @@ import kotlinx.io.Source
  *   [io.github.solcott.marineapi.nmea.UnknownSentence] rather than as failures.
  */
 public fun Source.nmeaResults(
-  registry: SentenceRegistry = SentenceRegistry.Default
+  registry: SentenceRegistry = SentenceRegistry.Default,
 ): Flow<ParseResult> = flow {
   val reader = NmeaLineReader(this@nmeaResults)
   while (true) {
@@ -71,7 +71,7 @@ public fun Source.nmeaResults(
  * See [nmeaResults] for the notes on cold flows, source ownership and blocking.
  */
 public fun Source.nmeaSentences(
-  registry: SentenceRegistry = SentenceRegistry.Default
+  registry: SentenceRegistry = SentenceRegistry.Default,
 ): Flow<Sentence> = nmeaResults(registry).sentences()
 
 /**

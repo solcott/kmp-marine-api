@@ -175,7 +175,7 @@ class TtmTest {
     // A radar may report bearing relative to own heading while giving course as true.
     val mixed =
       parse<Ttm>(
-        Checksum.append("\$RATTM,11,25.3,13.7,R,7.0,20.0,T,10.1,20.2,N,NAME,T,,175550.24,M")
+        Checksum.append("\$RATTM,11,25.3,13.7,R,7.0,20.0,T,10.1,20.2,N,NAME,T,,175550.24,M"),
       )
     assertEquals(AngleReference.RELATIVE, mixed.bearingReference)
     assertEquals(AngleReference.TRUE, mixed.courseReference)
@@ -188,7 +188,7 @@ class TtmTest {
     // A negative time to closest approach means the target is already drawing away.
     val opening =
       parse<Ttm>(
-        Checksum.append("\$RATTM,11,25.3,13.7,T,7.0,20.0,T,10.1,-4.5,N,NAME,T,,175550.24,A")
+        Checksum.append("\$RATTM,11,25.3,13.7,T,7.0,20.0,T,10.1,-4.5,N,NAME,T,,175550.24,A"),
       )
     assertEquals(-4.5, opening.timeToClosestPointOfApproach)
   }
@@ -197,7 +197,7 @@ class TtmTest {
   fun readsTheReferenceTargetFlag() {
     val reference =
       parse<Ttm>(
-        Checksum.append("\$RATTM,11,25.3,13.7,T,7.0,20.0,T,10.1,20.2,N,NAME,T,R,175550.24,A")
+        Checksum.append("\$RATTM,11,25.3,13.7,T,7.0,20.0,T,10.1,20.2,N,NAME,T,R,175550.24,A"),
       )
     assertTrue(reference.isReferenceTarget)
   }
@@ -206,7 +206,7 @@ class TtmTest {
   fun readsALostTarget() {
     val lost =
       parse<Ttm>(
-        Checksum.append("\$RATTM,11,25.3,13.7,T,7.0,20.0,T,10.1,20.2,N,NAME,L,,175550.24,A")
+        Checksum.append("\$RATTM,11,25.3,13.7,T,7.0,20.0,T,10.1,20.2,N,NAME,L,,175550.24,A"),
       )
     assertEquals(TargetStatus.LOST, lost.status)
   }
@@ -244,7 +244,7 @@ class TllTest {
     // rather than quietly treat as "not the reference".
     val result =
       SentenceRegistry.Default.parse(
-        Checksum.append("\$RATLL,01,3731.51205,N,02436.00000,E,ANDROS,163700.86,T,X")
+        Checksum.append("\$RATLL,01,3731.51205,N,02436.00000,E,ANDROS,163700.86,T,X"),
       )
     val malformed = assertIs<ParseResult.Malformed>(result)
     assertTrue("is not 'R' or empty" in malformed.reason, malformed.reason)
@@ -297,7 +297,7 @@ class TargetSentenceCrossReferenceTest {
     // the three together, so it is read the same way in each.
     val ttm =
       parse<Ttm>(
-        Checksum.append("\$RATTM,07,25.3,13.7,T,7.0,20.0,T,10.1,20.2,N,NAME,T,,175550.24,A")
+        Checksum.append("\$RATTM,07,25.3,13.7,T,7.0,20.0,T,10.1,20.2,N,NAME,T,,175550.24,A"),
       )
     val tll = parse<Tll>(Checksum.append("\$RATLL,07,3731.51205,N,02436.00000,E,NAME,163700.86,T,"))
     val tlb = parse<Tlb>(Checksum.append("\$RATLB,7,NAME"))
