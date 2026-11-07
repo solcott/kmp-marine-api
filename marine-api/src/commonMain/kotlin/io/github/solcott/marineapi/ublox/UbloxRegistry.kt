@@ -43,7 +43,7 @@ private constructor(private val factories: Map<Int, UbloxMessageFactory>) {
             UbloxMessageFactory(UbloxPositionVelocityTime.Companion::from),
           UbloxSatelliteStatusReport.ID to
             UbloxMessageFactory(UbloxSatelliteStatusReport.Companion::from),
-        )
+        ),
       )
 
     /** A registry that decodes nothing, for building one up from scratch. */
@@ -66,7 +66,7 @@ private constructor(private val factories: Map<Int, UbloxMessageFactory>) {
  * its own type parameter.
  */
 public fun Flow<Sentence>.ubloxMessages(
-  registry: UbloxRegistry = UbloxRegistry.Default
+  registry: UbloxRegistry = UbloxRegistry.Default,
 ): Flow<UbloxMessage> = mapNotNull { (it as? Ubx)?.let(registry::decode) }
 
 /** Decodes this sentence, or `null` if [registry] has no factory for its message id. */

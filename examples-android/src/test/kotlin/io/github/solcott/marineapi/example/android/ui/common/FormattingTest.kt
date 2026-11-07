@@ -43,7 +43,7 @@ class FormattingTest {
             accuracy = FixAccuracy(horizontal = 0.85, source = AccuracySource.GST),
             horizontalDilution = 0.95,
           )
-          .accuracyEstimate()
+          .accuracyEstimate(),
       )
 
     assertTrue(estimate.measured)
@@ -65,7 +65,7 @@ class FormattingTest {
     val autonomous = assertNotNull(fix(horizontalDilution = 1.1).accuracyEstimate())
     val differential =
       assertNotNull(
-        fix(horizontalDilution = 1.1, fixQuality = GpsFixQuality.DGPS).accuracyEstimate()
+        fix(horizontalDilution = 1.1, fixQuality = GpsFixQuality.DGPS).accuracyEstimate(),
       )
 
     assertEquals(1.1 * 4.75, differential.metres)

@@ -223,7 +223,7 @@ class BwcTest {
     // gpsd's second worked example.
     val bwc =
       parse<Bwc>(
-        Checksum.append("\$GPBWC,220516,5130.02,N,00046.34,W,213.8,T,218.0,M,0004.6,N,EGLM")
+        Checksum.append("\$GPBWC,220516,5130.02,N,00046.34,W,213.8,T,218.0,M,0004.6,N,EGLM"),
       )
     assertEquals(22, bwc.time?.hour)
     assertEquals(213.8, bwc.bearingTrue)
@@ -249,10 +249,10 @@ class BwcTest {
   fun isDistinctFromBod() {
     // BWC replaced BOD in NMEA 4.00 and says considerably more, so they stay separate types.
     assertTrue(
-      SentenceRegistry.Default.parse("\$GPBWC,125106,,,,,,T,,M,,N,,S*68").sentenceOrNull() is Bwc
+      SentenceRegistry.Default.parse("\$GPBWC,125106,,,,,,T,,M,,N,,S*68").sentenceOrNull() is Bwc,
     )
     assertTrue(
-      SentenceRegistry.Default.parse("\$GPBOD,234.9,T,228.8,M,RUSKI,*1D").sentenceOrNull() is Bod
+      SentenceRegistry.Default.parse("\$GPBOD,234.9,T,228.8,M,RUSKI,*1D").sentenceOrNull() is Bod,
     )
   }
 }

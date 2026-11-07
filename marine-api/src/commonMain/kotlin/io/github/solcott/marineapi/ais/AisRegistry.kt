@@ -125,7 +125,7 @@ public class AisRegistry private constructor(private val factories: Map<Int, Ais
           put(AisAidToNavigationReport.TYPE, AisMessageFactory(AisAidToNavigationReport::from))
           put(AisStaticDataReport.TYPE, AisMessageFactory(::staticDataReportFrom))
           put(AisLongRangePositionReport.TYPE, AisMessageFactory(AisLongRangePositionReport::from))
-        }
+        },
       )
 
     /** A registry that decodes nothing, for building one up from scratch. */

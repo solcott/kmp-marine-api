@@ -321,7 +321,7 @@ public data class Xdr(
       if (values.size % FIELDS_PER_MEASUREMENT != 0) {
         throw NmeaFieldException(
           "${fields.talker}$ID carries ${values.size} fields; each transducer takes " +
-            "$FIELDS_PER_MEASUREMENT, so a count that is not a multiple of that is truncated"
+            "$FIELDS_PER_MEASUREMENT, so a count that is not a multiple of that is truncated",
         )
       }
       // Indices rather than chunking, so a value that is not a number is reported against the

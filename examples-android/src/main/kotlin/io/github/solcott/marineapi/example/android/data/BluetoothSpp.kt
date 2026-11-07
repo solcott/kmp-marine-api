@@ -145,7 +145,7 @@ internal fun BluetoothDevice.nmeaFixes(dispatcher: CoroutineDispatcher): Flow<Po
         // Attached to the read rather than to `nmeaFixes` itself so that the two counters above
         // stay per-collection; hoisting them out of the builder to reach an outer operator would
         // share them across every collection of what is a cold flow.
-        .onCompletion { cause -> report(fixes, connected, cause) }
+        .onCompletion { cause -> report(fixes, connected, cause) },
     )
   }
 }

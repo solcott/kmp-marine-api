@@ -108,8 +108,8 @@ class MdaTest {
     val inches =
       parse<Mda>(
         Checksum.append(
-          "\$IIMDA,29.9,I,1.01,B,3.2,C,4.1,C,66.0,5.0,3.0,C,295.19,T,301.2,M,5.70,N,2.93,M"
-        )
+          "\$IIMDA,29.9,I,1.01,B,3.2,C,4.1,C,66.0,5.0,3.0,C,295.19,T,301.2,M,5.70,N,2.93,M",
+        ),
       )
     assertEquals(Units.INCHES, inches.primaryPressureUnits)
     assertEquals(4.1, inches.waterTemperature)
@@ -130,7 +130,7 @@ class MdaTest {
   fun rejectsAPressureUnitThatIsNeitherInchesNorPascals() {
     val result =
       SentenceRegistry.Default.parse(
-        Checksum.append("\$IIMDA,29.9,C,1.01,B,3.2,C,,C,,,,C,295.19,T,,M,5.70,N,2.93,M")
+        Checksum.append("\$IIMDA,29.9,C,1.01,B,3.2,C,,C,,,,C,295.19,T,,M,5.70,N,2.93,M"),
       )
     val malformed = assertIs<ParseResult.Malformed>(result)
     assertTrue("one of [I, P]" in malformed.reason, malformed.reason)

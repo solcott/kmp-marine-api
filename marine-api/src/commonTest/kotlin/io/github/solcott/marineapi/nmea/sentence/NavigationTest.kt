@@ -246,7 +246,7 @@ class ApbTest {
     // Units carries nine codes; C for Celsius is not one an autopilot can mean here.
     val result =
       SentenceRegistry.Default.parse(
-        Checksum.append("\$GPAPB,A,A,0.10,R,C,V,V,011,M,DEST,011,M,011,M")
+        Checksum.append("\$GPAPB,A,A,0.10,R,C,V,V,011,M,DEST,011,M,011,M"),
       )
     val malformed = assertIs<ParseResult.Malformed>(result)
     assertTrue("one of [N, K]" in malformed.reason, malformed.reason)
@@ -294,7 +294,7 @@ class RmbTest {
   fun readsGpsdsWorkedExample() {
     val gpsd =
       parse<Rmb>(
-        Checksum.append("\$GPRMB,A,0.66,L,003,004,4917.24,N,12309.57,W,001.3,052.5,000.5,V")
+        Checksum.append("\$GPRMB,A,0.66,L,003,004,4917.24,N,12309.57,W,001.3,052.5,000.5,V"),
       )
     assertEquals(0.66, gpsd.crossTrackError)
     assertEquals(Direction.LEFT, gpsd.steerTo)

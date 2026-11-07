@@ -343,7 +343,7 @@ class PositionsTest {
     // empty GST beside a populated GBS, so this is a decision the data does not settle.
     val accuracy =
       assertNotNull(
-        onlyFixOf(Examples.GGA, Examples.GST_EMPTY, Examples.GBS, Examples.RMC).accuracy
+        onlyFixOf(Examples.GGA, Examples.GST_EMPTY, Examples.GBS, Examples.RMC).accuracy,
       )
 
     assertEquals(AccuracySource.GBS, accuracy.source)

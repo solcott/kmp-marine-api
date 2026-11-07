@@ -301,7 +301,7 @@ private constructor(private val factories: Map<String, SentenceFactory>) {
           Zda.ID to SentenceFactory(Zda::from),
           Zfo.ID to SentenceFactory(Zfo::from),
           Ztg.ID to SentenceFactory(Ztg::from),
-        )
+        ),
       )
 
     /** An empty registry, for parsing into [UnknownSentence] only. */

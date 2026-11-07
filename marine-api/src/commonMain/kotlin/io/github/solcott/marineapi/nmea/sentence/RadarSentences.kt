@@ -545,7 +545,7 @@ public data class Tlb(override val talker: TalkerId, val labels: List<TargetLabe
       if (values.size % 2 != 0) {
         throw NmeaFieldException(
           "${fields.talker}$ID carries ${values.size} fields; target numbers and labels come in " +
-            "pairs, so an odd count means one is missing"
+            "pairs, so an odd count means one is missing",
         )
       }
       return Tlb(
@@ -581,7 +581,7 @@ private fun SentenceFields.readReferenceTarget(index: Int): Boolean {
   val value = stringAt(index) ?: return false
   if (value != REFERENCE_TARGET_MARKER.toString()) {
     throw NmeaFieldException(
-      "$talker$id field $index is not '$REFERENCE_TARGET_MARKER' or empty: \"$value\""
+      "$talker$id field $index is not '$REFERENCE_TARGET_MARKER' or empty: \"$value\"",
     )
   }
   return true

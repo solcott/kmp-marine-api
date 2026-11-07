@@ -53,7 +53,7 @@ public fun ParseResult.getOrThrow(): Sentence =
     is ParseResult.Ok -> sentence
     is ParseResult.BadChecksum ->
       throw NmeaParseException(
-        "Checksum mismatch: expected $expected but read $actual in \"$line\""
+        "Checksum mismatch: expected $expected but read $actual in \"$line\"",
       )
     is ParseResult.Malformed -> throw NmeaParseException("$reason in \"$line\"")
   }
