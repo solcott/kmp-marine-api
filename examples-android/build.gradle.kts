@@ -31,7 +31,14 @@ plugins {
 // Deliberately never published.
 android {
   namespace = "io.github.solcott.marineapi.example.android"
-  compileSdk = libs.versions.androidCompileSdk.get().toInt()
+  // A minor API level, not just the major: the Compose artifacts declare a minimum compileSdk of
+  // 37.1 in their AAR metadata, and checkAarMetadata fails the build against 37.0.
+  compileSdk {
+    version =
+      release(libs.versions.androidCompileSdk.get().toInt()) {
+        minorApiLevel = libs.versions.androidCompileSdkMinor.get().toInt()
+      }
+  }
 
   defaultConfig {
     applicationId = "io.github.solcott.marineapi.example.android"

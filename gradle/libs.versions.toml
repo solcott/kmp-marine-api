@@ -1,7 +1,7 @@
 [versions]
 agp = "9.5.2"
 androidx-activity = "1.13.0"
-androidx-compose-bom = "2026.09.00"
+androidx-compose-bom = "2026.11.01"
 androidx-hilt = "1.4.0"
 androidx-lifecycle = "2.11.1"
 androidx-navigation3 = "1.2.1"
@@ -24,6 +24,10 @@ ksp = "2.3.14"
 nrjavaserial = "5.2.1"
 #noinspection UnusedVersionCatalogEntry
 androidCompileSdk = "37"
+# Only :examples-android compiles against the minor release: Compose 1.13 (compose-bom 2026.11)
+# refuses to build against anything older than 37.1. The library has no Compose and stays on 37.
+#noinspection UnusedVersionCatalogEntry
+androidCompileSdkMinor = "1"
 #noinspection UnusedVersionCatalogEntry
 androidMinSdk = "24"
 #noinspection UnusedVersionCatalogEntry
