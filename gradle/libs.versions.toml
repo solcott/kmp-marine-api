@@ -1,5 +1,5 @@
 [versions]
-agp = "9.5.2"
+agp = "9.5.3"
 androidx-activity = "1.13.0"
 androidx-compose-bom = "2026.11.01"
 androidx-hilt = "1.4.0"
